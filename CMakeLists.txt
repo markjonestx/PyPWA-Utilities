@@ -39,9 +39,10 @@ add_executable (hgamp ${GAMP_SOURCES} src/waveH.cc)
 add_executable (ppgen ${PPGEN_SOURCES})
 add_executable (vamp src/vamp.cc)
 
-target_link_libraries (gamp pp)
-target_link_libraries (hgamp pp)
-target_link_libraries (ppgen pp)
+target_link_libraries (gamp pp -static)
+target_link_libraries (hgamp pp -static)
+target_link_libraries (ppgen pp -static)
+target_link_libraries (vamp -static)
 
 install (TARGETS gamp DESTINATION bin)
 install (TARGETS hgamp DESTINATION bin)
