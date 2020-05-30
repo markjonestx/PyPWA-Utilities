@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 2.8.12)
 project (PWA_UTILS)
 
+set(CMAKE_CXX_STANDARD 98)
+
 include_directories (include)
 
 set (
