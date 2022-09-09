@@ -33,7 +33,7 @@
 		this->_inRestFrame = particle._inRestFrame;
 		this->_helicities = particle._helicities;
 		if (particle._decay) {
-			this->_decay = new decay(*(particle._decay));
+			this->_decay = new Decay(*(particle._decay));
 		}
 		else {
 			this->_decay = NULL;
@@ -82,7 +82,7 @@
 			this->_helicities = particle._helicities;
 			delete this->_decay;
 			if (particle._decay) {
-				this->_decay = new decay(*(particle._decay));
+				this->_decay = new Decay(*(particle._decay));
 			}
 			else {
 				this->_decay = NULL;
@@ -131,11 +131,11 @@
 		return(*this);
 	}
 	
-	particle& particle::setDecay(const decay& d) {
+	particle& particle::setDecay(const Decay& d) {
 		if (this->_decay) {
 			delete this->_decay;
 		}
-		this->_decay = new decay(d);
+		this->_decay = new Decay(d);
 		return(*this);
 	}
 
@@ -155,60 +155,60 @@
 		return(*this);
 	}
 	
-	decay* particle::Decay() const {
+	Decay* particle::get_decay() const {
 		return(this->_decay);
 	}
 
 	
-	void decay::_init(const list<particle>& cl, int l,int s,double m) {
+	void Decay::_init(const list<particle>& cl, int l, int s, double m) {
 		_children = cl;
 		_l = l;
 		_s = s;
 		_mass = m;
 	}
 
-	decay::decay() {
+	Decay::Decay() {
 		_l = 0;
 		_s = 0;
 	}
 
-	decay::decay(const decay& d) {
+	Decay::Decay(const Decay& d) {
 		if(_decay_debug) {
-			cout << "in decay(" << this << ")::decay(const decay& d)" << endl;
+			cout << "in Decay(" << this << ")::Decay(const Decay& d)" << endl;
 		}
 		_init(d._children, d._l, d._s, d._mass);
 	}
 
-	decay::~decay() {
+	Decay::~Decay() {
 		if(_decay_debug) {
-			cout << "in decay(" << this << ")::~decay()" << endl;
+			cout << "in Decay(" << this << ")::Decay()" << endl;
 		}
 	}
 
-	decay& decay::addChild(const particle& p) {
+	Decay& Decay::addChild(const particle& p) {
 		_children.push_back(p);
 		return(*this);
 	}
 
-	decay& decay::setL(int l) {
+	Decay& Decay::setL(int l) {
 		_l = l;
 		return(*this);
 	}
 
-	decay& decay::setS(int s) {
+	Decay& Decay::setS(int s) {
 		_s = s;
 		return(*this);
 	}
 
-	int decay::L() const {
+	int Decay::L() const {
 		return(this->_l);
 	}
 
-	int decay::S() const {
+	int Decay::S() const {
 		return(this->_s);
 	}
 
-	decay& decay::calculateS() {
+	Decay& Decay::calculateS() {
 		int spin = 0;
 		int numNonZero = 0;
 		list<particle>::iterator child;
@@ -222,7 +222,7 @@
 			child++;
 		}
 		if (numNonZero > 1) {
-			cerr << "final state spin is undetermined in decay: " << endl;
+			cerr << "final state spin is undetermined in Decay: " << endl;
 			this->print();
 			exit(1);
 		}
@@ -232,18 +232,18 @@
 		}
 	}
 
-	decay& decay::operator=(const decay& d) {
+	Decay& Decay::operator=(const Decay& d) {
 		if(_decay_debug) {
-			cout << "in decay(" << this << ")::operator=(const decay& d)" << endl;
+			cout << "in Decay(" << this << ")::operator=(const Decay& d)" << endl;
 		}
 		_init(d._children, d._l, d._s, d._mass);
 		return(*this);
 	}
 
-	void decay::print() const {
+	void Decay::print() const {
 		if (this) {
-			list<particle>::iterator first = const_cast<decay*>(this)->_children.begin();
-			list<particle>::iterator last = const_cast<decay*>(this)->_children.end();
+			list<particle>::iterator first = const_cast<Decay*>(this)->_children.begin();
+			list<particle>::iterator last = const_cast<Decay*>(this)->_children.end();
 			list<particle>::iterator c;
 			ptab(); cout << "children : {" << endl;
 			for( c = first; c != last; c++) {
@@ -256,13 +256,13 @@
 		}
 	}
 
-	void decay::printFrames() const {
+	void Decay::printFrames() const {
 		if (this) {
-			list<particle>::iterator first = const_cast<decay*>(this)->_children.begin();
-			list<particle>::iterator last = const_cast<decay*>(this)->_children.end();
+			list<particle>::iterator first = const_cast<Decay*>(this)->_children.begin();
+			list<particle>::iterator last = const_cast<Decay*>(this)->_children.end();
 			list<particle>::iterator c;
 			ptab(); cout << "i have " << this->_childrenInFrames.size() << " children." << endl;
-			ptab(); cout << "children in decay frame : {" << endl;
+			ptab(); cout << "children in Decay frame : {" << endl;
 			for( c = first; c != last; c++) {
 				(*c).printFrames();
 			}
@@ -273,12 +273,12 @@
 		}
 	}
 
-fourVec decay::fill(const event& e, int debug) {
+fourVec Decay::fill(const event& e, int debug) {
 	fourVec p;
 	if (this) {
-		decay* d;
-		list<particle>::iterator first = const_cast<decay*>(this)->_children.begin();
-		list<particle>::iterator last = const_cast<decay*>(this)->_children.end();
+		Decay* d;
+		list<particle>::iterator first = const_cast<Decay*>(this)->_children.begin();
+		list<particle>::iterator last = const_cast<Decay*>(this)->_children.end();
 		list<particle>::iterator c;
 		for( c = first; c != last; c++) {
 			fourVec v;
@@ -298,7 +298,7 @@ fourVec decay::fill(const event& e, int debug) {
 				if (debug) {
 				    cout << "Found unstable particle " << (*c).Name() << endl;
 				}
-				d = (*c).Decay();
+				d = (*c).get_decay();
 				if (debug) {
 				    cout << "Calling fill for " << (*c).Name() << endl;
 				}
@@ -315,7 +315,7 @@ fourVec decay::fill(const event& e, int debug) {
 	return p;
 }
 
-fourVec* decay::get4P(particle* part, int debug) {
+fourVec* Decay::get4P(particle* part, int debug) {
 
     fourVec*  p = NULL;
 
@@ -341,7 +341,7 @@ fourVec* decay::get4P(particle* part, int debug) {
 	return p;
 }
 
-decay& decay::setupFrames(lorentzTransform T, int debug){
+Decay& Decay::setupFrames(lorentzTransform T, int debug){
 
     // assert(this->_children.size() == 2);
     fourVec p(0,threeVec(0,0,0));
@@ -376,16 +376,16 @@ decay& decay::setupFrames(lorentzTransform T, int debug){
 
     if(debug) {
 		child = this->_children.begin();
-        cout << "decay mass: " << this->_mass << endl;
-        cout << "decay analyzer: " << child->Name() << child->Charge() << "[" << child->Index() << "]" << endl;
-        cout << "decay angles: theta: " << child->get3P().theta() << " ";
+        cout << "Decay mass: " << this->_mass << endl;
+        cout << "Decay analyzer: " << child->Name() << child->Charge() << "[" << child->Index() << "]" << endl;
+        cout << "Decay angles: theta: " << child->get3P().theta() << " ";
         cout << "phi: " << child->get3P().phi() << endl;
     }
 
     return *this;
 }
 
-complex<double> decay::expt_amp(double b, double t, int debug) const {
+complex<double> Decay::expt_amp(double b, double t, int debug) const {
 	assert( b >= 0 );
 	
 	complex<double> a, amp;
@@ -478,7 +478,7 @@ complex<double> decay::expt_amp(double b, double t, int debug) const {
 	return amp;
 }
 
-complex<double> decay::amp(int j, int m, int debug) const {
+complex<double> Decay::amp(int j, int m, int debug) const {
 	assert( j >= 0 );
 	assert( m <= j );
 	
@@ -550,7 +550,7 @@ complex<double> decay::amp(int j, int m, int debug) const {
 					theta = analyzer.get3P().theta();
 				}
 				else if (this->_children.size() == 3) {  
-					// omega case, use normal to decay plane
+					// omega case, use normal to Decay plane
 					threeVec normal = child1.get3P() / child2.get3P();
 					phi = normal.phi();
 					theta = normal.theta();
@@ -659,10 +659,10 @@ complex<double> decay::amp(int j, int m, int debug) const {
 	return amp;
 }
 
-decay& decay::operator*=(const lorentzTransform& L) {
+Decay& Decay::operator*=(const lorentzTransform& L) {
 	if (this) {
-		list<particle>::iterator first = const_cast<decay*>(this)->_children.begin();
-		list<particle>::iterator last = const_cast<decay*>(this)->_children.end();
+		list<particle>::iterator first = const_cast<Decay*>(this)->_children.begin();
+		list<particle>::iterator last = const_cast<Decay*>(this)->_children.end();
 		list<particle>::iterator c;
 		for( c = first; c != last; c++) {
 				(*c) *= L;
@@ -671,7 +671,7 @@ decay& decay::operator*=(const lorentzTransform& L) {
 	return *this;
 }
 	int particle::_particle_debug = 0;
-	int decay::_decay_debug = 0;
+	int Decay::_decay_debug = 0;
 
 	int particle::Stable() const {
 		return((this->_decay)?0:1);
@@ -691,13 +691,13 @@ decay& decay::operator*=(const lorentzTransform& L) {
 				cout << "found particle " << part->Name() <<  part->Charge() << "[" << part->Index() << "]" << endl;
 				cout << "returning fourVec:" << ret << endl;
 			}
-		} else if ( this->Decay() ){
+		} else if ( this->get_decay() ){
 			if(debug) {
 				cout << "I'm a " << this->Name() <<  this->Charge() << "[" << this->Index() << "]" << endl;
 				cout << "not a " << part->Name() <<  part->Charge() << "[" << part->Index() << "]" << endl;
 				cout << "checking my children..." << endl;
 			}
-			decay* d = this->Decay();
+			Decay* d = this->get_decay();
 			ret = d->get4P(part, debug);
 		}
 		return ret;
@@ -798,12 +798,12 @@ decay& decay::operator*=(const lorentzTransform& L) {
     }
 
 	double particle::q() const{
-		list<particle>::const_iterator child = this->Decay()->_children.begin();
+		list<particle>::const_iterator child = this->get_decay()->_children.begin();
 
 		if (_inRestFrame) {
 			return(~(child->get3P()));
 		} else {
-			assert(this->Decay()->_children.size() == 2);
+			assert(this->get_decay()->_children.size() == 2);
 			particle child1 = *child; child++;
 			particle child2 = *child;
 
@@ -818,9 +818,9 @@ decay& decay::operator*=(const lorentzTransform& L) {
 	}
 
 	double particle::q0() const{
-		list<particle>::const_iterator child = this->Decay()->_children.begin();
+		list<particle>::const_iterator child = this->get_decay()->_children.begin();
 
-		assert(this->Decay()->_children.size() == 2);
+		assert(this->get_decay()->_children.size() == 2);
 		particle child1 = *child; child++;
 		particle child2 = *child;
 
@@ -841,18 +841,18 @@ string particle::sprint(string space) {
 	s+= "[";
 	s+= itos(this->_index);
 	s+= "]";
-	if (this->Decay() ) {
+	if (this->get_decay()) {
 		s+= space;
 		s+= "{";
 		list<particle>::iterator c;
-		for( c  = this->Decay()->_children.begin(); c != this->Decay()->_children.end(); c++) {
+		for( c  = this->get_decay()->_children.begin(); c != this->get_decay()->_children.end(); c++) {
 			s+= space;
 			s+= c->sprint(space);
 		}
 		s+= space;
-		s+= itos(this->Decay()->L());
+		s+= itos(this->get_decay()->L());
 		s+= space;
-		s+= itos(this->Decay()->S());
+		s+= itos(this->get_decay()->S());
 		s+= space;
 		s+= "}";
 		
@@ -870,7 +870,7 @@ complex<double> particle::breitWigner() const
 	double q0 = this->q0 ();
 	double m = ~(this->get4P ());
 	double GammaV;
-	int l = this->Decay ()->L ();
+	int l = this->get_decay ()->L ();
 
 	GammaV = Gamma0 * (m0 / m) * (q / q0) * (pow (F (l, q), 2) / pow (F (l, q0), 2));
 
@@ -889,14 +889,14 @@ complex < double >particle::decayAmp (int lambda, int debug)
 	bw = this->_massDep->val(*this);
 	if (debug) {
 	    ptab ();
-	    cout << "calculate decay amplitude for " << this->Name () << this->Charge () << "[" << this->Index () << "] {bw=" << bw << "}" << endl;
+	    cout << "calculate Decay amplitude for " << this->Name () << this->Charge () << "[" << this->Index () << "] {bw=" << bw << "}" << endl;
 	}
-	decay *d = this->Decay ();
+	Decay *d = this->get_decay ();
 	a = d->amp (this->J (), lambda, debug) * bw;
     }
     if (debug) {
 	ptab ();
-	cout << this->Name() << " decay amp = " << a << endl;
+	cout << this->Name() << " Decay amp = " << a << endl;
     }
     return a;
 }

@@ -83,7 +83,7 @@ void printUsage(char* pname) {
 	cerr << "\t-P pdgFile:\tread PDG table from pdgFile" << endl;
 	cerr << "\t-v:\tprint pdgTable" << endl;
 	cerr << "\t-D:\tdump pdgTable" << endl;
-	cerr << "\tkeyfile: decay amplitude specification" << endl;
+	cerr << "\tkeyfile: Decay amplitude specification" << endl;
 
 	exit(1);
 }

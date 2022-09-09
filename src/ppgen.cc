@@ -612,7 +612,7 @@ void pippim (int argc, char *argv[])
     recoil.set(sqrt(resonance.V().lenSq() + pow (PROTON_MASS, 2.0)), zeroVec - resonance.V());
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double pip_p = CMmomentum (resonance_mass, PI_MASS, PI_MASS);
     pip.polar(pip_p, acos (randm (-0.9999, 0.9999)),randm (-M_PI,M_PI));
@@ -653,7 +653,7 @@ void pippim (int argc, char *argv[])
 	 */
 	// e852 values
 	threeVec production = threeVec (vbeam.x, vbeam.y, vbeam.z);
-	//	threeVec decay;
+	//	threeVec Decay;
 
 	if (Print) {
 	  // std::cerr << "\n\n*** New Event\n";
@@ -857,7 +857,7 @@ void nKpKm(int argc, char *argv[])
     recoil.set(sqrt(resonance.V().lenSq() + pow (PROTON_MASS, 2.0)), zeroVec - resonance.V());
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double Kp_p = CMmomentum (resonance_mass, KCHARGED_MASS, KCHARGED_MASS);
     Kp.polar(Kp_p, acos (randm (-1,1)),randm (-M_PI,M_PI));
@@ -897,7 +897,7 @@ void nKpKm(int argc, char *argv[])
 	 */
 	// e852 values
 	threeVec production = threeVec (vbeam.x, vbeam.y, vbeam.z);
-	//	threeVec decay;
+	//	threeVec Decay;
 
 	if (Print) {
 	  // std::cerr << "\n\n*** New Event\n";
@@ -1110,7 +1110,7 @@ void pipipi(int argc, char *argv[])
     recoil.set(sqrt(resonance.V().lenSq() +  pow (PROTON_MASS, 2.0)),zeroVec - resonance.V());
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double isobar1_p = CMmomentum (resonance_mass, isobar1_mass, PI_MASS);
      
@@ -1125,7 +1125,7 @@ void pipipi(int argc, char *argv[])
 
 
     /*
-     *  now do decay in isobar1 rest frame
+     *  now do Decay in isobar1 rest frame
      */
   // pi pi case
     double piplus_p = CMmomentum (isobar1_mass, PI_MASS,PI_MASS);
@@ -1394,7 +1394,7 @@ void pipipi0 (int argc, char *argv[])
     recoil.set(sqrt(resonance.V().lenSq() +  pow (PROTON_MASS, 2.0)),zeroVec - resonance.V());
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double isobar1_p = CMmomentum (resonance_mass, isobar1_mass, PI_MASS);
      
@@ -1409,7 +1409,7 @@ void pipipi0 (int argc, char *argv[])
 
 
     /*
-     *  now do decay in isobar1 rest frame
+     *  now do Decay in isobar1 rest frame
      */
   // pi pi case
     double piplus_p = CMmomentum (isobar1_mass, PI_MASS,PI_MASS);
@@ -1714,7 +1714,7 @@ void pipipi0X(int argc, char *argv[])
     recoil.set(sqrt(resonance.V().lenSq() +  pow (PROTON_MASS, 2.0)),zeroVec - resonance.V());
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double isobar1_p = CMmomentum (resonance_mass, isobar1_mass, PI_MASS);
      
@@ -1729,7 +1729,7 @@ void pipipi0X(int argc, char *argv[])
 
 
     /*
-     *  now do decay in isobar1 rest frame
+     *  now do Decay in isobar1 rest frame
      */
     // pi pi case
     double piplus_p = CMmomentum (isobar1_mass, PI_MASS,PI_MASS);
@@ -2013,7 +2013,7 @@ void npip (int argc, char *argv[])
 
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double pip_p = CMmomentum (resonance_mass, NEUTRON_MASS, PI_MASS);
 
@@ -2056,7 +2056,7 @@ void npip (int argc, char *argv[])
 	 */
 	// e852 values
 	threeVec production = threeVec (0.0, 0.0, 0.0);
-	//	threeVec decay;
+	//	threeVec Decay;
 	electron = beam + target -neutron - pip;
 	if (Print) {
 	  // std::cerr << "\n\n*** New Event\n";
@@ -2203,7 +2203,7 @@ void npip_gamma (int argc, char *argv[],int nw,int *wlist)
     resonance.set(resonance_mass,zeroVec);
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double pip_p = CMmomentum (resonance_mass, NEUTRON_MASS, PI_MASS);
 
@@ -2229,7 +2229,7 @@ void npip_gamma (int argc, char *argv[],int nw,int *wlist)
 	 *  generate vertices
 	 */
 	threeVec production = threeVec (0.0, 0.0, 0.0);
-	//	threeVec decay;
+	//	threeVec Decay;
 	if (Print) {
 	  // std::cerr << "\n\n*** New Event\n";
 	  // std::cerr << "Beam:\n  " << beam;
@@ -2401,7 +2401,7 @@ void ppi0_gamma (int argc, char *argv[])
     resonance.set(resonance_mass,zeroVec);
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double pi0_p = CMmomentum (resonance_mass, PROTON_MASS, PI0_MASS);
 
@@ -2409,7 +2409,7 @@ void ppi0_gamma (int argc, char *argv[])
     pi0.t(sqrt (pi0.V().lenSq () + pow (PI0_MASS, 2.0)));
     proton.set(sqrt (pi0.V().lenSq() + pow (PROTON_MASS, 2.0)),zeroVec - pi0.V());
  
-    // pi0 decay to 2gamma, in pi0 rest frame
+    // pi0 Decay to 2gamma, in pi0 rest frame
     double gam1_p = CMmomentum (PI0_MASS, 0.0, 0.0);
     gamma1.polar(gam1_p,acos (randm (-0.999999, 0.999999)),randm (-M_PI, M_PI)); 
     gamma1.t(gam1_p);
@@ -2440,7 +2440,7 @@ void ppi0_gamma (int argc, char *argv[])
      *  generate vertices
      */
     threeVec production = threeVec (vbeam.x, vbeam.y, vbeam.z);
-    //	threeVec decay;
+    //	threeVec Decay;
     if (Print) {
       // std::cerr << "\n\n*** New Event\n";
       // std::cerr << "Beam:\n  " << beam;
@@ -2663,7 +2663,7 @@ void ppi0 (int argc, char *argv[])
 
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double pi0_p = CMmomentum (resonance_mass, PROTON_MASS, PI_MASS);
 
@@ -2705,7 +2705,7 @@ void ppi0 (int argc, char *argv[])
 	 */
 	// e852 values
 	threeVec production = threeVec (0.0, 0.0, 0.0);
-	//	threeVec decay;
+	//	threeVec Decay;
 	  electron = beam + target -proton - pi0;
 	if (Print) {
 	  // std::cerr << "\n\n*** New Event\n";
@@ -2905,7 +2905,7 @@ void kpkspim(int argc, char *argv[])
     recoil.t(sqrt (recoil.V().lenSq () + pow (PROTON_MASS, 2.0)));
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double isobar1_p = CMmomentum (resonance_mass, isobar1_mass, KCHARGED_MASS); 
     isobar1.polar(isobar1_p,acos (randm (-0.999999, 0.999999)),randm (-M_PI, M_PI));
@@ -2914,7 +2914,7 @@ void kpkspim(int argc, char *argv[])
     kplus.t(sqrt (kplus.V().lenSq () + pow (KCHARGED_MASS, 2.0)));
 
     /*
-     *  now do decay in isobar1 rest frame
+     *  now do Decay in isobar1 rest frame
      */
   // k pi case
     double kshort_p = CMmomentum (isobar1_mass, KZERO_MASS,PI_MASS);
@@ -2923,7 +2923,7 @@ void kpkspim(int argc, char *argv[])
     piminus.V() = threeVec (0.0, 0.0, 0.0) - kshort.V();
     piminus.t(sqrt (piminus.V().lenSq () + pow (PI0_MASS, 2.0)));
 
-         /* Kshort decay */
+         /* Kshort Decay */
 
 
         double pi1_p = CMmomentum (KZERO_MASS, PI_MASS,PI_MASS);
@@ -2993,7 +2993,7 @@ void kpkspim(int argc, char *argv[])
          */
         // e852 values
         threeVec production = threeVec (vbeam.x, vbeam.y, vbeam.z);
-    //    threeVec decay;
+    //    threeVec Decay;
 
 
 
@@ -3215,7 +3215,7 @@ void pipipi_gamma (int argc, char *argv[])
     recoil.set(sqrt(resonance.V().lenSq() +  pow (PROTON_MASS, 2.0)),zeroVec - resonance.V());
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double isobar1_p = CMmomentum (resonance_mass, isobar1_mass, PI_MASS);
      
@@ -3230,7 +3230,7 @@ void pipipi_gamma (int argc, char *argv[])
 
 
     /*
-     *  now do decay in isobar1 rest frame
+     *  now do Decay in isobar1 rest frame
      */
   // pi pi case
     double piminus_p = CMmomentum (isobar1_mass, PI_MASS,PI_MASS);
@@ -3544,7 +3544,7 @@ void ppipi_gamma(int argc, char *argv[])
     recoil.set(sqrt(resonance.V().lenSq() +  pow (PROTON_MASS, 2.0)),zeroVec - resonance.V());
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     // pi pi case
     double piplus_p = CMmomentum (resonance_mass, PI_MASS,PI_MASS);
@@ -3836,7 +3836,7 @@ void pepem_gamma(int argc, char *argv[])
     recoil.set(sqrt(resonance.V().lenSq() +  PROTON_MASS * PROTON_MASS),zeroVec - resonance.V());
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     // e+ e- case
     double eplus_p = CMmomentum (resonance_mass, ELEC_MASS,ELEC_MASS);
@@ -4130,7 +4130,7 @@ void ppipiX_gamma(int argc, char *argv[])
     piminus.set(sqrt(resonance.V().lenSq() +  pow (PI_MASS, 2.0)),zeroVec - resonance.V());
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     // pi pi case
     double piplus_p = CMmomentum (resonance_mass, PROTON_MASS,PI_MASS);
@@ -4285,7 +4285,7 @@ void omegapipi (int argc, char *argv[],Particle_t Beam,Particle_t Pi1,Particle_t
     gamma2;
   fourVec isobar1,isobar2;
   // isobar1 is pi pi isobar off of omega pi pi system
-  // isobar2 is pi+ pi- isobar from omega decay
+  // isobar2 is pi+ pi- isobar from omega Decay
   lorentzTransform Boost;
   
   threeVec zeroVec = threeVec (0.0, 0.0, 0.0);
@@ -4465,7 +4465,7 @@ void omegapipi (int argc, char *argv[],Particle_t Beam,Particle_t Pi1,Particle_t
 
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double isobar1_p = CMmomentum (resonance_mass, isobar1_mass, OMEGA_MASS);
      
@@ -4477,7 +4477,7 @@ void omegapipi (int argc, char *argv[],Particle_t Beam,Particle_t Pi1,Particle_t
     omeg.set(sqrt(isobar1.V().lenSq() + pow (OMEGA_MASS, 2.0)),zeroVec -isobar1.V());
 
     /*
-     *  now do decay in isobar1 rest frame
+     *  now do Decay in isobar1 rest frame
      */
     // pi pi case
     double pi1_p = CMmomentum (isobar1_mass, pi1mass,pi2mass);
@@ -4488,7 +4488,7 @@ void omegapipi (int argc, char *argv[],Particle_t Beam,Particle_t Pi1,Particle_t
     pi2.set(sqrt (pi1.V().lenSq () + pow (pi2mass, 2.0)),zeroVec - pi1.V());
 
 
-    // code to do omega decay
+    // code to do omega Decay
     double himass = OMEGA_MASS - PI0_MASS;
     double lomass = 2 * PI_MASS;
     double isobar2_mass = randm(lomass,himass);
@@ -4498,7 +4498,7 @@ void omegapipi (int argc, char *argv[],Particle_t Beam,Particle_t Pi1,Particle_t
     pizero.set(sqrt(isobar2.V().lenSq() + pow(PI0_MASS,2.0)),zeroVec - isobar2.V());
 
  
-    // isobar2 decay
+    // isobar2 Decay
     double piplus_p = CMmomentum(isobar2_mass,PI_MASS,PI_MASS);
 
     piplus.polar( piplus_p, acos (randm (-0.999999, 0.999999)), randm (-M_PI, M_PI)); 
@@ -4515,7 +4515,7 @@ void omegapipi (int argc, char *argv[],Particle_t Beam,Particle_t Pi1,Particle_t
 
 
     
-    // pi0 decay to 2 gamma, in pi0 rest frame
+    // pi0 Decay to 2 gamma, in pi0 rest frame
     double gam1_p = CMmomentum (PI0_MASS, 0.0, 0.0);
     gamma1.polar(gam1_p,acos (randm (-0.999999, 0.999999)),randm (-M_PI, M_PI)); 
     gamma1.t(gam1_p);
@@ -4803,7 +4803,7 @@ void omegapipi0(int argc, char *argv[],Particle_t Beam,Particle_t Pi1,Particle_t
     gamma4;
   fourVec isobar1,isobar2;
   // isobar1 is pi pi isobar off of omega pi pi system
-  // isobar2 is pi+ pi- isobar from omega decay
+  // isobar2 is pi+ pi- isobar from omega Decay
   lorentzTransform Boost;
   
   threeVec zeroVec = threeVec (0.0, 0.0, 0.0);
@@ -4983,7 +4983,7 @@ void omegapipi0(int argc, char *argv[],Particle_t Beam,Particle_t Pi1,Particle_t
 
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double isobar1_p = CMmomentum (resonance_mass, isobar1_mass, OMEGA_MASS);
      
@@ -4995,7 +4995,7 @@ void omegapipi0(int argc, char *argv[],Particle_t Beam,Particle_t Pi1,Particle_t
     omeg.set(sqrt(isobar1.V().lenSq() + pow (OMEGA_MASS, 2.0)),zeroVec -isobar1.V());
 
     /*
-     *  now do decay in isobar1 rest frame
+     *  now do Decay in isobar1 rest frame
      */
     // pi pi case
     double pi1_p = CMmomentum (isobar1_mass, pi1mass,pi2mass);
@@ -5006,7 +5006,7 @@ void omegapipi0(int argc, char *argv[],Particle_t Beam,Particle_t Pi1,Particle_t
     pi2.set(sqrt (pi1.V().lenSq () + pow (pi2mass, 2.0)),zeroVec - pi1.V());
 
 
-    // code to do omega decay
+    // code to do omega Decay
     double himass = OMEGA_MASS - PI0_MASS;
     double lomass = 2 * PI_MASS;
     double isobar2_mass = randm(lomass,himass);
@@ -5016,7 +5016,7 @@ void omegapipi0(int argc, char *argv[],Particle_t Beam,Particle_t Pi1,Particle_t
     pizero.set(sqrt(isobar2.V().lenSq() + pow(PI0_MASS,2.0)),zeroVec - isobar2.V());
 
  
-    // isobar2 decay
+    // isobar2 Decay
     double piplus_p = CMmomentum(isobar2_mass,PI_MASS,PI_MASS);
 
     piplus.polar( piplus_p, acos (randm (-0.999999, 0.999999)), randm (-M_PI, M_PI)); 
@@ -5033,7 +5033,7 @@ void omegapipi0(int argc, char *argv[],Particle_t Beam,Particle_t Pi1,Particle_t
 
 
     
-    // pi0 decay to 2 gamma, in pi0 rest frame pi0
+    // pi0 Decay to 2 gamma, in pi0 rest frame pi0
     double gam1_p = CMmomentum (PI0_MASS, 0.0, 0.0);
     gamma1.polar(gam1_p,acos (randm (-0.999999, 0.999999)),randm (-M_PI, M_PI)); 
     gamma1.t(gam1_p);
@@ -5055,7 +5055,7 @@ void omegapipi0(int argc, char *argv[],Particle_t Beam,Particle_t Pi1,Particle_t
 	/* transform all 4-vectors back to lab frame */
         fourVec tmp;
 
-	// boost gammas to from first pi0 decay
+	// boost gammas to from first pi0 Decay
 	tmp.set(pi2.t(),zeroVec - pi2.V());
 	Boost.set(tmp);
 	gamma3 = Boost * gamma3;
@@ -5357,7 +5357,7 @@ void omegaphi (int argc, char *argv[],Particle_t Beam)
     gamma2;
   fourVec isobar2;
   // isobar1 is pi pi isobar off of omega pi pi system
-  // isobar2 is pi+ pi- isobar from omega decay
+  // isobar2 is pi+ pi- isobar from omega Decay
   lorentzTransform Boost;
   
   threeVec zeroVec = threeVec (0.0, 0.0, 0.0);
@@ -5526,7 +5526,7 @@ void omegaphi (int argc, char *argv[],Particle_t Beam)
 
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double phi_p = CMmomentum (resonance_mass, PHI_MASS, OMEGA_MASS);
      
@@ -5538,7 +5538,7 @@ void omegaphi (int argc, char *argv[],Particle_t Beam)
     omeg.set(sqrt(phi.V().lenSq() + pow (OMEGA_MASS, 2.0)),zeroVec - phi.V());
 
     /*
-     *  now do decay in phi rest frame
+     *  now do Decay in phi rest frame
      */
     // K+ K- case
     double Kp_p = CMmomentum (PHI_MASS, KCHARGED_MASS,KCHARGED_MASS);
@@ -5551,7 +5551,7 @@ void omegaphi (int argc, char *argv[],Particle_t Beam)
    
 
 
-    // code to do omega decay
+    // code to do omega Decay
     double himass = OMEGA_MASS - PI0_MASS;
     double lomass = 2 * PI_MASS;
     double isobar2_mass = randm(lomass,himass);
@@ -5561,7 +5561,7 @@ void omegaphi (int argc, char *argv[],Particle_t Beam)
     pizero.set(sqrt(isobar2.V().lenSq() + pow(PI0_MASS,2.0)),zeroVec - isobar2.V());
 
  
-    // isobar2 decay
+    // isobar2 Decay
     double piplus_p = CMmomentum(isobar2_mass,PI_MASS,PI_MASS);
 
     piplus.polar( piplus_p, acos (randm (-0.999999, 0.999999)), randm (-M_PI, M_PI)); 
@@ -5578,7 +5578,7 @@ void omegaphi (int argc, char *argv[],Particle_t Beam)
 
 
     
-    // pi0 decay to 2 gamma, in pi0 rest frame
+    // pi0 Decay to 2 gamma, in pi0 rest frame
     double gam1_p = CMmomentum (PI0_MASS, 0.0, 0.0);
     gamma1.polar(gam1_p,acos (randm (-0.999999, 0.999999)),randm (-M_PI, M_PI)); 
     gamma1.t(gam1_p);
@@ -6009,13 +6009,13 @@ void doubleDalitz (int argc, char *argv[],Particle_t Beam,Particle_t Pi1,Particl
 
 
     /*
-     *  now do pi0 pi0 decay in resonance rest frame
+     *  now do pi0 pi0 Decay in resonance rest frame
      */
 
     twoBodyDecay(resonance_mass,Mass(Pi0),Mass(Pi0),pi1,pi2);
     pi_p = CMmomentum(resonance_mass,Mass(Pi1),Mass(Pi2));
 
-    // neutral decay to gamma e+ e-, in pi0 rest frame
+    // neutral Decay to gamma e+ e-, in pi0 rest frame
 #define EPEMSLOPE 70.0
     if (decay) {
       fourVec tmp;
@@ -6455,7 +6455,7 @@ void cpcmn0N (int argc, char *argv[],Particle_t Beam,Particle_t Cplus,Particle_t
     recoil.set(sqrt(resonance.V().lenSq() +  pow (Mass(Baryon), 2.0)),zeroVec - resonance.V());
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double isobar1_p = CMmomentum (resonance_mass, isobar1_mass, Mass(N0));
      
@@ -6470,7 +6470,7 @@ void cpcmn0N (int argc, char *argv[],Particle_t Beam,Particle_t Cplus,Particle_t
 
 
     /*
-     *  now do decay in isobar1 rest frame
+     *  now do Decay in isobar1 rest frame
      */
     // c+ c-
     double cplus_p = CMmomentum (isobar1_mass, Mass(Cplus),Mass(Cminus));
@@ -6480,7 +6480,7 @@ void cpcmn0N (int argc, char *argv[],Particle_t Beam,Particle_t Cplus,Particle_t
     cplus.t(sqrt (cplus.V().lenSq () + pow (Mass(Cplus), 2.0)));
     cminus.set(sqrt (cplus.V().lenSq () + pow (Mass(Cminus), 2.0)),zeroVec - cplus.V());
     
-    // neutral decay to 2gamma, in pi0 rest frame
+    // neutral Decay to 2gamma, in pi0 rest frame
     if (decay) {
     double gam1_p = CMmomentum (Mass(N0), 0.0, 0.0);
     gamma1.polar(gam1_p,acos (randm (-0.999999, 0.999999)),randm (-M_PI, M_PI)); 
@@ -6894,7 +6894,7 @@ void cpcm(int argc, char *argv[],Particle_t Beam,Particle_t Cplus,Particle_t Cmi
 
 
     /*
-     *  now do decay in isobar1 rest frame
+     *  now do Decay in isobar1 rest frame
      */
     // c+ c-
     double cplus_p = CMmomentum (resonance_mass, Mass(Cplus),Mass(Cminus));
@@ -7078,7 +7078,7 @@ void etaprimepi(int argc, char *argv[],Particle_t Beam,Particle_t Pi)
     gamma2;
   fourVec isobar1,isobar2;
   // isobar1 is pi pi isobar off of omega pi pi system
-  // isobar2 is pi+ pi- isobar from omega decay
+  // isobar2 is pi+ pi- isobar from omega Decay
   lorentzTransform Boost;
   
   threeVec zeroVec = threeVec (0.0, 0.0, 0.0);
@@ -7239,7 +7239,7 @@ void etaprimepi(int argc, char *argv[],Particle_t Beam,Particle_t Pi)
 
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
      
     etaprime_p = CMmomentum(resonance_mass,ETAPRIME_MASS,pimass);
@@ -7247,7 +7247,7 @@ void etaprimepi(int argc, char *argv[],Particle_t Beam,Particle_t Pi)
     etaprime.t(sqrt (etaprime.V().lenSq () + pow (ETAPRIME_MASS, 2.0)));
     pi.set(sqrt (etaprime.V().lenSq () + pow (PI_MASS, 2.0)),zeroVec - etaprime.V());
 
-     // code to do etaprime decay
+     // code to do etaprime Decay
     double himass = ETAPRIME_MASS - ETA_MASS;
     double lomass = 2 * PI_MASS;
     double isobar2_mass = randm(lomass,himass);
@@ -7257,7 +7257,7 @@ void etaprimepi(int argc, char *argv[],Particle_t Beam,Particle_t Pi)
     eta.set(sqrt(isobar2.V().lenSq() + pow(ETA_MASS,2.0)),zeroVec - isobar2.V());
 
  
-    // isobar2 decay
+    // isobar2 Decay
     double piplus_p = CMmomentum(isobar2_mass,PI_MASS,PI_MASS);
 
     piplus.polar( piplus_p, acos (randm (-0.999999, 0.999999)), randm (-M_PI, M_PI)); 
@@ -7274,7 +7274,7 @@ void etaprimepi(int argc, char *argv[],Particle_t Beam,Particle_t Pi)
 
 
     
-    // eta decay to 2 gamma, in eta rest frame
+    // eta Decay to 2 gamma, in eta rest frame
     double gam1_p = CMmomentum (ETA_MASS, 0.0, 0.0);
     gamma1.polar(gam1_p,acos (randm (-0.999999, 0.999999)),randm (-M_PI, M_PI)); 
     gamma1.t(gam1_p);
@@ -7682,7 +7682,7 @@ void test100(int argc, char *argv[])
     recoil.set(sqrt(resonance.V().lenSq() +  pow (PROTON_MASS, 2.0)),zeroVec - resonance.V());
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double isobar1_p = CMmomentum (resonance_mass, isobar1_mass, PI_MASS);
      
@@ -7697,7 +7697,7 @@ void test100(int argc, char *argv[])
 
 
     /*
-     *  now do decay in isobar1 rest frame
+     *  now do Decay in isobar1 rest frame
      */
     // pi pi case
     double piplus_p = CMmomentum (isobar1_mass, PI_MASS,PI_MASS);
@@ -8940,7 +8940,7 @@ void c1c2(int argc,char **argv,Particle_t Beam,Particle_t Target,Particle_t C1,P
 
 
     /*
-     *  now do decay in isobar1 rest frame
+     *  now do Decay in isobar1 rest frame
      */
     
 
@@ -9212,7 +9212,7 @@ void twobody (int argc, char *argv[],Particle_t Beam,Particle_t Target,Particle_
     c2.set(sqrt(c1.V().lenSq() +  pow (Mass(C2), 2.0)),zeroVec - c1.V());
 
     
-    // decay c1, in its rest frame
+    // Decay c1, in its rest frame
     if (decay) {
       double d1_p = CMmomentum (Mass(C1), Mass(D1),Mass(D2));
       d1.polar(d1_p,acos (randm (-0.999999, 0.999999)),randm (-M_PI, M_PI)); 
@@ -9610,7 +9610,7 @@ void body3 (int argc, char *argv[],Particle_t Beam,Particle_t Cplus,Particle_t C
     resonance = fourVec(resonance_mass,threeVec(0.0,0.0,0.0));
 
     /*
-     *  now do decay in resonance rest frame
+     *  now do Decay in resonance rest frame
      */
     double isobar1_p = CMmomentum (resonance_mass, isobar1_mass, Mass(N0));
      
@@ -9625,7 +9625,7 @@ void body3 (int argc, char *argv[],Particle_t Beam,Particle_t Cplus,Particle_t C
 
 
     /*
-     *  now do decay in isobar1 rest frame
+     *  now do Decay in isobar1 rest frame
      */
     // c+ c-
     double cplus_p = CMmomentum (isobar1_mass, Mass(Cplus),Mass(Cminus));
@@ -9635,7 +9635,7 @@ void body3 (int argc, char *argv[],Particle_t Beam,Particle_t Cplus,Particle_t C
     cplus.t(sqrt (cplus.V().lenSq () + pow (Mass(Cplus), 2.0)));
     cminus.set(sqrt (cplus.V().lenSq () + pow (Mass(Cminus), 2.0)),zeroVec - cplus.V());
     
-    // neutral decay to 2gamma, in pi0 rest frame
+    // neutral Decay to 2gamma, in pi0 rest frame
     if (decay) {
     double gam1_p = CMmomentum (Mass(N0), 0.0, 0.0);
     gamma1.polar(gam1_p,acos (randm (-0.999999, 0.999999)),randm (-M_PI, M_PI)); 
@@ -10032,7 +10032,7 @@ void bcpcm(int argc, char *argv[],Particle_t Beam,Particle_t Part1,Particle_t Pa
 
 
     /*
-     *  now do decay in isobar1 rest frame
+     *  now do Decay in isobar1 rest frame
      */
     // c+ c-
     double cplus_p = CMmomentum (resonance_mass, Mass(Part2),Mass(Part3));

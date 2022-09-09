@@ -29,7 +29,7 @@ void wave::printFrames() const {
     cout << " m = " << this->_m << " eps = " << this->_epsilon << endl;
     cout << "momentum: "; this->get4P().print();
     cout << "decays to:" << endl;
-    if( !(this->Stable()) ) this->Decay()->printFrames();
+    if( !(this->Stable()) ) this->get_decay()->printFrames();
 }
 
 void wave::print() const {
@@ -46,11 +46,11 @@ void wave::print() const {
 		}
     cout << "momentum: "; this->get4P().print();
     cout << "decays to:" << endl;
-    if( !(this->Stable()) ) this->Decay()->print();
+    if( !(this->Stable()) ) this->get_decay()->print();
 }
 
 wave wave::fill(const event& e, int debug) {
-	decay* d;
+	Decay* d;
 	fourVec p;
 
 	if (debug) {
@@ -64,7 +64,7 @@ wave wave::fill(const event& e, int debug) {
 	    e.target().get4P().print();
 	}
 	this->_target = e.target().get4P();
-	d = this->Decay();
+	d = this->get_decay();
 	if (debug) {
 	    cout << "Calling fill for wave: " << endl;
 	}
@@ -91,7 +91,7 @@ wave & wave::setupFrames (int debug)
 	matrix < double >X (4, 4);
 	rotation R;
 	fourVec tempX,tempX_copy, tempBeam, tempTarget, tempChild1;
-	list<particle>::iterator child1 = this->Decay()->_children.begin();
+	list<particle>::iterator child1 = this->get_decay()->_children.begin();
 	threeVec N;
 
 	tempX = this->get4P ();
@@ -186,7 +186,7 @@ wave & wave::setupFrames (int debug)
 	this->_target *= L;
 
 	// setupFrames of children
-	this->Decay ()->setupFrames (L, debug);
+	this->get_decay ()->setupFrames (L, debug);
     }
     return *this;
 }
@@ -197,17 +197,17 @@ complex<double> wave::decayAmp(int debug) {
 		a = complex<double>(1,0);
 	} else if ( this->_b != 0.0 ) {
 		if(debug) {
-			cout << "calculate decay amplitude for expt wave b=" << this->_b;
+			cout << "calculate Decay amplitude for expt wave b=" << this->_b;
 			cout << " t=" << this->_t << endl;
 		}
-		decay* d = this->Decay();
+		Decay* d = this->get_decay();
 		a = d->expt_amp(this->_b,this->_t,debug);
 	} else {
 		if(debug) {
-			cout << "calculate decay amplitude for wave J=" << this->J();
+			cout << "calculate Decay amplitude for wave J=" << this->J();
 			cout << " m=" << this->_m << endl;
 		}
-		decay* d = this->Decay();
+		Decay* d = this->get_decay();
 		a = d->amp(this->J(),this->_m,debug);
 	}
 	return a;
@@ -233,14 +233,14 @@ string wave::sprint(string space) {
 	s+= space;
 	s+= "{";
 	list<particle>::iterator c;
-	for( c  = this->Decay()->_children.begin(); c != this->Decay()->_children.end(); c++) {
+	for( c  = this->get_decay()->_children.begin(); c != this->get_decay()->_children.end(); c++) {
 		s+= space;
 		s+= c->sprint(space);
 	}
 	s+= space;
-	s+= itos(this->Decay()->L() );
+	s+= itos(this->get_decay()->L() );
 	s+= space;
-	s+= itos(this->Decay()->S() );
+	s+= itos(this->get_decay()->S() );
 	s+= space;
 	s+= "};";
 	

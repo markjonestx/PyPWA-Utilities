@@ -176,7 +176,7 @@ void bpn(int argc, char *argv[],Particle_t Beam,Particle_t Part1,Particle_t Part
     leading.polar(resonance_p,acos(costheta),cmphi = randm(-M_PI,M_PI));
     leading.t(sqrt(resonance_p * resonance_p + Mass(Part1) * Mass(Part1)));
 
-    // now decay leading
+    // now Decay leading
 
     double d_p = CMmomentum(Mass(Part1),Mass(D1),Mass(D2));
     double cth = randm(-1,1);
@@ -209,7 +209,7 @@ void bpn(int argc, char *argv[],Particle_t Beam,Particle_t Part1,Particle_t Part
 
 
     /*
-     *  now do decay in isobar1 rest frame
+     *  now do Decay in isobar1 rest frame
      */
     // c+ c-
     double cplus_p = CMmomentum (resonance_mass, Mass(Part2),Mass(Part3));

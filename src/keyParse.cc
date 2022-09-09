@@ -57,7 +57,7 @@ typedef union{
         std::complex<double>* Cnum;
         double Fnum;
         char string[100];
-        decay* Decay;
+        Decay* Decay;
         particle* Particle;
 } yystype;
 # define YYSTYPE yystype
@@ -159,7 +159,7 @@ static const char *const yytname[] =
   "PARTICLENAME", "DEBUG", "CHANNEL", "MODE", "MASSDEP", "HELICITY",
   "'+'", "'-'", "'*'", "'='", "';'", "','", "'('", "')'", "'{'", "'}'",
   "'['", "']'", "'0'", "input", "statement", "waveexp", "wave",
-  "resonance", "quantum_nums", "quantum_num", "decay", "particle",
+  "resonance", "quantum_nums", "quantum_num", "Decay", "particle",
   "pstate", "particleID", "particleCharge", "complex", 0
 };
 #endif
@@ -1108,7 +1108,7 @@ case 15:
                         wv.print();
                 }
                 if (debug) {
-                        cout << "This should compute decay amplitude expt wave" << endl;
+                        cout << "This should compute Decay amplitude expt wave" << endl;
                 }
                 double t = 0.0;
                 fourVec t_init(0.0,threeVec(0.0,0.0,0.0));
@@ -1155,7 +1155,7 @@ case 18:
 case 19:
 #line 225 "keyParse.yy"
 {
-                decay* d = new decay;
+                Decay* d = new Decay;
                 d->addChild(*yyvsp[-3].Particle);
                 d->addChild(*yyvsp[-2].Particle);
                 delete yyvsp[-3].Particle;
@@ -1168,7 +1168,7 @@ case 19:
 case 20:
 #line 235 "keyParse.yy"
 {
-                decay* d = new decay;
+                Decay* d = new Decay;
                 d->addChild(*yyvsp[-5].Particle);
                 d->addChild(*yyvsp[-4].Particle);
                 delete yyvsp[-5].Particle;
@@ -1189,7 +1189,7 @@ case 20:
 case 21:
 #line 253 "keyParse.yy"
 {
-                decay* d = new decay;
+                Decay* d = new Decay;
                 d->addChild(*yyvsp[-5].Particle);
                 d->addChild(*yyvsp[-4].Particle);
                 delete yyvsp[-5].Particle;
@@ -1209,7 +1209,7 @@ case 21:
 case 22:
 #line 270 "keyParse.yy"
 {
-                decay* d = new decay;
+                Decay* d = new Decay;
                 d->addChild(*yyvsp[-8].Particle);
                 d->addChild(*yyvsp[-7].Particle);
                 delete yyvsp[-8].Particle;
@@ -1236,7 +1236,7 @@ case 22:
 case 23:
 #line 294 "keyParse.yy"
 {
-                decay* d = new decay;
+                Decay* d = new Decay;
                 d->addChild(*yyvsp[-4].Particle);
                 d->addChild(*yyvsp[-3].Particle);
                 delete yyvsp[-4].Particle;
@@ -1249,7 +1249,7 @@ case 23:
 case 24:
 #line 304 "keyParse.yy"
 {
-                decay* d = new decay;
+                Decay* d = new Decay;
                 d->addChild(*yyvsp[-4].Particle);
                 d->addChild(*yyvsp[-3].Particle);
                 d->addChild(*yyvsp[-2].Particle);

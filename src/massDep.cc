@@ -17,7 +17,7 @@ complex<double> breitWigner::val(particle& p)
     double q0 = p.q0 ();   
     double m = ~(p.get4P ());
     double GammaV;
-    int l = p.Decay ()->L ();
+    int l = p.get_decay()->L ();
 
     GammaV = Gamma0*(m0/m)*(q/q0)*(pow(F(l,q),2)/pow(F(l,q0),2));
     ret = (m0*Gamma0)/(m0*m0-m*m-complex<double>(0,1)*m0*GammaV);

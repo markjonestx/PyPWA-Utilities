@@ -12,73 +12,73 @@
 #include <massDep.h>
 
 	
-	class decay;
-	class massDep;
+class Decay;
+class massDep;
 
-	class particle:public particleData {
-		private:
-			
-		static int _particle_debug;
-		int _lambda;
-		int _charge;
-		fourVec _p;
-		decay *_decay;
-		int _index;
-		std::list<int> _helicities;
-		int _inRestFrame;
-		massDep* _massDep;
-	
-		public:
-			
-		particle();
-		particle(const particleData&,int);
-		particle(const particle&);
-		~particle();
-		particle& operator=(const particle&);
-	
-		particle& setCharge(int);
-		particle& set4P(const fourVec&);
-		particle& set3P(const threeVec&);
-		particle& Index(int);
-		particle& setDecay(const decay&);
-		particle& setMassDep(massDep* md) {_massDep = md; return *this;}
-		friend particle operator*(const lorentzTransform&, const particle&);
-		particle& operator*=(const lorentzTransform&);
+class particle: public particleData {
 
-		decay* Decay() const;
-		int Stable() const;
-		int operator==(const particle&);
-		int operator!=(const particle&);
-		int operator<(const particle&);
+private:
+    static int _particle_debug;
+    int _lambda;
+    int _charge;
+    fourVec _p;
+    Decay *_decay;
+    int _index;
+    std::list<int> _helicities;
+    int _inRestFrame;
+    massDep* _massDep;
 
-		fourVec get4P() const;
-		fourVec* get4P(particle* p, int debug = 0) const;
-		threeVec get3P() const;
-		int Index() const;
-		int Charge() const;
-		std::list<int>& helicities();
-		particle& addHelicity(int lam);
-		int is(std::string) const;
-		fourVec setupFrames(int debug = 0);
-		std::string sprint(std::string space = " ");
-		double q() const;
-		double q0() const;
-		std::complex<double> breitWigner() const;
+public:
 
-		std::complex<double> decayAmp(int, int debug = 0);
+    particle();
+    particle(const particleData&,int);
+    particle(const particle&);
+    ~particle();
+    particle& operator=(const particle&);
 
-		void print() const;
-		void printFrames() const;
+    particle& setCharge(int);
+    particle& set4P(const fourVec&);
+    particle& set3P(const threeVec&);
+    particle& Index(int);
+    particle& setDecay(const Decay&);
+    particle& setMassDep(massDep* md) {_massDep = md; return *this;}
+    friend particle operator*(const lorentzTransform&, const particle&);
+    particle& operator*=(const lorentzTransform&);
 
-		void debug(int d = 1) {
-			_particle_debug = d;
-		}
+    Decay* get_decay() const;
+    int Stable() const;
+    int operator==(const particle&);
+    int operator!=(const particle&);
+    int operator<(const particle&);
 
-	};
+    fourVec get4P() const;
+    fourVec* get4P(particle* p, int debug = 0) const;
+    threeVec get3P() const;
+    int Index() const;
+    int Charge() const;
+    std::list<int>& helicities();
+    particle& addHelicity(int lam);
+    int is(std::string) const;
+    fourVec setupFrames(int debug = 0);
+    std::string sprint(std::string space = " ");
+    double q() const;
+    double q0() const;
+    std::complex<double> breitWigner() const;
+
+    std::complex<double> decayAmp(int, int debug = 0);
+
+    void print() const;
+    void printFrames() const;
+
+    void debug(int d = 1) {
+        _particle_debug = d;
+    }
+
+};
 
 	
 class event;
-class decay {
+class Decay {
 	
 	private:
 		// list<particle> _children;
@@ -92,26 +92,26 @@ class decay {
 	
  	public:
 		std::list<particle> _children;
-		decay();
-		decay(const decay&);
-		~decay();
+		Decay();
+		Decay(const Decay&);
+		~Decay();
 		
-		decay& addChild(const particle&);
-		decay& setL(int);
-		decay& setS(int);
+		Decay& addChild(const particle&);
+		Decay& setL(int);
+		Decay& setS(int);
 		int L() const;
 		int S() const;
 
-		decay& calculateS();
+		Decay& calculateS();
 		fourVec fill(const event&, int debug=0);
 		fourVec* get4P(particle* part, int debug=0);
 
-		decay& setupFrames(lorentzTransform T, int debug=0);
+		Decay& setupFrames(lorentzTransform T, int debug=0);
 		std::complex<double> amp(int,int,int debug=0) const;
 		std::complex<double> expt_amp(double b, double t, int debug=0) const;
 		
-		decay& operator*=(const lorentzTransform& L);
-		decay& operator=(const decay&);
+		Decay& operator*=(const lorentzTransform& L);
+		Decay& operator=(const Decay&);
 		
 		void print() const;
 		void printFrames() const;

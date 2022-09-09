@@ -7,7 +7,7 @@ typedef union{
         std::complex<double>* Cnum;
         double Fnum;
         char string[100];
-        decay* Decay;
+        Decay* Decay;
         particle* Particle;
 } yystype;
 # define YYSTYPE yystype

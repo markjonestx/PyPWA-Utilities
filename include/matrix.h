@@ -113,7 +113,7 @@ Type matrix<Type>::det() const
 		dt *= r.el(i,i);
 
 	if (indx)
-		delete indx;
+		delete[] indx;
 	return(d * dt);
 }
 
@@ -199,7 +199,7 @@ matrix<Type> matrix<Type>::_LU(int *d,int *indx) const
 		}
 	       }
 	if (vv)
-		delete vv;
+		delete[] vv;
 	r.setStatus(1);
 	return(r);
 				
@@ -215,7 +215,7 @@ matrix<Type> matrix<Type>::LU() const
 	matrix<Type> r(this->_nrows, this->_ncols);
 	r = this->_LU(&d,indx);
 	if (indx)
-		delete indx;
+		delete[] indx;
 	return(r);
 }
 
@@ -268,7 +268,7 @@ matrix<Type> matrix<Type>::inv()
 	}
 	r.setStatus(1);
 	if (indx)
-		delete indx;
+		delete[] indx;
 	}
 	else {
 		 r= lu;

@@ -199,7 +199,7 @@ void cpcmEXP(int argc, char *argv[],Particle_t Beam,Particle_t Cplus,Particle_t 
 
 
     /*
-     *  now do decay in isobar1 rest frame
+     *  now do Decay in isobar1 rest frame
      */
     // c+ c-
     double cplus_p = CMmomentum (resonance_mass, Mass(Cplus),Mass(Cminus));
