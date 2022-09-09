@@ -51,36 +51,58 @@ typedef unsigned long long   uint64;
  * The IBM xlc compiler seem to understand 'long long', but it is not documented, so...
 */
 
-typedef int                   int32;
-typedef unsigned int         uint32;
-typedef long long             int64;
-typedef unsigned long long   uint64;
+typedef int int32;
+typedef unsigned int uint32;
+typedef long long int64;
+typedef unsigned long long uint64;
 
 #endif
 
-typedef short             int16;
-typedef unsigned short   uint16;
-typedef char               int8;
-typedef unsigned char     uint8;
+typedef short int16;
+typedef unsigned short uint16;
+typedef char int8;
+typedef unsigned char uint8;
 
-typedef float    float32;
-typedef double   float64;
+typedef float float32;
+typedef double float64;
 
 /* These are the 'float' structures ... */
 
-typedef struct { float32 x,y,z; }               vector3_t;
-typedef struct { float32 t; vector3_t space; }  vector4_t;
-typedef struct { float32 rho,phi,z;}            vector3cyl_t;
-typedef struct { vector3cyl_t vert[8];}         cylcoord_t;
-typedef struct { vector3_t    vert[8];}         cartcoord_t;
+typedef struct {
+    float32 x, y, z;
+} vector3_t;
+typedef struct {
+    float32 t;
+    vector3_t space;
+} vector4_t;
+typedef struct {
+    float32 rho, phi, z;
+} vector3cyl_t;
+typedef struct {
+    vector3cyl_t vert[8];
+} cylcoord_t;
+typedef struct {
+    vector3_t vert[8];
+} cartcoord_t;
 
 /* ... and their 'double' siblings */
 
-typedef struct { float64 x,y,z; } dvector3_t;
-typedef struct { float64 t; dvector3_t space; } dvector4_t;
-typedef struct { float64 rho,phi,z;     } dvector3cyl_t;
-typedef struct { dvector3cyl_t vert[8]; } dcylcoord_t;
-typedef struct { dvector3_t    vert[8]; } dcartcoord_t;
+typedef struct {
+    float64 x, y, z;
+} dvector3_t;
+typedef struct {
+    float64 t;
+    dvector3_t space;
+} dvector4_t;
+typedef struct {
+    float64 rho, phi, z;
+} dvector3cyl_t;
+typedef struct {
+    dvector3cyl_t vert[8];
+} dcylcoord_t;
+typedef struct {
+    dvector3_t vert[8];
+} dcartcoord_t;
 
 
 /*

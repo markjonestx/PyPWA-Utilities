@@ -8,96 +8,97 @@
 #include <Vec.h>
 #include <lorentz.h>
 #include <particle.h>
-	
-	extern particleDataTable PDGtable;
-	
-	class particle;
-	class event {
-		protected:
-			std::list<particle> _initial;
-			std::list<particle> _final;
-			particle* _beam;
-			particle* _target;
-			int _ioversion;
-		public:
-			
-	
-	event();
 
-	event(const event&);
-	
-	~event();
+extern particleDataTable PDGtable;
 
-	event& operator=(const event& e);
+class particle;
 
-	
-	event& addfinal(const particle&);	
-
-	event& addinitial(const particle& p);	
-
-	event& erase();
-
-	event& beam(const particle&);	
-
-	event& target(const particle&);	
+class event {
+protected:
+    std::list<particle> _initial;
+    std::list<particle> _final;
+    particle *_beam;
+    particle *_target;
+    int _ioversion;
+public:
 
 
-	
-	int OK(double epsilon) const;	
+    event();
 
-	particle beam() const;	
+    event(const event &);
 
-	particle target() const;	
+    ~event();
 
-	fourVec getPartPFinal(std::string name,int charge,int index,int debug=0) const;
+    event &operator=(const event &e);
 
-	fourVec getPartPInitial(std::string name,int charge,int index) const;
 
-	int f_charge() const;
+    event &addfinal(const particle &);
 
-	std::list<particle> f_mesons() const;
+    event &addinitial(const particle &p);
 
-	std::list<particle> f_baryons() const;
+    event &erase();
 
-	std::list<particle> f_particles() const;
+    event &beam(const particle &);
 
-	particle f_particle(const std::string& name, int charge, int index) const;
+    event &target(const particle &);
 
-	int i_charge() const;
 
-	std::list<particle> i_mesons() const;
+    int OK(double epsilon) const;
 
-	std::list<particle> i_baryons() const;
+    particle beam() const;
 
-	std::list<particle> i_particles() const;
+    particle target() const;
 
-	particle i_particle(const std::string& name, int charge, int index) const;
+    fourVec
+    getPartPFinal(std::string name, int charge, int index, int debug = 0) const;
 
-	threeVec mesonPlane() const;
+    fourVec getPartPInitial(std::string name, int charge, int index) const;
 
-	threeVec baryonPlane() const;
+    int f_charge() const;
 
-	
-	void print() const;
+    std::list<particle> f_mesons() const;
 
-	friend std::istream& operator>>(std::istream& is, event& e);	
+    std::list<particle> f_baryons() const;
 
-	friend std::ostream& operator<<(std::ostream& os, event& e);	
+    std::list<particle> f_particles() const;
 
-	std::istream& read1(std::istream& is);	
+    particle f_particle(const std::string &name, int charge, int index) const;
 
-	std::ostream& write1(std::ostream& os);	
+    int i_charge() const;
 
-	std::istream& read2(std::istream& is);
+    std::list<particle> i_mesons() const;
 
-	std::ostream& write2(std::ostream& os);
+    std::list<particle> i_baryons() const;
 
-	event& setIOVersion(int ver);
+    std::list<particle> i_particles() const;
 
-	
-	friend event operator*(const lorentzTransform&,const event&);
-	 
-	};
-	
+    particle i_particle(const std::string &name, int charge, int index) const;
+
+    threeVec mesonPlane() const;
+
+    threeVec baryonPlane() const;
+
+
+    void print() const;
+
+    friend std::istream &operator>>(std::istream &is, event &e);
+
+    friend std::ostream &operator<<(std::ostream &os, event &e);
+
+    std::istream &read1(std::istream &is);
+
+    std::ostream &write1(std::ostream &os);
+
+    std::istream &read2(std::istream &is);
+
+    std::ostream &write2(std::ostream &os);
+
+    event &setIOVersion(int ver);
+
+
+    friend event operator*(const lorentzTransform &, const event &);
+
+};
+
 #endif
 

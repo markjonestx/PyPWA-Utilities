@@ -1,5 +1,5 @@
-	double conj(double x) {
-		return(x);
-	}
+double conj(double x) {
+    return (x);
+}
 
 
