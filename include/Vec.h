@@ -35,8 +35,6 @@ public:
 
     friend threeVec operator*(double, const threeVec &);
 
-    friend threeVec operator*(const threeVec &, double);
-
     threeVec &operator=(const threeVec &);
 
     threeVec &operator+=(const threeVec &);
@@ -49,11 +47,6 @@ public:
 
     threeVec &scan(std::istream &is = std::cin);
 
-    threeVec write(std::ostream &) const;
-
-    threeVec read(std::istream &);
-
-
     double &operator[](int);
 
     double &el(int i) { return this->operator[](i); }
@@ -63,15 +56,8 @@ public:
 
     int operator==(const threeVec &) const;
 
-    int operator!=(const threeVec &) const;
-
     int operator<(const threeVec &) const;
 
-    int operator>(const threeVec &) const;
-
-    int operator>=(const threeVec &) const;
-
-    int operator<=(const threeVec &) const;
 
     double x() const;
 
@@ -151,10 +137,6 @@ public:
 
     fourVec &scan(std::istream & = std::cin);
 
-    fourVec write(std::ostream &) const;
-
-    fourVec read(std::istream &);
-
     fourVec mass(double);
 
     double &operator[](int);
@@ -167,15 +149,7 @@ public:
 
     int operator==(const fourVec &) const;
 
-    int operator!=(const fourVec &) const;
-
     int operator<(const fourVec &) const;
-
-    int operator>(const fourVec &) const;
-
-    int operator>=(const fourVec &) const;
-
-    int operator<=(const fourVec &) const;
 
     threeVec V() const;
 
@@ -191,8 +165,6 @@ public:
 
     double theta() const;
 
-    double cosTheta() const;
-
     double phi() const;
 
     fourVec &V(threeVec V);
@@ -204,8 +176,6 @@ public:
     fourVec &z(double z);
 
     fourVec &t(double t);
-
-    fourVec &cartesian(double x, double y, double z);
 
     fourVec &polar(double r, double theta, double phi);
 

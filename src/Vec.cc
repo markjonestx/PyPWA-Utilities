@@ -60,10 +60,6 @@ threeVec operator*(double a, const threeVec &V) {
     return threeVec(a * V._x, a * V._y, a * V._z);
 }
 
-threeVec operator*(const threeVec &V, double a) {
-    return (a * V);
-}
-
 threeVec &threeVec::operator=(const threeVec &V) {
     this->_x = V._x;
     this->_y = V._y;
@@ -114,21 +110,6 @@ istream &operator>>(istream &is, threeVec &V) {
     return is;
 }
 
-threeVec threeVec::write(ostream &os) const {
-    os.write((char *) &(this->_x), sizeof(this->_x));
-    os.write((char *) &(this->_y), sizeof(this->_y));
-    os.write((char *) &(this->_z), sizeof(this->_z));
-    os.flush();
-    return *this;
-}
-
-threeVec threeVec::read(istream &is) {
-    is.read((char *) &(this->_x), sizeof(this->_x));
-    is.read((char *) &(this->_y), sizeof(this->_y));
-    is.read((char *) &(this->_z), sizeof(this->_z));
-    return *this;
-}
-
 double &threeVec::operator[](int index) {
     assert(index >= 0 && index <= 2);
     switch (index) {
@@ -142,7 +123,7 @@ double &threeVec::operator[](int index) {
             return _z;
             break;
         default:
-            cerr << "threeVec: error: index " << index << " out of bounds";
+            cerr << "ThreeVector: error: index " << index << " out of bounds";
             cerr << endl;
             break;
     }
@@ -163,24 +144,8 @@ int threeVec::operator==(const threeVec &V) const {
             && this->_z == V._z);
 }
 
-int threeVec::operator!=(const threeVec &V) const {
-    return (!(*this == V));
-}
-
 int threeVec::operator<(const threeVec &V) const {
     return (this->lenSq() < V.lenSq());
-}
-
-int threeVec::operator>(const threeVec &V) const {
-    return (this->lenSq() > V.lenSq());
-}
-
-int threeVec::operator>=(const threeVec &V) const {
-    return (this->lenSq() >= V.lenSq());
-}
-
-int threeVec::operator<=(const threeVec &V) const {
-    return (this->lenSq() <= V.lenSq());
 }
 
 double threeVec::x() const {
@@ -350,19 +315,6 @@ istream &operator>>(istream &is, fourVec &v) {
     return is;
 }
 
-fourVec fourVec::write(ostream &os) const {
-    os.write((char *) &(this->_t), sizeof(this->_t));
-    this->_V.write(os);
-    os.flush();
-    return *this;
-}
-
-fourVec fourVec::read(istream &is) {
-    is.read((char *) &(this->_t), sizeof(this->_t));
-    this->_V.read(is);
-    return *this;
-}
-
 double &fourVec::operator[](int index) {
     assert(index >= 0 && index <= 3);
     switch (index) {
@@ -397,24 +349,8 @@ int fourVec::operator==(const fourVec &v) const {
     return (this->_t == v._t && (this->_V == v._V));
 }
 
-int fourVec::operator!=(const fourVec &v) const {
-    return (!(*this == v));
-}
-
 int fourVec::operator<(const fourVec &v) const {
     return (this->lenSq() < v.lenSq());
-}
-
-int fourVec::operator>(const fourVec &v) const {
-    return (this->lenSq() > v.lenSq());
-}
-
-int fourVec::operator>=(const fourVec &v) const {
-    return (this->lenSq() >= v.lenSq());
-}
-
-int fourVec::operator<=(const fourVec &v) const {
-    return (this->lenSq() <= v.lenSq());
 }
 
 threeVec fourVec::V() const {
@@ -443,10 +379,6 @@ double fourVec::r() const {
 
 double fourVec::theta() const {
     return acos(this->_V.cosTheta());
-}
-
-double fourVec::cosTheta() const {
-    return (this->_V.cosTheta());
 }
 
 double fourVec::phi() const {
@@ -489,11 +421,6 @@ fourVec &fourVec::z(double z) {
 
 fourVec &fourVec::t(double t) {
     this->_t = t;
-    return *this;
-}
-
-fourVec &fourVec::cartesian(double x, double y, double z) {
-    this->_V.cartesian(x, y, z);
     return *this;
 }
 
