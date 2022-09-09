@@ -1,7 +1,10 @@
-cmake_minimum_required (VERSION 2.8.12)
-project (PWA_UTILS)
+cmake_minimum_required(VERSION 3.1)
+project(PWA_UTILS VERSION 1.1
+		DESCRIPTION "A Modern revision of PWA2000"
+		LANGUAGES CXX
+)
 
-set(CMAKE_CXX_STANDARD 98)
+set(CMAKE_CXX_STANDARD 11)
 
 include_directories (include)
 
@@ -39,10 +42,10 @@ add_executable (hgamp ${GAMP_SOURCES} src/waveH.cc)
 add_executable (ppgen ${PPGEN_SOURCES})
 add_executable (vamp src/vamp.cc)
 
-target_link_libraries (gamp pp -static)
-target_link_libraries (hgamp pp -static)
-target_link_libraries (ppgen pp -static)
-target_link_libraries (vamp -static)
+target_link_libraries (gamp pp)
+target_link_libraries (hgamp pp)
+target_link_libraries (ppgen pp)
+target_link_libraries (vamp)
 
 install (TARGETS gamp DESTINATION bin)
 install (TARGETS hgamp DESTINATION bin)
