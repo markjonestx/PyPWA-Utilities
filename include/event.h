@@ -1,5 +1,4 @@
-#ifndef EVENT_H
-#define EVENT_H
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -99,6 +98,3 @@ public:
     friend event operator*(const lorentzTransform &, const event &);
 
 };
-
-#endif
-

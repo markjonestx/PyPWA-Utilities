@@ -6,8 +6,7 @@
 #define SUCCESS 1
 #define FAILURE 0
 
-#ifndef ntypesH_INCLUDED
-#define ntypesH_INCLUDED
+#pragma once
 
 /*
 static const char sccsid_ntypesH[] = "@(#)ntypes.h\t4.1\tCreated 10 Dec 1995 18:48:47, \tcompiled "__DATE__;
@@ -108,10 +107,3 @@ typedef struct {
 /*
  * Kludge to get rid of the Particle_t without breaking everybody's code
 */
-
-
-#endif
-/* end file */
-
-
-

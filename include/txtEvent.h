@@ -1,5 +1,4 @@
-#ifndef TXTEVENT_H
-#define TXTEVENT_H
+#pragma once
 
 #include <string>
 #include <list>
@@ -100,5 +99,3 @@ public:
 
     int code(int i) { return (_code = i); }
 };
-
-#endif

@@ -7,8 +7,7 @@
  * Created on March 27, 2012, 7:53 PM
  */
 
-#ifndef PPGEN_H
-#define    PPGEN_H
+#pragma once
 
 #include <stdlib.h>
 #include <string.h>
@@ -224,7 +223,3 @@ float eprime(float theta, float Qsq, float E);
 double Mass(Particle_t pid);
 
 void PrintParticleID();
-
-
-#endif    /* PPGEN_H */
-

@@ -1,6 +1,4 @@
-#ifndef PPUTIL_H
-#define PPUTIL_H
-
+#pragma once
 #include <iostream>
 #include <string>
 #include <complex>
@@ -99,7 +97,3 @@ std::string chargetos(int);
 Geant_ID name2id(std::string name, int q);
 
 std::string id2name(Geant_ID);
-
-#endif
-
-

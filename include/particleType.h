@@ -1,8 +1,7 @@
 /*
  * particleType.h
 */
-#ifndef particleTypeH_INCLUDED
-#define particleTypeH_INCLUDED
+#pragma once
 
 #define SC_ENERGY 1
 #define SC_MASS 2
@@ -125,6 +124,3 @@ BIT     HEX
 #define PART_BEAM      BIT(0)
 #define PART_FINAL      BIT(1)
 
-
-#endif
-/* end file */

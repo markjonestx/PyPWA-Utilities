@@ -1,5 +1,4 @@
-#ifndef WAVEH_H
-
+#pragma once
 #include <lorentz.h>
 #include <particle.h>
 #include <event.h>
@@ -75,9 +74,3 @@ public:
 
     void printFrames() const;
 };
-
-#define WAVEH_H
-#endif
-
-
-

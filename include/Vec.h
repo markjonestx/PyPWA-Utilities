@@ -1,6 +1,4 @@
-#ifndef __VEC_H_
-#define __VEC_H_
-
+#pragma once
 #include <fstream>
 #include <cmath>
 #include <cassert>
@@ -233,6 +231,3 @@ std::istream &operator>>(std::istream &is, threeVec &V);
 std::ostream &operator<<(std::ostream &os, const fourVec &v);
 
 std::istream &operator>>(std::istream &is, fourVec &v);
-
-#endif
-

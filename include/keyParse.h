@@ -1,5 +1,4 @@
-#ifndef BISON_KEYPARSE_H
-# define BISON_KEYPARSE_H
+#pragma once
 
 #ifndef YYSTYPE
 typedef union {
@@ -27,5 +26,3 @@ typedef union {
 
 
 extern YYSTYPE keylval;
-
-#endif /* not BISON_KEYPARSE_H */

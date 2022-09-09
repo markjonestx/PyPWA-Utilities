@@ -1,5 +1,4 @@
-#ifndef __PARTICLEDATA_H_
-#define __PARTICLEDATA_H_
+#pragma once
 
 #include <string>
 #include <iostream>
@@ -176,7 +175,3 @@ public:
 
     void dump() const;
 };
-
-#endif
-
-

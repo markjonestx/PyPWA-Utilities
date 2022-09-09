@@ -1,6 +1,4 @@
-#ifndef plibH_INCLUDED
-#define plibH_INCLUDED
-
+#pragma once
 #include <Vec.h>
 #include <matrix.h>
 
@@ -56,5 +54,3 @@ double Fdist(double f, int nu1, int nu2);
 double gammaFnc(double x);
 
 double factrl(int n);
-
-#endif

@@ -1,6 +1,4 @@
-#ifndef __MATRIX_H_
-#define __MATRIX_H_
-
+#pragma once
 #include <iostream>
 #include <cassert>
 #include <cstring>
@@ -574,7 +572,3 @@ fourVec operator*=(fourVec &v, const matrix<Type> &M) {
     v = M * v;
     return v;
 }
-
-#endif
-
-

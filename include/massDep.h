@@ -1,6 +1,4 @@
-#ifndef MASSDEP_H
-#define MASSDEP_H
-
+#pragma once
 #include <iostream>
 #include <complex>
 #include <vector>
@@ -114,7 +112,3 @@ public:
 
     std::complex<double> val(particle &);
 };
-
-#endif
-
-

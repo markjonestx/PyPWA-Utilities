@@ -1,5 +1,4 @@
-#ifndef __PARTICLE_H_
-#define __PARTICLE_H_
+#pragma once
 
 #include <list>
 #include <string>
@@ -168,8 +167,3 @@ public:
     }
 
 };
-
-
-#define _PARTICLE_H
-#endif
-

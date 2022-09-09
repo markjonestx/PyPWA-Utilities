@@ -1,6 +1,4 @@
-#ifndef __LORENTZ_H_
-#define __LORENTZ_H_
-
+#pragma once
 #include <cmath>
 #include <Vec.h>
 #include <matrix.h>
@@ -59,7 +57,3 @@ public:
     friend fourVec operator*=(fourVec &, const lorentzTransform &);
 
 };
-
-
-#endif
-
