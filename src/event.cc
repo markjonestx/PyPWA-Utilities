@@ -78,32 +78,6 @@ event &event::target(const particle &p) {
     return *this;
 }
 
-
-int event::OK(double epsilon = 1e-6) const {
-    list<particle>::const_iterator p;
-    int q_initial = 0;
-    int q_final = 0;
-    fourVec p_initial, p_final;
-    int q_conserved, p_conserved;
-
-    p = this->_initial.begin();
-    while (p != this->_initial.end()) {
-        q_initial += p->Charge();
-        p_initial += p->get4P();
-        p++;
-    }
-    p = this->_final.begin();
-    while (p != this->_final.end()) {
-        q_final += p->Charge();
-        p_final += p->get4P();
-        p++;
-    }
-    q_conserved = q_initial == q_final;
-    p_conserved = (p_initial - p_final).lenSq() < epsilon;
-
-    return (q_conserved && p_conserved);
-}
-
 particle event::beam() const {
     return (*(this->_beam));
 }
@@ -145,28 +119,6 @@ event::getPartPFinal(string name, int charge, int index, int debug) const {
     return (fourVec(0, threeVec(0, 0, 0)));
 }
 
-fourVec event::getPartPInitial(string name, int charge, int index) const {
-    int i = 1;
-    list<particle>::const_iterator p = this->_initial.begin();
-    while (p != this->_initial.end()) {
-        if (p->Name() == name && i++ == index) {
-            return p->get4P();
-        }
-    }
-    throw ("PartNotFound");
-    return (fourVec(0, threeVec(0, 0, 0)));
-}
-
-int event::f_charge() const {
-    int q = 0;
-    list<particle>::const_iterator p = _final.begin();
-
-    while (p != _final.end()) {
-        q += p->Charge();
-        p++;
-    }
-    return (q);
-}
 
 list<particle> event::f_mesons() const {
     list<particle> l;
@@ -194,37 +146,6 @@ list<particle> event::f_baryons() const {
     return (l);
 }
 
-list<particle> event::f_particles() const {
-    return (_final);
-}
-
-
-particle event::f_particle(const string &name, int charge, int index) const {
-    int i = 0;
-
-    list<particle>::const_iterator p = this->_final.begin();
-    while (p != this->_final.end()) {
-        if (p->Name() == name && p->Charge() == charge) {
-            i++;
-            if (i == index) {
-                return *p;
-            }
-        }
-        p++;
-    }
-    throw ("PartNotFound");
-}
-
-int event::i_charge() const {
-    int q = 0;
-    list<particle>::const_iterator p = _initial.begin();
-
-    while (p != _initial.end()) {
-        q += p->Charge();
-        p++;
-    }
-    return (q);
-}
 
 list<particle> event::i_mesons() const {
     list<particle> l;
@@ -251,84 +172,6 @@ list<particle> event::i_baryons() const {
     }
     return (l);
 }
-
-list<particle> event::i_particles() const {
-    return (_initial);
-}
-
-
-particle event::i_particle(const string &name, int charge, int index) const {
-    int i = 0;
-
-    list<particle>::const_iterator p = this->_initial.begin();
-    while (p != this->_initial.end()) {
-        if (p->Name() == name && p->Charge() == charge) {
-            i++;
-            if (i == index) {
-                return *p;
-            }
-        }
-        p++;
-    }
-    throw ("PartNotFound");
-}
-
-threeVec event::mesonPlane() const {
-    threeVec A, C, N;
-    list<particle> i, f;
-    list<particle>::const_iterator ip, fp;
-
-    i = this->i_mesons();
-    ip = i.begin();
-    while (ip != i.end()) {
-        A += ip->get3P();
-        ip++;
-    }
-
-    f = this->f_mesons();
-    fp = f.begin();
-    while (fp != f.end()) {
-        C += fp->get3P();
-        fp++;
-    }
-
-    if ((A < threeVec(1e-4, 0, 0)) || (C < threeVec(1e-4, 0, 0)))
-        return threeVec(0, 0, 0);
-
-    N = A / C;
-    N *= (1 / N.len());
-
-    return N;
-}
-
-threeVec event::baryonPlane() const {
-    threeVec B, D, N;
-    list<particle> i, f;
-    list<particle>::const_iterator ip, fp;
-
-    i = this->i_baryons();
-    ip = i.begin();
-    while (ip != i.end()) {
-        B += ip->get3P();
-        ip++;
-    }
-
-    f = this->f_baryons();
-    fp = f.begin();
-    while (fp != f.end()) {
-        D += fp->get3P();
-        fp++;
-    }
-
-    if ((B < threeVec(1e-4, 0, 0)) || (D < threeVec(1e-4, 0, 0)))
-        return threeVec(0, 0, 0);
-
-    N = B / D;
-    N *= (1 / N.len());
-
-    return N;
-}
-
 
 void event::print() const {
     cout << "beam: ";
@@ -491,16 +334,6 @@ istream &event::read1(istream &is) {
         }
     }
     return is;
-}
-
-event &event::setIOVersion(int ver) {
-    if (ver >= 1 && ver <= 2) {
-        this->_ioversion = ver;
-    } else {
-        std::cerr << "unknown io version " << ver << endl;
-        throw ("UnknownIOVersion");
-    }
-    return *this;
 }
 
 
