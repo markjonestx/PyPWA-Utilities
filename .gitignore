@@ -1,3 +1,11 @@
+# Ignore system files
+.nfs*
+.DS_Store
+
+# Ignore IDE directories
+.vscode/
+.idea/
+
 # Ignore the build directory.
 build/
-.vscode/
+*build*/
