@@ -15,8 +15,6 @@ public:
 
     virtual massDep *create() const = 0;
 
-    virtual massDep *clone() const = 0;
-
     virtual void print() { std::cout << "massDep"; }
 
     virtual std::complex<double> val(particle &) = 0;
@@ -34,8 +32,6 @@ public:
     // breitWigner& operator=(const breitWigner) {;}
     breitWigner *create() const { return new breitWigner(); }
 
-    breitWigner *clone() const { return new breitWigner(*this); }
-
     virtual void print() { std::cout << "breitWigner"; }
 
     std::complex<double> val(particle &);
@@ -52,8 +48,6 @@ public:
 
     // flat& operator=(const flat) {;}
     flat *create() const { return new flat(); }
-
-    flat *clone() const { return new flat(*this); }
 
     virtual void print() { std::cout << "flat"; }
 
@@ -86,8 +80,6 @@ public:
     // AMP_M& operator=(const AMP_M) {;}
     virtual massDep *create() const { return new AMP_M(); }
 
-    virtual massDep *clone() const { return new AMP_M(*this); }
-
     virtual void print() { std::cout << "AMP_M"; }
 
     std::complex<double> val(particle &);
@@ -106,9 +98,5 @@ public:
     // AMP_ves& operator=(const AMP_ves) {;}
     virtual massDep *create() const { return new AMP_ves(); }
 
-    virtual massDep *clone() const { return new AMP_ves(*this); }
-
     virtual void print() { std::cout << "AMP_ves"; }
-
-    std::complex<double> val(particle &);
 };

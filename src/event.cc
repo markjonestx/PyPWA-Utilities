@@ -120,59 +120,6 @@ event::getPartPFinal(string name, int charge, int index, int debug) const {
 }
 
 
-list<particle> event::f_mesons() const {
-    list<particle> l;
-    list<particle>::const_iterator p = _final.begin();
-
-    while (p != _final.end()) {
-        if (p->J() % 2 == 0) {
-            l.push_back(*p);
-        }
-        p++;
-    }
-    return (l);
-}
-
-list<particle> event::f_baryons() const {
-    list<particle> l;
-    list<particle>::const_iterator p = _final.begin();
-
-    while (p != _final.end()) {
-        if (p->J() % 2 == 1) {
-            l.push_back(*p);
-        }
-        p++;
-    }
-    return (l);
-}
-
-
-list<particle> event::i_mesons() const {
-    list<particle> l;
-    list<particle>::const_iterator p = _initial.begin();
-
-    while (p != _initial.end()) {
-        if (p->J() % 2 == 0) {
-            l.push_back(*p);
-        }
-        p++;
-    }
-    return (l);
-}
-
-list<particle> event::i_baryons() const {
-    list<particle> l;
-    list<particle>::const_iterator p = _initial.begin();
-
-    while (p != _initial.end()) {
-        if (p->J() % 2 == 1) {
-            l.push_back(*p);
-        }
-        p++;
-    }
-    return (l);
-}
-
 void event::print() const {
     cout << "beam: ";
     this->_beam->get4P().print();

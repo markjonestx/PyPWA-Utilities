@@ -20,9 +20,7 @@ using namespace std;
  * Created on March 27, 2012, 7:47 PM
  */
 
-#include <cstdlib>
 #include <iostream>
-#include <stdio.h>
 #include <time.h>
 #include <string.h>
 #include <math.h>
@@ -31,15 +29,6 @@ using namespace std;
 #include <txtEvent.h>
 
 using namespace std;
-
-
-
-extern "C" {
-#include <stdio.h>
-}
-
-using namespace std;
-
 
 #define SPEED_OF_LIGHT 3.0E8
 
@@ -103,30 +92,6 @@ int onList(int a, int n, int *l) {
         return (0);
     } else
         return (1);
-}
-
-int countchar(char *ptr, char c) {
-    int ret = 0;
-    while (*ptr) {
-        if (*ptr++ == c)
-            ret++;
-    }
-    return (ret);
-}
-
-
-int processList(char *arg, int **alist) {
-    char *word;
-    int i;
-    int nwords = countchar(arg, ',') + 1;
-    int *list = new int[nwords];
-    word = strtok(arg, "\n,");
-    for (i = 0; i < nwords; ++i) {
-        list[i] = atoi(word);
-        word = strtok(NULL, "\n,");
-    }
-    *alist = list;
-    return (nwords);
 }
 
 int main(int argc, char *argv[]) {
@@ -667,7 +632,7 @@ void pippim(int argc, char *argv[]) {
 	 */
                 // e852 values
                 threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
-                //	threeVec Decay;
+                //	ThreeVector Decay;
 
                 if (Print) {
                     // std::cerr << "\n\n*** New Event\n";
@@ -708,265 +673,6 @@ void pippim(int argc, char *argv[]) {
 }
 
 /*------------- end of pi+ pi- -------------------------------*/
-
-void nKpKm(int argc, char *argv[]) {
-    float beamMass = PI_MASS;
-    int Print = 0,
-            maxevents = 9999999,
-            nevents = 0,
-            lfevents = 5000;
-    double masslow = 2 * KCHARGED_MASS,
-            masshigh = 3.0,
-            t_min = 0.0,
-            t_max,
-            slope = 3.0,
-            LorentzFactor = 0,
-            expt_min = exp(-slope * t_min),
-            expt_max,
-            lfmax = 0,
-            resonance_mass;
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
-
-    fourVec beam,
-            target,
-            resonance,
-            recoil,
-            Kp,
-            Km;
-
-    vector3_t
-            vbeam,
-            pbeam;
-
-    int printBaryon = 0;
-
-    lorentzTransform Boost;
-
-    for (int iarg = 1; iarg < argc; ++iarg) {
-        char *ptr = argv[iarg];
-        if (*ptr == '-') {
-            ptr++;
-            switch (*ptr) {
-                case 'B':
-                    printBaryon = 1;
-                    break;
-                case 'm':
-                    ptr++;
-                    maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
-                    break;
-                case 'l':
-                    ptr++;
-                    lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
-                    break;
-                case 'L':
-                    ptr++;
-                    masslow = atof(ptr);
-                    break;
-                case 'U':
-                    ptr++;
-                    masshigh = atof(ptr);
-                    break;
-                case 'p':
-                    Print = 1;
-                    break;
-                case 'M':
-                    break;
-                case 'b':
-                    beamMass = atof(++ptr);
-                    break;
-                case 'h':
-                    UsageM14(argv[0]);
-                    return;
-                default:
-                    std::cerr << "unrecognized argument: " << *ptr << std::endl;
-                    break;
-            }
-        }
-    }
-
-
-    /*
-   *-- beam and target in lab frame
-   */
-
-    slope = (Slope > 0.0) ? Slope : slope;
-
-    while (maxevents) {
-        /*
-     *-- use real beam distribution
-     */
-        generateBeamMCinsideTarget(&vbeam, &pbeam);
-
-        /*
-     *-- beam and target in lab frame
-     */
-
-        beam = fourVec(
-                sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
-                     pow((double) pbeam.z, 2.0) +
-                     pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
-
-        /*
-     *-- put them into the center of mass frame
-     */
-        Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
-        double K_K_threshold = 2 * KCHARGED_MASS;
-
-        /* in case it was not set */
-        if (masshigh == 0.)
-            masshigh = CMenergy - PROTON_MASS;
-
-        if (masshigh < K_K_threshold) {
-            std::cerr << "K K high mass below K K threshold" << std::endl;
-            exit(1);
-        }
-
-        if (masshigh > CMenergy - PROTON_MASS)
-            masshigh = CMenergy - PROTON_MASS;
-        if (masslow > CMenergy - PROTON_MASS) {
-            std::cerr << "Not enough beam energy... exiting" << std::endl;
-            exit(1);
-        }
-
-        t_max = pow(CMmomentum(2 * CMenergy, masslow, PROTON_MASS), 2.0);
-        expt_max = exp(-slope * t_max);
-
-        /*
-     *-- generate the resonance
-     */
-
-        if (masshigh < K_K_threshold) {
-            std::cerr << "K K high mass below K K_threshold" << std::endl;
-            exit(1);
-        }
-
-        do {
-            resonance_mass = randm(masslow, masshigh);
-        } while (resonance_mass < K_K_threshold);
-
-
-        double resonance_p = CMmomentum(CMenergy, resonance_mass, PROTON_MASS);
-        double resonance_E = sqrt(
-                pow(resonance_mass, 2.0) + pow(resonance_p, 2.0));
-        double costheta;
-        double expt;
-        double t;
-        do {
-            expt = randm(expt_min, expt_max);
-            t = -log(expt) / slope;
-            costheta = (CMbeam.t() * resonance_E
-                        - 0.5 * (t + pow((double) beamMass, 2.0) +
-                                 pow(resonance_mass, 2.0)))
-                       / (~CMbeam.V() * resonance_p);
-        } while (fabs(costheta) > 1.0);
-        resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
-
-        /*
-     *-- recoil particle
-     */
-
-        recoil.set(sqrt(resonance.V().lenSq() + pow(PROTON_MASS, 2.0)),
-                   zeroVec - resonance.V());
-
-        /*
-     *  now do Decay in resonance rest frame
-     */
-        double Kp_p = CMmomentum(resonance_mass, KCHARGED_MASS, KCHARGED_MASS);
-        Kp.polar(Kp_p, acos(randm(-1, 1)), randm(-M_PI, M_PI));
-        Kp.t(sqrt(Kp.V().lenSq() + pow(KCHARGED_MASS, 2.0)));
-
-        Km.set(sqrt(Kp.V().lenSq() + pow(KCHARGED_MASS, 2.0)),
-               zeroVec - Kp.V());
-
-        /*
-     *  compute lorentz factor
-     */
-        LorentzFactor = resonance_p * (Kp_p);
-        if (lfevents-- > 0)
-            lfmax = LorentzFactor > lfmax ? LorentzFactor : lfmax;
-        else {
-            if (LorentzFactor > randm(0.0, lfmax)) {
-                //	fourVec tmpvec;
-                /*
-	 *  transform all 4-vectors back to lab frame
-	 */
-                fourVec tmp;
-
-                // boost from K_K rest frame to CM
-                tmp.set(resonance.t(), zeroVec - resonance.V());
-                Boost.set(tmp);
-                Kp *= Boost;
-                Km *= Boost;
-
-                // boost from CM to target rest frame (lab)
-                Boost.set(CMtarget);
-                resonance *= Boost;
-                recoil *= Boost;
-                Kp *= Boost;
-                Km *= Boost;
-
-                /*
-	 *  generate vertices
-	 */
-                // e852 values
-                threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
-                //	threeVec Decay;
-
-                if (Print) {
-                    // std::cerr << "\n\n*** New Event\n";
-                    //	  std::cerr << "Beam:\n  " << beam;
-                    // std::cerr << "Beam in CM:\n  " << CMbeam;
-                    // std::cerr << "Target in CM:\n  " << CMtarget;
-                    // std::cerr << "Resonance\n";
-                    // std::cerr << "  Resonance mass: " << resonance_mass << "\n";
-                    // std::cerr << "  Resonance CMmomentum: " << resonance_p << "\n";
-                    // std::cerr << "  expt: " << expt << "\n";
-                    // std::cerr << "  t: " << t << "\n";
-                    // std::cerr << "  Resonance:\n     " << resonance;
-                    // std::cerr << "recoil: \n  " << recoil;
-                    // std::cerr << "Kp\n";
-                    // std::cerr << "  Kp mass: " << KCHARGED_MASS << "\n";
-                    // std::cerr << "  Kp momentum: " << Kp_p << "\n";
-                    // std::cerr << "  Kp:\n    " << Kp;
-                    // std::cerr << "Km :\n  " << Km;
-                    // std::cerr << "vertices:\n";
-                    // std::cerr << "  prod: " << production;
-                    // std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
-                }
-                // calculate masses for dalitz plots
-                if (dalitz) {
-                    std::cerr << pow(~(Kp + Km), 2.0) << std::endl;
-                }
-                /*
-	 *  write event
-	 */
-                if (txt2part_style) {
-                    std::cout << "3" << std::endl;
-                    std::cout << EbeamZ << " " << beam.t() << " "
-                              << -production.z() / SPEED_OF_LIGHT << std::endl;
-                    pParticle_txt2part(KPlus, production, Kp);
-                    pParticle_txt2part(KMinus, production, Km);
-                    pParticle_txt2part(Neutron, production, recoil);
-                } else {
-                    pParticle(KPlus, production, Kp);
-                    pParticle(KMinus, production, Km);
-                    if (printBaryon)
-                        pParticle(Neutron, production, recoil);
-                }
-
-                maxevents--;
-            }
-        }
-    }
-}
 
 // resonance -> isobar1 + piminus1
 // isobar1 -> piplus + piminus2
@@ -2112,7 +1818,7 @@ void npip(int argc, char *argv[]) {
 	 */
                 // e852 values
                 threeVec production = threeVec(0.0, 0.0, 0.0);
-                //	threeVec Decay;
+                //	ThreeVector Decay;
                 electron = beam + target - neutron - pip;
                 if (Print) {
                     // std::cerr << "\n\n*** New Event\n";
@@ -2286,7 +1992,7 @@ void npip_gamma(int argc, char *argv[], int nw, int *wlist) {
 	 *  generate vertices
 	 */
         threeVec production = threeVec(0.0, 0.0, 0.0);
-        //	threeVec Decay;
+        //	ThreeVector Decay;
         if (Print) {
             // std::cerr << "\n\n*** New Event\n";
             // std::cerr << "Beam:\n  " << beam;
@@ -2491,7 +2197,7 @@ void ppi0_gamma(int argc, char *argv[]) {
      *  generate vertices
      */
         threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
-        //	threeVec Decay;
+        //	ThreeVector Decay;
         if (Print) {
             // std::cerr << "\n\n*** New Event\n";
             // std::cerr << "Beam:\n  " << beam;
@@ -2757,7 +2463,7 @@ void ppi0(int argc, char *argv[]) {
 	 */
                 // e852 values
                 threeVec production = threeVec(0.0, 0.0, 0.0);
-                //	threeVec Decay;
+                //	ThreeVector Decay;
                 electron = beam + target - proton - pi0;
                 if (Print) {
                     // std::cerr << "\n\n*** New Event\n";
@@ -3053,7 +2759,7 @@ void kpkspim(int argc, char *argv[]) {
          */
                 // e852 values
                 threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
-                //    threeVec Decay;
+                //    ThreeVector Decay;
 
 
 
@@ -8131,19 +7837,6 @@ void UsageM100(char *ProcessName) {
 
 /*----------------End of specific final states -----------------------*/
 
-int comp_double(const void *a, const void *b) {
-
-    double *da = (double *) a;
-    double *db = (double *) b;
-
-    if (*da < *db) {
-        return -1;
-    } else if (*da > *db) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
 
 double randm(double low, double high) {
     return ((high - low) * drand48() + low);
@@ -8159,21 +7852,6 @@ double CMmomentum(double cm_engy, double m1, double m2) {
     return (((D < 0) ? -sqrt(-D) : sqrt(D)) / (2.0 * cm_engy));
 }
 
-void distribute_beam(vector4_t *beam) {
-    float r1, r2, r3, phi, theta, p, r;
-
-    r1 = gaussian_gen();
-    beam->t = BEAM_EN_CENTER + r1 * BEAM_EN_SIGMA;
-    r2 = gaussian_gen();
-    phi = BEAM_PHI_CENTER + r2 * BEAM_PHI_SIGMA;
-    r3 = gaussian_gen();
-    theta = BEAM_THETA_CENTER + r3 * BEAM_THETA_SIGMA;
-    p = sqrt((beam->t * beam->t) - (PI_MASS * PI_MASS));
-    r = p * sin(theta);
-    beam->space.x = r * cos(phi);
-    beam->space.y = r * sin(phi);
-    beam->space.z = p * cos(theta);
-}
 
 void distribute_vertex(vector3_t *v) {
     float r1, r2;
@@ -8194,22 +7872,6 @@ float gaussian_gen() {
         r2 = randm(0, 1);
     }
     return (r1);
-}
-
-void Usage(char *ProcessName) {
-    std::cerr << "Useage: " << ProcessName
-              << " -mmaxevents -llfevents -Lmass -Umass -D -p -ofile -h\n";
-    std::cerr << "\t-mmaxevents\t: write maxevents, default 999999\n";
-    std::cerr
-            << "\t-llfevents\t: use lfevents to find max. lorentz factor, default 3000\n";
-    std::cerr << "\t-Llowmass\t: lower bound for X mass, default 1.5 GeV\n";
-    std::cerr << "\t-Ulowmass\t: upper bound for X mass, default 2.5 GeV\n";
-    std::cerr << "\t-e\t\t: use 1/E factor in LIPS factor\n";
-    std::cerr << "\t-d\t\t: print dalitz plot masses\n";
-    std::cerr << "\t-p\t\t: print events\n";
-    std::cerr << "\t-ofile\t: write to file\n";
-    std::cerr << "\t-h\t: print useage\n";
-    std::cerr << flush;
 }
 
 void UsageM1(char *ProcessName) {
@@ -8361,26 +8023,6 @@ void UsageM2(char *ProcessName) {
 
 }
 
-void UsageM3(char *ProcessName) {
-    std::cerr << ProcessName
-              << " generates neutron pi+  monte carlo events\n\n\n";
-    std::cerr << "Useage: " << ProcessName
-              << " -mmaxevents -llfevents -Lmass -Umass -D -p -ofile -h\n";
-    GeneralUsage();
-    std::cerr << "\t-mmaxevents: write maxevents, default 999999\n";
-    std::cerr
-            << "\t-llfevents : use lfevents to find max. lorentz factor, default 3000\n";
-    std::cerr << "\t-Llowmass  : lower bound for X mass, default 1.5 GeV\n";
-    std::cerr << "\t-Ulowmass  : upper bound for X mass, default 2.5 GeV\n";
-    std::cerr << "\t-e         : use 1/E factor in LIPS factor\n";
-    std::cerr << "\t-d         : print dalitz plot masses (to stdout)\n";
-    std::cerr << "\t-p         : print events\n";
-    std::cerr << "\t-ofile     : write to file\n";
-    std::cerr << "\t-h         : print useage\n";
-    std::cerr << flush;
-
-}
-
 
 void UsageM5(char *ProcessName) {
     std::cerr << ProcessName << " generates k+ ks pi- monte carlo events\n\n\n";
@@ -8502,30 +8144,6 @@ void UsageM11(char *ProcessName) {
     std::cerr << "\t-b#\t: beam mass\n";
     std::cerr << "\t-B\t: Print baryon\n";
     std::cerr << "\t-p\t: print events\n";
-    std::cerr << "\t-h\t: print useage\n";
-    std::cerr << "\t\tdefault slope: 10.0" << std::endl;
-    std::cerr << flush;
-
-}
-
-void UsageM12(char *ProcessName) {
-    std::cerr << ProcessName
-              << " generates 2 pion monte carlo events- photon beam (pi+ pi-)  - pi  forward\n\n\n";
-    std::cerr << "Useage: " << ProcessName
-              << " -mmaxevents -llfevents -Lmass -Umass -D -p -ofile -h\n";
-    GeneralUsage();
-    std::cerr << "\t-mmaxevents\t: write maxevents, default 999999\n";
-    std::cerr
-            << "\t-llfevents\t: use lfevents to find max. lorentz factor, default 3000\n";
-    std::cerr << "\t-Llowmass\t: lower bound for X mass, default 1.5 GeV\n";
-    std::cerr << "\t-Ulowmass\t: upper bound for X mass, default 2.5 GeV\n";
-    std::cerr << "\t-e\t: use 1/E factor in LIPS factor\n";
-    std::cerr << "\t-d\t: print dalitz plot masses (to stdout)\n";
-    std::cerr << "\t-b#\t: beam mass\n";
-    std::cerr << "\t-B\t: Print baryon\n";
-    std::cerr << "\t-p\t: print events\n";
-    std::cerr << "\t=cX\t: charge of the forward pi, (+/-) (default = -)"
-              << std::endl;
     std::cerr << "\t-h\t: print useage\n";
     std::cerr << "\t\tdefault slope: 10.0" << std::endl;
     std::cerr << flush;
@@ -8876,14 +8494,6 @@ float eprime(float theta, float Qsq, float E) {
 
 double Qsq(double E, double Ep, double theta) {
     return (4.0 * E * Ep * sin(theta / 2.0) * sin(theta / 2.0));
-}
-
-double nQsq(double E, double Ep, double theta) {
-    double p = sqrt(E * E - ELECTRON_MASS * ELECTRON_MASS);
-    double pp = sqrt(Ep * Ep - ELECTRON_MASS * ELECTRON_MASS);
-    double ret = 2.0 *
-                 (ELECTRON_MASS * ELECTRON_MASS - E * Ep + p * pp * cos(theta));
-    return (ret);
 }
 
 

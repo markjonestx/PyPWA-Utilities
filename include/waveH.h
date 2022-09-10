@@ -68,9 +68,5 @@ public:
 
     wave &operator*=(const lorentzTransform &);
 
-    string sprint(string space = " ");
-
     void print() const;
-
-    void printFrames() const;
 };

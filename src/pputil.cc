@@ -230,11 +230,6 @@ void ptab() {
     }
 }
 
-void settab(int nchar) {
-    tabsize = nchar;
-}
-
-
 string id2name(Geant_ID type) {
     switch (type) {
         case g_EtaPrime:

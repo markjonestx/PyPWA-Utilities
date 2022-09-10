@@ -67,8 +67,6 @@ D(double alpha, double beta, double gamma, int j, int n, int m);
 
 double clebsch(int j1, int j2, int j3, int m1, int m2, int m3);
 
-extern "C" void clebs_(int *, int *, int *, int *, int *, int *, int *, int *);
-
 double d_jmn_b(int J, int M, int N, double beta);
 
 int fact(int i);
@@ -87,8 +85,6 @@ void addtab();
 void subtab();
 
 void ptab();
-
-void settab(int);
 
 std::string itos(int);
 

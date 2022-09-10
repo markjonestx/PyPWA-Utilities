@@ -120,29 +120,3 @@ complex<double> AMP_M::val(particle &p) {
 
     return ret;
 }
-
-complex<double> AMP_ves::val(particle &p) {
-    complex<double> bw, amp_m;
-    static complex<double> coupling(-0.3743, 0.3197);
-    static double massf0 = 0.9837, widthf0 = 0.0376;
-
-    double pi_mass = PDGtable.get("pi").Mass();
-    double My_mass = ~(p.get4P());
-
-    ves_sheet = 1;
-    amp_m = AMP_M::val(p);
-
-    if (My_mass > 2.0 * pi_mass) {
-        double p, p0, gam, denom, A, B, C;
-        p = q(My_mass, pi_mass, pi_mass).real();
-        p0 = q(massf0, pi_mass, pi_mass).real();
-        gam = widthf0 * (p / p0);
-        A = massf0 * massf0 - My_mass * My_mass;
-        B = massf0 * gam;
-        C = B * (My_mass / p);
-        denom = C / (A * A + B * B);
-        bw = denom * complex<double>(A, B);
-    }
-
-    return amp_m - coupling * bw;
-}

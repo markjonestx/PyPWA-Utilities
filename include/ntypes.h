@@ -28,7 +28,7 @@ static const char sccsid_ntypesH[] = "@(#)ntypes.h\t4.1\tCreated 10 Dec 1995 18:
  * MSB means "big-endian", like SGI-MIPS, RS6000 and others.
  * LSB means "little-endian", like Intel x86, WindowsNT and others.
  *
- * Read 'man math' for more details on IEEE-754 floating point numbers.
+ * Read 'man vector' for more details on IEEE-754 floating point numbers.
  *
 */
 

@@ -40,13 +40,6 @@ threeVec operator*=(threeVec &V, const rotation &R) {
     return V;
 }
 
-//particle operator*=(particle& part,const rotation& R) {
-//	part._p._V *= R*part._p._V;
-//	return part;
-//}
-
-
-
 lorentzTransform lorentzTransform::set(const rotation &r) {
     this->zero();
     for (int row = 1; row < 4; row++) {
@@ -132,13 +125,6 @@ lorentzTransform lorentzTransform::set(const fourVec &p) {
 lorentzTransform::lorentzTransform(const fourVec &p) : matrix<double>(4, 4) {
     this->set(p);
 }
-
-// lorentzTransform lorentzTransform::operator*=(const lorentzTransform& L) {
-// this->_beta = L._beta;
-// this->_gamma = L._gamma;
-// 	*this = *((lorentzTransform*) &(L * (*this)));
-// 	return *this;
-// }
 
 fourVec operator*=(fourVec &v, const lorentzTransform &L) {  //new
     v = L * v;

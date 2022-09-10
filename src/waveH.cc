@@ -20,21 +20,6 @@ wave &wave::operator=(const wave &wv) {
     return (*this);
 }
 
-void wave::printFrames() const {
-    cout << "wave: " << endl;
-    cout << "beam: ";
-    this->_beam.print();
-    cout << "target: ";
-    this->_target.print();
-    cout << this->I() << getsign(this->G());
-    cout << "(" << this->J() << getsign(this->P()) << getsign(this->C()) << ")";
-    cout << " m = " << this->_m << " eps = " << this->_epsilon << endl;
-    cout << "momentum: ";
-    this->get4P().print();
-    cout << "decays to:" << endl;
-    if (!(this->Stable())) this->get_decay()->printFrames();
-}
-
 void wave::print() const {
     cout << "wave: " << endl;
     cout << "beam: ";
@@ -240,33 +225,4 @@ wave &wave::operator*=(const lorentzTransform &L) {
     this->_target *= L;
     particle::operator*=(L);
     return *this;
-}
-
-string wave::sprint(string space) {
-    string s;
-    s = "J=";
-    s += itos(this->J());
-    s += space;
-    s += "P=";
-    s += itos(this->P());
-    s += space;
-    s += "M=";
-    s += itos(this->M());
-    s += space;
-    s += "{";
-    list<particle>::iterator c;
-    for (c = this->get_decay()->_children.begin();
-         c != this->get_decay()->_children.end(); c++) {
-        s += space;
-        s += c->sprint(space);
-    }
-    s += space;
-    s += itos(this->get_decay()->L());
-    s += space;
-    s += itos(this->get_decay()->S());
-    s += space;
-    s += "};";
-
-    return s;
-
 }

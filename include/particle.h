@@ -40,11 +40,7 @@ public:
 
     particle &operator=(const particle &);
 
-    particle &setCharge(int);
-
     particle &set4P(const fourVec &);
-
-    particle &set3P(const threeVec &);
 
     particle &Index(int);
 
@@ -92,8 +88,6 @@ public:
     double q() const;
 
     double q0() const;
-
-    std::complex<double> breitWigner() const;
 
     std::complex<double> decayAmp(int, int debug = 0);
 

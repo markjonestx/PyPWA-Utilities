@@ -51,8 +51,6 @@ public:
     lorentzTransform set(const fourVec &); //boost to rest frame
     lorentzTransform set(const rotation &);
 
-    double beta() { return _beta; }
-
 //		lorentzTransform operator*=(const lorentzTransform&);
     friend fourVec operator*=(fourVec &, const lorentzTransform &);
 

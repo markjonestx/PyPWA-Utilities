@@ -4,18 +4,17 @@ project(PWA_UTILS VERSION 1.1
 		LANGUAGES CXX
 )
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
 
-include_directories (include)
+include_directories(include)
 
-set (
-    SHARED_LIBPP
-	src/event.cc
-	src/lorentz.cc
-	src/particle.cc
-	src/particleData.cc
-	src/pputil.cc
-	src/Vec.cc
+set(SHARED_LIBPP
+		src/event.cc
+		src/lorentz.cc
+		src/particle.cc
+		src/particleData.cc
+		src/pputil.cc
+		src/Vec.cc
 )
 
 set (
@@ -35,7 +34,7 @@ set (
 	src/txtEvent.cc
 )
 
-add_library (pp ${SHARED_LIBPP})
+add_library (pp STATIC ${SHARED_LIBPP})
 
 add_executable (gamp ${GAMP_SOURCES} src/wave.cc)
 add_executable (hgamp ${GAMP_SOURCES} src/waveH.cc)

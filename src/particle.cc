@@ -114,18 +114,8 @@ int particle::operator<(const particle &p) {
     return (this->Mass() < p.Mass());
 }
 
-particle &particle::setCharge(int c) {
-    this->_charge = c;
-    return (*this);
-}
-
 particle &particle::set4P(const fourVec &p4) {
     this->_p = p4;
-    return (*this);
-}
-
-particle &particle::set3P(const threeVec &P) {
-    this->_p = fourVec(pow(P.lenSq() + pow(this->Mass(), 2), 0.5), P);
     return (*this);
 }
 
@@ -927,25 +917,6 @@ string particle::sprint(string space) {
 
     }
     return s;
-}
-
-complex<double> particle::breitWigner() const {
-    complex<double> ret;
-
-    double m0 = this->Mass();
-    double Gamma0 = this->Width();
-    double q = this->q();
-    double q0 = this->q0();
-    double m = ~(this->get4P());
-    double GammaV;
-    int l = this->get_decay()->L();
-
-    GammaV =
-            Gamma0 * (m0 / m) * (q / q0) * (pow(F(l, q), 2) / pow(F(l, q0), 2));
-
-    ret = (m0 * Gamma0) /
-          (m0 * m0 - m * m - complex<double>(0, 1) * m0 * GammaV);
-    return (ret);
 }
 
 complex<double> particle::decayAmp(int lambda, int debug) {

@@ -56,10 +56,6 @@ double randm(double, double);
 
 double CMmomentum(double, double, double);
 
-int comp_double(const void *, const void *);
-
-void distribute_beam(vector4_t *);
-
 void distribute_vertex(vector3_t *);
 
 float gaussian_gen(void);
@@ -73,15 +69,11 @@ void UsageM1(char *ProcessName);
 
 void UsageM2(char *ProcessName);
 
-void UsageM3(char *ProcessName);
-
 void UsageM5(char *ProcessName);
 
 void UsageM6(char *ProcessName);
 
 void UsageM7(char *ProcessName);
-
-void UsageM8(char *ProcessName);
 
 void UsageM9(char *ProcessName);
 
@@ -89,11 +81,7 @@ void UsageM10(char *ProcessName);
 
 void UsageM11(char *ProcessName);
 
-void UsageM12(char *ProcessName);
-
 void UsageM13(char *ProcessName);
-
-void UsageM14(char *ProcessName);
 
 void UsageM15(char *ProcessName);
 
@@ -116,17 +104,7 @@ void pipipi(int argc, char *argv[]);
 
 void pipipi0(int argc, char *argv[]);
 
-void pipipi_gamma(int argc, char *argv[]);
-
-void pepem_gamma(int argc, char *argv[]);
-
-void pipipi0_gamma(int argc, char *argv[]);
-
-void ppipi_gamma(int, char **);
-
 void ppipiX_gamma(int, char **);
-
-void nKpKm(int argc, char **);
 
 void npip(int argc, char *argv[]);
 

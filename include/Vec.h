@@ -83,8 +83,6 @@ public:
 
     threeVec &z(double z);
 
-    threeVec &cartesian(double x, double y, double z);
-
     threeVec &polar(double r, double theta, double phi);
 
     double operator~() const;

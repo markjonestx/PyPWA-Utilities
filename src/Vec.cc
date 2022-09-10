@@ -205,11 +205,6 @@ threeVec &threeVec::z(double z) {
     return *this;
 }
 
-threeVec &threeVec::cartesian(double x, double y, double z) {
-    this->_init(x, y, z);
-    return *this;
-}
-
 threeVec &threeVec::polar(double r, double theta, double phi) {
     this->_x = r * sin(theta) * cos(phi);
     this->_y = r * sin(theta) * sin(phi);

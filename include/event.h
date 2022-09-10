@@ -48,15 +48,6 @@ public:
     fourVec
     getPartPFinal(std::string name, int charge, int index, int debug = 0) const;
 
-
-    std::list<particle> f_mesons() const;
-
-    std::list<particle> f_baryons() const;
-
-    std::list<particle> i_mesons() const;
-
-    std::list<particle> i_baryons() const;
-
     void print() const;
 
     friend std::istream &operator>>(std::istream &is, event &e);
