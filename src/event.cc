@@ -116,7 +116,6 @@ event::getPartPFinal(string name, int charge, int index, int debug) const {
         p++;
     }
     throw ("PartNotFound");
-    return (fourVec(0, threeVec(0, 0, 0)));
 }
 
 
@@ -138,10 +137,8 @@ ostream &operator<<(ostream &os, event &e) {
     switch (e._ioversion) {
         case 1:
             return e.write1(os);
-            break;
         case 2:
             return e.write2(os);
-            break;
         default:
             throw ("badIOVersion");
     }
@@ -151,10 +148,8 @@ istream &operator>>(istream &is, event &e) {
     switch (e._ioversion) {
         case 1:
             return e.read1(is);
-            break;
         case 2:
             return e.read2(is);
-            break;
         default:
             throw ("badIOVersion");
     }

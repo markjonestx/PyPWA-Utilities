@@ -14,8 +14,6 @@ typedef union {
 #endif
 # define    INT    257
 # define    FLOAT    258
-# define    COMPLEX    259
-# define    SIGN    260
 # define    STRING    261
 # define    PARTICLENAME    262
 # define    DEBUG    263

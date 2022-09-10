@@ -1,4 +1,3 @@
-#include <string.h>
 #include <particleData.h>
 
 using std::string;
@@ -82,11 +81,6 @@ string particleData::Name() const {
     return (this->_name);
 }
 
-particleData &particleData::setName(string nm) {
-    this->_name = nm;
-    return (*this);
-}
-
 void particleData::print() const {
     ptab();
     cout << this->_name << ":\tmass=" << this->_mass << "\twidth="
@@ -116,10 +110,6 @@ void tableEntry::_init(const particleData &p, tableEntry *n) {
 
 tableEntry::tableEntry(particleData p, tableEntry *n) {
     _init(p, n);
-}
-
-tableEntry::tableEntry(const tableEntry &te) {
-    _init(te.particle, te.nextparticle);
 }
 
 tableEntry::~tableEntry() {
@@ -289,35 +279,6 @@ void particleDataTable::dump() const {
     }
 }
 
-int particleDataTable::ListLen() const {
-    int len = 0;
-    tableEntry *te = this->head;
-    while (te != NULL) {
-        len++;
-        te = te->next();
-    }
-    return (len);
-}
-
-char **particleDataTable::List() const {
-    int particleno = 0;
-    int listlen = ListLen();
-    particleData p;
-    char **list;
-    list = (char **) malloc(listlen * sizeof(char *));
-    tableEntry *te = this->head;
-    while (te != NULL) {
-        p = te->Particle();
-        list[particleno] = (char *) malloc(
-                ((p.Name().length()) + 1) * sizeof(char));
-        strcpy(list[particleno], p.Name().c_str());
-//			p.Name().to_char_type(list[particleno]);
-        particleno++;
-        te = te->next();
-    }
-    return (list);
-}
-
 particleData particleDataTable::get(string name) const {
     tableEntry *te = this->head;
     while (te != NULL) {
@@ -331,9 +292,5 @@ particleData particleDataTable::get(string name) const {
 
 double particleDataTable::mass(string name) const {
     return this->get(name).Mass();
-}
-
-double particleDataTable::width(string name) const {
-    return this->get(name).Width();
 }
 

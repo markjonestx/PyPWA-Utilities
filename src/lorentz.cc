@@ -75,7 +75,6 @@ lorentzTransform lorentzTransform::set(const threeVec &beta) {
     double gamma;
     double gFactor;
 
-    this->_beta = beta.len();
     this->_gamma = 1.0 / sqrt(1 - beta.lenSq());
     gamma = this->_gamma;
     gFactor = pow(gamma, 2) / (gamma + 1);

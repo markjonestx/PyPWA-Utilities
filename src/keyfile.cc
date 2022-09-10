@@ -1,6 +1,5 @@
 #include <keyfile.h>
 
-extern particleDataTable table;
 extern FILE *keyin;
 extern char *fname;
 extern "C++" int keylex();

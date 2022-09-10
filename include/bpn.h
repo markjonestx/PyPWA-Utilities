@@ -19,12 +19,9 @@ bpn(int argc, char *argv[],
     double
             masslow = Mass(Part2) + Mass(Part3),
             masshigh = 0.,
-            t_max,
-            expt_max,
-            LorentzFactor = 0,
+            LorentzFactor,
             lfmax = 0,
-            resonance_mass,
-            isobar1_mass;
+            resonance_mass;
     fourVec
             beam,
             target,
@@ -39,7 +36,6 @@ bpn(int argc, char *argv[],
     fourVec tmp;
     vector3_t vbeam, pbeam;
     float beamMass;
-    int printBaryon = 0;
     int debug = 0;
 
     Particle_t Target = Proton;
@@ -77,12 +73,6 @@ bpn(int argc, char *argv[],
                     break;
                 case 'M':
                     break;
-                case 'b':
-                    beamMass = atof(++ptr);
-                    break;
-                case 'B':
-                    printBaryon = 1;
-                    break;
                 case 'D':
                     debug = 1;
                     break;
@@ -97,7 +87,6 @@ bpn(int argc, char *argv[],
     }
 
     double slope = (Slope > 0.0) ? Slope : 4.0;
-    int qtot = Q(Beam) + Q(Proton) - Q(Part1) - Q(Part2) - Q(Part3);
     double Threshold = Mass(Part2) + Mass(Part3);
 
     beamMass = Mass(Beam);
@@ -158,11 +147,6 @@ bpn(int argc, char *argv[],
         double costheta;
         double costhetax, tx;
         double t;
-        double mTot = beamMass + TARGET_MASS + Mass(Part1) + Mass(Part2) -
-                      Mass(Part3);
-        double s = pow(sqrt(beam_p * beam_p + beamMass * beamMass) +
-                       sqrt(beam_p * beam_p + TARGET_MASS * TARGET_MASS),
-                       2);
 
         tMin = tmin(pbeam.z, Mass(Beam), PROTON_MASS, Mass(Part1),
                     resonance_mass);

@@ -18,12 +18,9 @@ void cpcmEXP(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
     double
             masslow = Mass(Cplus) + Mass(Cminus),
             masshigh = 0.,
-            t_max,
-            expt_max,
-            LorentzFactor = 0,
+            LorentzFactor,
             lfmax = 0,
-            resonance_mass,
-            isobar1_mass;
+            resonance_mass;
     fourVec
             beam,
             target,
@@ -36,8 +33,6 @@ void cpcmEXP(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
     threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass;
-    float baryonmass;
-    int printBaryon = 0;
     int debug = 0;
     double alpha = 1.0;
 
@@ -80,12 +75,6 @@ void cpcmEXP(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
                     break;
                 case 'M':
                     break;
-                case 'b':
-                    beamMass = atof(++ptr);
-                    break;
-                case 'B':
-                    printBaryon = 1;
-                    break;
                 case 'D':
                     debug = 1;
                     break;
@@ -102,13 +91,11 @@ void cpcmEXP(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
     }
 
     double slope = (Slope > 0.0) ? Slope : 10.0;
-    int qtot = Q(Beam) + Q(Proton) - Q(Cplus) - Q(Cminus);
     double cpcmThreshold = Mass(Cplus) + Mass(Cminus);
 
     Baryon = Recoil;
 
     beamMass = Mass(Beam);
-    baryonmass = Mass(Baryon);
 
     if (masslow < cpcmThreshold)
         masslow = cpcmThreshold;
@@ -166,11 +153,6 @@ void cpcmEXP(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
         double costheta;
         double costhetax, tx;
         double t;
-        double mTot = beamMass + TARGET_MASS + Mass(Baryon) + Mass(Cplus) -
-                      Mass(Cminus);
-        double s = pow(sqrt(beam_p * beam_p + beamMass * beamMass) +
-                       sqrt(beam_p * beam_p + TARGET_MASS * TARGET_MASS),
-                       2);
 
         tMin = tmin(pbeam.z, Mass(Beam), PROTON_MASS, resonance_mass,
                     Mass(Baryon));

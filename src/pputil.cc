@@ -22,7 +22,7 @@ D(double alpha, double beta, double gamma, int j, int m, int n) {
 double d_jmn_b(int J, int M, int N, double beta) {
 
     int temp_M, k, k_low, k_hi;
-    double const_term = 0.0, sum_term = 0.0, d = 1.0;
+    double const_term, sum_term = 0.0, d;
     int m_p_n, j_p_m, j_p_n, j_m_m, j_m_n;
     int kmn1, kmn2, jmnk, jmk, jnk;
     double kk;
@@ -234,55 +234,37 @@ string id2name(Geant_ID type) {
     switch (type) {
         case g_EtaPrime:
             return "eta'(958)";
-            break;
         case g_PiMinus:
         case g_PiPlus:
             return "pi";
-            break;
         case g_KMinus:
         case g_KPlus:
             return "K";
-            break;
         case g_Pi0:
             return "pi0";
-            break;
         case g_Eta:
             return "eta";
-            break;
         case g_omega:
             return ("omega(782)");
-            break;
         case g_Proton:
             return "p";
-            break;
         case g_AntiProton:
             return ("pbar");
-            break;
         case g_Neutron:
             return "n";
-            break;
         case g_Gamma:
             return ("gamma");
-            break;
         case g_Electron:
         case g_Positron:
             return ("e");
-            break;
         case g_Deuteron:
             return ("d");
-            break;
-
-            // weygand
         case g_KShort:
             return ("K0");
-            break;
-
         case g_Lambda:
             return ("lambda");
-            break;
         default:
             return "unknown";
-            break;
     }
 }
 
@@ -291,10 +273,8 @@ Geant_ID name2id(string name, int q) {
         switch (q) {
             case -1:
                 return g_PiMinus;
-                break;
             case 1:
                 return g_PiPlus;
-                break;
         }
     } else if (name == "omega(782)") {
         return (g_omega);
@@ -302,19 +282,15 @@ Geant_ID name2id(string name, int q) {
         switch (q) {
             case -1:
                 return g_Electron;
-                break;
             case 1:
                 return g_Positron;
-                break;
         }
     } else if (name == "K") {
         switch (q) {
             case -1:
                 return g_KMinus;
-                break;
             case 1:
                 return g_KPlus;
-                break;
         }
     } else if (name == "KShort") {
         return g_KShort;

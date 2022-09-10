@@ -6,9 +6,6 @@
 #include <complex>
 #include <Vec.h>
 
-double conj(double x);
-
-
 template<class Type>
 class matrix;
 
@@ -64,21 +61,9 @@ public:
 
     matrix operator-=(const matrix &);
 
-    matrix conjugate() const;
-
-    matrix transpose() const;
-
-    matrix adjoint() const;
-
     int status() const { return _status; }
 
     void setStatus(int s) { this->_status = s; }
-
-    Type trace() const;
-
-    Type det() const;
-
-    matrix LU() const;
 
     matrix inv();
 
@@ -102,46 +87,6 @@ public:
     matrix &scan(std::istream &is = std::cin);
 
 };
-
-
-template<class Type>
-class identityMatrix : public matrix<Type> {
-
-public:
-    identityMatrix(int n) : matrix<Type>(n, n) {
-        for (int i = 0; i < n; i++) this->el(i, i) = 1;
-    }
-
-    ~identityMatrix() { ; }
-
-};
-
-template<class Type>
-Type matrix<Type>::trace() const {
-    Type tr = 0;
-    assert(this->_nrows == this->_ncols);
-
-    for (int i = 0; i < this->_nrows; i++) {
-        tr += (const_cast<matrix<Type> *>(this))->el(i, i);
-    }
-    return (tr);
-}
-
-template<class Type>
-Type matrix<Type>::det() const {
-    Type dt = 1.0;
-    int *indx = new int[this->_ncols];
-    int d;
-    assert(this->_nrows == this->_ncols);
-    matrix r(this->_nrows, this->_ncols);
-    r = this->_LU(&d, indx);
-    for (int i = 0; i < this->_nrows; ++i)
-        dt *= r.el(i, i);
-
-    if (indx)
-        delete[] indx;
-    return (d * dt);
-}
 
 template<class Type>
 double mag(Type t) {
@@ -230,16 +175,6 @@ matrix<Type> matrix<Type>::_LU(int *d, int *indx) const {
 
 }
 
-template<class Type>
-matrix<Type> matrix<Type>::LU() const {
-    int d;
-    int *indx = new int[this->_nrows];
-    matrix<Type> r(this->_nrows, this->_ncols);
-    r = this->_LU(&d, indx);
-    if (indx)
-        delete[] indx;
-    return (r);
-}
 
 template<class Type>
 matrix<Type> matrix<Type>::_lubksb(int *indx, matrix &b) {
@@ -289,46 +224,11 @@ matrix<Type> matrix<Type>::inv() {
         if (indx)
             delete[] indx;
     } else {
-        r = lu;
         throw "singular matrix";
     }
     return (r);
 }
 
-
-template<class Type>
-matrix<Type> matrix<Type>::conjugate() const {
-    matrix<Type> r(this->_nrows, this->_ncols);
-
-    for (int i = 0; i < this->_nrows; i++) {
-        for (int j = 0; j < this->_ncols; j++) {
-            r.el(i, j) = conj((const_cast<matrix<Type> *>(this))->el(i, j));
-        }
-    }
-    return (r);
-}
-
-
-template<class Type>
-matrix<Type> matrix<Type>::transpose() const {
-    matrix<Type> r(this->_ncols, this->_nrows);
-
-    for (int i = 0; i < this->_nrows; i++) {
-        for (int j = 0; j < this->_ncols; j++) {
-            r.el(j, i) = (const_cast<matrix<Type> *>(this))->el(i, j);
-        }
-    }
-    return (r);
-}
-
-template<class Type>
-matrix<Type> matrix<Type>::adjoint() const {
-    matrix<Type> r(this->_ncols, this->_nrows);
-
-    r = (this->transpose()).conjugate();
-
-    return (r);
-}
 
 template<class Type>
 matrix<Type> matrix<Type>::operator+(const matrix &M) const {

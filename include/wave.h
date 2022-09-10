@@ -52,8 +52,6 @@ public:
 
     fourVec getTarget() const { return this->_target; }
 
-    int M() { return (this->_m); }
-
     wave channel(char *c) {
         this->_channel = c;
         return (*this);
@@ -69,9 +67,5 @@ public:
 
     wave &operator*=(const lorentzTransform &);
 
-    string sprint(string space = " ");
-
     void print() const;
-
-    void printFrames() const;
 };

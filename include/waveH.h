@@ -51,8 +51,6 @@ public:
 
     fourVec getTarget() const { return this->_target; }
 
-    int M() { return (this->_m); }
-
     wave channel(char *c) {
         this->_channel = c;
         return (*this);

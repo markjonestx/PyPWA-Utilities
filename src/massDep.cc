@@ -33,13 +33,12 @@ AMP_M::AMP_M() {
 
     _rho = matrix<complex<double> >(2, 2);
     _M = matrix<complex<double> >(2, 2);
-    _T = matrix<complex<double> >(2, 2);
 
     _f = matrix<complex<double> >(1, 2);
     _f.el(0, 0) = 0.1968;
     _f.el(0, 1) = -0.0154;
 
-    _a = vector<matrix<complex<double> > >(2, matrix<complex<double> >(2, 2));
+    _a = vector<matrix<complex<double>>>(2, matrix<complex<double>>(2, 2));
     _a[0].el(0, 0) = 0.1131;
     _a[0].el(0, 1) = 0.0150;
     _a[0].el(1, 0) = 0.0150;

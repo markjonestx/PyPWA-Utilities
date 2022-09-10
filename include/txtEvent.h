@@ -24,8 +24,6 @@ protected:
 public:
     txtEvent();
 
-    txtEvent(const txtEvent &);
-
     ~txtEvent();
 
     txtEvent &operator=(const txtEvent &e);

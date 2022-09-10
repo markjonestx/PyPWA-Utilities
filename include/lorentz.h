@@ -18,7 +18,6 @@ public:
     rotation set(const threeVec &);
 
     friend threeVec operator*=(threeVec &, const rotation &);
-//		friend particle operator*=(particle&,const rotation&);
 
 };
 
@@ -27,12 +26,10 @@ class lorentzTransform : public matrix<double> {
     friend class fourVec;
 
 private:
-    double _beta;
     double _gamma;
 
 public:
     lorentzTransform() : matrix<double>(4, 4) {
-        _beta = 0;
         _gamma = 1;
     }
 
@@ -51,7 +48,6 @@ public:
     lorentzTransform set(const fourVec &); //boost to rest frame
     lorentzTransform set(const rotation &);
 
-//		lorentzTransform operator*=(const lorentzTransform&);
     friend fourVec operator*=(fourVec &, const lorentzTransform &);
 
 };

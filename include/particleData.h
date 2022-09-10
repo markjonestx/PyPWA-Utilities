@@ -35,30 +35,6 @@ public:
 
     ~particleData();
 
-    int OK() const;
-
-    particleData &setName(std::string);
-
-    particleData &setMass(double m) {
-        this->_mass = m;
-        return (*this);
-    }
-
-    particleData &setWidth(double w) {
-        this->_width = w;
-        return (*this);
-    }
-
-    particleData &setI(int i) {
-        this->_isospin = i;
-        return (*this);
-    }
-
-    particleData &setG(int g) {
-        this->_gparity = g;
-        return (*this);
-    }
-
     particleData &setJ(int j) {
         this->_spin = j;
         return (*this);
@@ -66,11 +42,6 @@ public:
 
     particleData &setP(int p) {
         this->_parity = p;
-        return (*this);
-    }
-
-    particleData &setC(int c) {
-        this->_cparity = c;
         return (*this);
     }
 
@@ -113,9 +84,6 @@ public:
     void debug(int d = 1) {
         _particle_data_debug = d;
     }
-
-    friend std::ostream &operator<<(std::ostream &, particleData &);
-
 
 };
 
@@ -164,12 +132,6 @@ public:
     particleData get(std::string _name) const;
 
     double mass(std::string _name) const;
-
-    double width(std::string _name) const;
-
-    int ListLen() const;
-
-    char **List() const;
 
     void print() const;
 
