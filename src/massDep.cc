@@ -3,7 +3,8 @@
 using std::complex;
 using std::vector;
 
-complex<double> flat::val(particle &p) {
+complex<double> flat::val([[maybe_unused]] particle &p) {
+
     return (complex<double>(1, 0));
 }
 
