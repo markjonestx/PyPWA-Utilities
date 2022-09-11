@@ -233,87 +233,68 @@ Decay &Decay::operator=(const Decay &d) {
 }
 
 void Decay::print() const {
-    if (this) {
-        list<particle>::iterator first = const_cast<Decay *>(this)->_children.begin();
-        list<particle>::iterator last = const_cast<Decay *>(this)->_children.end();
-        list<particle>::iterator c;
-        ptab();
-        cout << "children : {" << endl;
-        for (c = first; c != last; c++) {
-            (*c).print();
-        }
-        ptab();
-        cout << "L: " << _l << " S: " << _s << endl;
-        ptab();
-        cout << "}" << endl;
-    } else {
-        ptab();
-        cout << "stable" << endl;
-    }
+    ptab();
+    cout << "children : {" << endl;
+
+    for (const auto &c : _children)
+        c.print();
+
+    ptab();
+    cout << "L: " << _l << " S: " << _s << endl;
+    ptab();
+    cout << "}" << endl;
 }
 
 void Decay::printFrames() const {
-    if (this) {
-        list<particle>::iterator first = const_cast<Decay *>(this)->_children.begin();
-        list<particle>::iterator last = const_cast<Decay *>(this)->_children.end();
-        list<particle>::iterator c;
-        ptab();
-        cout << "i have " << this->_childrenInFrames.size() << " children."
-             << endl;
-        ptab();
-        cout << "children in Decay frame : {" << endl;
-        for (c = first; c != last; c++) {
-            (*c).printFrames();
-        }
-        ptab();
-        cout << "L: " << _l << " S: " << _s << endl;
-        ptab();
-        cout << "}" << endl;
-    } else {
-        ptab();
-        cout << "stable" << endl;
-    }
+    ptab();
+    cout << "i have " << this->_childrenInFrames.size() << " children." << endl;
+    ptab();
+    cout << "children in Decay frame : {" << endl;
+
+    for (const auto &c: _children)
+        c.printFrames();
+
+    ptab();
+    cout << "L: " << _l << " S: " << _s << endl;
+    ptab();
+    cout << "}" << endl;
 }
 
 math::VFour Decay::fill(const event &e, int debug) {
     math::VFour p;
-    if (this) {
-        Decay *d;
-        list<particle>::iterator first = const_cast<Decay *>(this)->_children.begin();
-        list<particle>::iterator last = const_cast<Decay *>(this)->_children.end();
-        list<particle>::iterator c;
-        for (c = first; c != last; c++) {
-            math::VFour v;
-            if ((*c).Stable()) {
-                if (debug) {
-                    cout << "Found stable particle " << (*c).Name() << endl;
-                }
-                v = e.getPartPFinal((*c).Name(), (*c).Charge(), (*c).Index(),
-                                    debug);
-                if (debug) {
-                    cout << "Setting p of " << (*c).Name() << " to:" << endl;
-                    cout << v << endl;
-                }
-                (*c).set4P(v);
-                p += v;
-            } else {
-                if (debug) {
-                    cout << "Found unstable particle " << (*c).Name() << endl;
-                }
-                d = (*c).get_decay();
-                if (debug) {
-                    cout << "Calling fill for " << (*c).Name() << endl;
-                }
-                v = d->fill(e, debug);
-                if (debug) {
-                    cout << "Setting p of " << (*c).Name() << " to:" << endl;
-                    cout << v << endl;
-                }
-                (*c).set4P(v);
-                p += v;
+    Decay *d;
+
+    for (auto &c: _children) {
+        math::VFour v;
+        if (c.Stable()) {
+            if (debug) {
+                cout << "Found stable particle " << c.Name() << endl;
             }
+            v = e.getPartPFinal(c.Name(), c.Charge(), c.Index(), debug);
+            if (debug) {
+                cout << "Setting p of " << c.Name() << " to:" << endl;
+                cout << v << endl;
+            }
+            c.set4P(v);
+            p += v;
+        } else {
+            if (debug) {
+                cout << "Found unstable particle " << c.Name() << endl;
+            }
+            d = c.get_decay();
+            if (debug) {
+                cout << "Calling fill for " << c.Name() << endl;
+            }
+            v = d->fill(e, debug);
+            if (debug) {
+                cout << "Setting p of " << c.Name() << " to:" << endl;
+                cout << v << endl;
+            }
+            c.set4P(v);
+            p += v;
         }
     }
+
     return p;
 }
 
@@ -570,8 +551,8 @@ complex<double> Decay::amp(int j, int m, int debug) const {
                 double tildeFactor;
                 double barrierFactor;
                 double lambdaFactor;
-                double phi;
-                double theta;
+                double phi = 0.0;
+                double theta = 0.0;
                 if (this->_children.size() == 2) {
                     phi = analyzer.get3P().getPhi();
                     theta = analyzer.get3P().getTheta();
@@ -708,13 +689,8 @@ complex<double> Decay::amp(int j, int m, int debug) const {
 }
 
 Decay &Decay::operator*=(const lorentzTransform &L) {
-    if (this) {
-        list<particle>::iterator first = const_cast<Decay *>(this)->_children.begin();
-        list<particle>::iterator last = const_cast<Decay *>(this)->_children.end();
-        list<particle>::iterator c;
-        for (c = first; c != last; c++) {
-            (*c) *= L;
-        }
+    for (auto &c: _children) {
+        c *= L;
     }
     return *this;
 }
