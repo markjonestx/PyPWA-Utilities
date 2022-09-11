@@ -81,7 +81,6 @@ double Wsq(double E, double Ep, double theta);
 
 
 int onList(int a, int n, int *l) {
-    int ret = 0;
     if (n) {
         for (int i = 0; i < n; ++i) {
             if (*l++ == a)
@@ -95,7 +94,7 @@ int onList(int a, int n, int *l) {
 int main(int argc, char *argv[]) {
     int mode = 0;
     int newargc = 0;
-    int nw = 0, *wlist;
+    int nw = 0, *wlist = nullptr;
     //  ios::sync_with_stdio();
     Particle_t beamid = Gamma;
 
@@ -377,7 +376,7 @@ int main(int argc, char *argv[]) {
                 cpcmEXP(newargc, newargv, beamid, Positron, Electron, Proton);
                 break;
             case 38:
-                doubleDalitz(newargc, newargv, beamid, Pi0, Pi0, Proton, 1);
+                doubleDalitz(newargc, newargv, beamid, Pi0, Pi0, 1);
                 break;
 
             case 39:
@@ -424,11 +423,9 @@ int main(int argc, char *argv[]) {
 void pippim(int argc, char *argv[]) {
     int Print = 0,
             maxevents = 9999999,
-            nevents = 0,
             lfevents = 5000;
     double masslow = 0.0,
             masshigh = 3.0,
-            r2 = 0.0,
             t_min = 0.0,
             t_max,
             slope = 3.0,
@@ -559,8 +556,6 @@ void pippim(int argc, char *argv[]) {
             resonance_mass = randm(masslow, masshigh);
         } while (resonance_mass < pi_pi_threshold);
 
-        r2 = randm(0.0, 1.0);
-
         double resonance_p = CMmomentum(CMenergy, resonance_mass, PROTON_MASS);
         double resonance_E = sqrt(
                 pow(resonance_mass, 2.0) + pow(resonance_p, 2.0));
@@ -681,7 +676,6 @@ void pipipi(int argc, char *argv[]) {
     int icount = 0;
     int Print = 0,
             maxevents = 9999999,
-            nevents = 0,
             lfevents = 5000;
     double
             masslow = 3 * PI_MASS,
@@ -708,8 +702,6 @@ void pipipi(int argc, char *argv[]) {
     vector3_t vbeam, pbeam;
     float beamMass = BEAM_MASS;
     int printBaryon = 0;
-
-    float tMin;
 
     for (int iarg = 1; iarg < argc; ++iarg) {
         char *ptr = argv[iarg];
@@ -815,8 +807,6 @@ void pipipi(int argc, char *argv[]) {
 
         /* use distribution t' * exp(-slope*t'), where t' = abs(t - tmin) and
        0 <= t' <= 4*pbeam*presonance in CM */
-        tMin = tmin(pbeam.z, beamMass, PROTON_MASS, resonance_mass,
-                    NEUTRON_MASS);
         //    std::cerr << tMin << std::endl;
         t_max = 4. * beam_p * resonance_p;
         expt_max = exp(-1.) / slope;
@@ -971,7 +961,6 @@ void pipipi0(int argc, char *argv[]) {
     int printGamma = 0;
     int Print = 0,
             maxevents = 9999999,
-            nevents = 0,
             lfevents = 5000;
     double
             masslow = 3 * PI_MASS,
@@ -999,8 +988,6 @@ void pipipi0(int argc, char *argv[]) {
     vector3_t vbeam, pbeam;
     float beamMass = BEAM_MASS;
     int printBaryon = 0;
-
-    float tMin;
 
     for (int iarg = 1; iarg < argc; ++iarg) {
         char *ptr = argv[iarg];
@@ -1105,8 +1092,6 @@ void pipipi0(int argc, char *argv[]) {
 
         /* use distribution t' * exp(-slope*t'), where t' = abs(t - tmin) and
        0 <= t' <= 4*pbeam*presonance in CM */
-        tMin = tmin(pbeam.z, beamMass, PROTON_MASS, resonance_mass,
-                    NEUTRON_MASS);
         //    std::cerr << tMin << std::endl;
         t_max = 4. * beam_p * resonance_p;
         expt_max = exp(-1.) / slope;
@@ -1279,14 +1264,10 @@ void pipipi0X(int argc, char *argv[]) {
     int printGamma = 0;
     int Print = 0,
             maxevents = 9999999,
-            nevents = 0,
             lfevents = 5000;
     double
             masslow = 3 * PI_MASS,
             masshigh = 0.,
-            t_max,
-            slope = 10.0,
-            expt_max,
             LorentzFactor = 0,
             lfmax = 0,
             resonance_mass,
@@ -1317,7 +1298,6 @@ void pipipi0X(int argc, char *argv[]) {
     double ep;
     double px, py, pz, phi;
 
-    float tMin;
     float setMassHigh = 0.0;
 
     for (int iarg = 1; iarg < argc; ++iarg) {
@@ -1442,8 +1422,6 @@ void pipipi0X(int argc, char *argv[]) {
         double resonance_E = sqrt(
                 pow(resonance_mass, 2.0) + pow(resonance_p, 2.0));
         double costheta;
-        double t;
-
         // Only isotropic right now
         costheta = randm(-1.0, 1.0);
 
@@ -1544,7 +1522,6 @@ void pipipi0X(int argc, char *argv[]) {
                     std::cerr << "  Resonance mass: " << resonance_mass << endl;
                     std::cerr << "  Resonance CMmomentum: " << resonance_p
                               << endl;
-                    std::cerr << "  t: " << t << endl;
                     std::cerr << "  Resonance:\n " << resonance << endl;
                     std::cerr << "recoil: \n  " << recoil << endl;
                     std::cerr << "isobar1\n";
@@ -1609,11 +1586,9 @@ void pipipi0X(int argc, char *argv[]) {
 void npip(int argc, char *argv[]) {
     int Print = 0,
             maxevents = 9999999,
-            nevents = 0,
             lfevents = 5000;
     double masslow = 2 * PI_MASS,
             masshigh = 3.0,
-            r2 = 0.0,
             t_min = 0.0,
             t_max,
             slope = 3.0,
@@ -1729,8 +1704,6 @@ void npip(int argc, char *argv[]) {
         do {
             resonance_mass = randm(masslow, masshigh);
         } while (resonance_mass < n_pi_threshold);
-
-        r2 = randm(0.0, 1.0);
 
         double resonance_p = CMmomentum(CMenergy, resonance_mass, PI_MASS);
         double resonance_E = sqrt(
@@ -1848,7 +1821,6 @@ void npip(int argc, char *argv[]) {
 void npip_gamma(int argc, char *argv[], int nw, int *wlist) {
     int Print = 0,
             maxevents = 9999999,
-            nevents = 0,
             lfevents = 5000;
     double mass,
             resonance_mass;
@@ -1924,7 +1896,6 @@ void npip_gamma(int argc, char *argv[], int nw, int *wlist) {
         math::VFour CMbeam = Boost * beam;
         math::VFour CMtarget = Boost * target;
         double CMenergy = (CMbeam + CMtarget).getT();
-        double n_pi_threshold = NEUTRON_MASS + PI_MASS;
         math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
         mass = CMenergy;
 
@@ -1939,13 +1910,6 @@ void npip_gamma(int argc, char *argv[], int nw, int *wlist) {
             std::cerr << "Not enough CM energy...exiting." << std::endl;
             exit(1);
         }
-
-
-        double resonance_p = 0.0;
-        double resonance_E = resonance_mass;
-        double costheta;
-        double expt;
-        double t;
 
         resonance = math::VFour(resonance_mass, zeroVec);
 
@@ -2023,7 +1987,6 @@ void npip_gamma(int argc, char *argv[], int nw, int *wlist) {
 void ppi0_gamma(int argc, char *argv[]) {
     int Print = 0,
             maxevents = 9999999,
-            nevents = 0,
             lfevents = 5000;
     int debug = 0;
     double mass,
@@ -2039,7 +2002,6 @@ void ppi0_gamma(int argc, char *argv[]) {
     vector3_t
             vbeam,
             pbeam;
-    char *word;
 
     int printBaryon = 0;
     int printGamma = 0;
@@ -2117,7 +2079,6 @@ void ppi0_gamma(int argc, char *argv[]) {
         math::VFour CMbeam = Boost * beam;
         math::VFour CMtarget = Boost * target;
         double CMenergy = (CMbeam + CMtarget).getT();
-        double p_pi0_threshold = PROTON_MASS + PI0_MASS;
         math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
         mass = CMenergy;
 
@@ -2133,12 +2094,6 @@ void ppi0_gamma(int argc, char *argv[]) {
             exit(1);
         }
 
-
-        double resonance_p = 0.0;
-        double resonance_E = resonance_mass;
-        double costheta;
-        double expt;
-        double t;
 
         resonance = math::VFour(resonance_mass, zeroVec);
 
@@ -2262,11 +2217,9 @@ void ppi0_gamma(int argc, char *argv[]) {
 void ppi0(int argc, char *argv[]) {
     int Print = 0,
             maxevents = 9999999,
-            nevents = 0,
             lfevents = 5000;
     double masslow = 2 * PI_MASS,
             masshigh = 3.0,
-            r2 = 0.0,
             t_min = 0.0,
             t_max,
             slope = 3.0,
@@ -2381,8 +2334,6 @@ void ppi0(int argc, char *argv[]) {
         do {
             resonance_mass = randm(masslow, masshigh);
         } while (resonance_mass < n_pi_threshold);
-
-        r2 = randm(0.0, 1.0);
 
         double resonance_p = CMmomentum(CMenergy, resonance_mass, PI_MASS);
         double resonance_E = sqrt(
@@ -2502,7 +2453,6 @@ void ppi0(int argc, char *argv[]) {
 void kpkspim(int argc, char *argv[]) {
     int Print = 0,
             maxevents = 9999999,
-            nevents = 0,
             lfevents = 5000;
     double masslow = KCHARGED_MASS + KZERO_MASS + PI_MASS,
             masshigh = 0,
@@ -2627,7 +2577,6 @@ void kpkspim(int argc, char *argv[]) {
 
         isobar1_mass = randm(k_pi_threshold, (resonance_mass - KCHARGED_MASS));
 
-        double beam_p = CMmomentum(CMenergy, BEAM_MASS, TARGET_MASS);
         double resonance_p = CMmomentum(CMenergy, resonance_mass, PROTON_MASS);
         double resonance_E = sqrt(
                 pow(resonance_mass, 2.0) + pow(resonance_p, 2.0));
@@ -2811,8 +2760,7 @@ void ppipiX_gamma(int argc, char *argv[]) {
             expt_max,
             LorentzFactor = 0,
             lfmax = 0,
-            resonance_mass,
-            isobar1_mass;
+            resonance_mass;
     math::VFour
             beam,
             target,
@@ -2828,8 +2776,6 @@ void ppipiX_gamma(int argc, char *argv[]) {
     vector3_t vbeam, pbeam;
     float beamMass = GAMMA_MASS;
     int printBaryon = 0;
-
-    float tMin;
 
     for (int iarg = 1; iarg < argc; ++iarg) {
         char *ptr = argv[iarg];
@@ -2935,8 +2881,6 @@ void ppipiX_gamma(int argc, char *argv[]) {
 
         /* use distribution t' * exp(-slope*t'), where t' = abs(t - tmin) and
        0 <= t' <= 4*pbeam*presonance in CM */
-        tMin = tmin(pbeam.z, beamMass, PROTON_MASS, resonance_mass,
-                    NEUTRON_MASS);
         //    std::cerr << tMin << std::endl;
         t_max = 4. * beam_p * resonance_p;
         expt_max = exp(-1.) / slope;
@@ -3043,8 +2987,8 @@ void ppipiX_gamma(int argc, char *argv[]) {
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
-                    std::cout << resonance_mass << " "
-                              << isobar1_mass * isobar1_mass << " ";
+                    // The zero used to be isobar mass, which was always zero
+                    std::cout << resonance_mass << " " << 0 << " ";
                     std::cout << (piminus + piplus).getMass() << " ";
                     std::cout << pow((piplus + piminus).getMass(), 2.0) << " ";
                     std::cout << masslow << " " << masshigh << " ";
@@ -3098,8 +3042,7 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
             maxevents = 9999999,
             nevents = 0,
             lfevents = 5000;
-    int PrintGammas = 0;
-    Particle_t Baryon;
+    Particle_t Baryon = {};
     double
             masslow = 3 * PI_MASS,
             masshigh = 0.,
@@ -3134,8 +3077,6 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
     int printGamma = 0;
 
     double pi1mass = Mass(Pi1), pi2mass = Mass(Pi2), baryonmass = Mass(Baryon);
-
-    float tMin;
 
     int debug = 0;
 
@@ -3271,7 +3212,6 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
 
         /* use distribution t' * exp(-slope*t'), where t' = abs(t - tmin) and
        0 <= t' <= 4*pbeam*presonance in CM */
-        tMin = tmin(pbeam.z, beamMass, PROTON_MASS, resonance_mass, baryonmass);
         //    std::cerr << tMin << std::endl;
         t_max = 4. * beam_p * resonance_p;
         expt_max = exp(-1.) / slope;
@@ -3635,15 +3575,13 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
 
 /*  omega pi pip */
 
-void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
-                Particle_t Pi2) {
+void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1, Particle_t Pi2) {
     int icount = 0;
     int Print = 0,
             maxevents = 9999999,
             nevents = 0,
             lfevents = 5000;
-    int PrintGammas = 0;
-    Particle_t Baryon;
+    Particle_t Baryon {};
     double
             masslow = 3 * PI_MASS,
             masshigh = 0.,
@@ -3680,8 +3618,6 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
     int printGamma = 0;
 
     double pi1mass = Mass(Pi1), pi2mass = Mass(Pi2), baryonmass = Mass(Baryon);
-
-    float tMin;
 
     int debug = 0;
 
@@ -3817,7 +3753,6 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
 
         /* use distribution t' * exp(-slope*t'), where t' = abs(t - tmin) and
        0 <= t' <= 4*pbeam*presonance in CM */
-        tMin = tmin(pbeam.z, beamMass, PROTON_MASS, resonance_mass, baryonmass);
         //    std::cerr << tMin << std::endl;
         t_max = 4. * beam_p * resonance_p;
         expt_max = exp(-1.) / slope;
@@ -4224,17 +4159,13 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
             maxevents = 9999999,
             nevents = 0,
             lfevents = 5000;
-    int PrintGammas = 0;
     Particle_t Baryon;
     double
             masslow = 3 * PI_MASS,
             masshigh = 0.,
-            t_max,
-            expt_max,
             LorentzFactor = 0,
             lfmax = 0,
-            resonance_mass,
-            isobar1_mass;
+            resonance_mass;
     math::VFour
             beam,
             target,
@@ -4260,8 +4191,6 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
     int printBaryon = 0;
     int printGamma = 0;
 
-
-    float tMin;
 
     int debug = 0;
 
@@ -4387,30 +4316,22 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
             resonance_mass = randm(masslow, masshigh);
         } while (resonance_mass < threshold);
 
-        double beam_p = CMmomentum(CMenergy, BEAM_MASS, TARGET_MASS);
         double resonance_p = CMmomentum(CMenergy, resonance_mass, baryonmass);
         double resonance_E = sqrt(
                 pow(resonance_mass, 2.0) + pow(resonance_p, 2.0));
         double costheta;
-        double t;
 
         /* use distribution t' * exp(-slope*t'), where t' = abs(t - tmin) and
        0 <= t' <= 4*pbeam*presonance in CM */
-        tMin = tmin(pbeam.z, beamMass, PROTON_MASS, resonance_mass, baryonmass);
         //    std::cerr << tMin << std::endl;
-        t_max = 4. * beam_p * resonance_p;
-        expt_max = exp(-1.) / slope;
-
 
         if (Isotropic)
             costheta = randm(-1.0, 1.0);
         else {
 
-            double tp = tprimeExp(pbeam.z, beamMass, PROTON_MASS,
-                                  resonance_mass, baryonmass, slope);
-            costheta = 1. - 2. * t / t_max;
-            costheta = cosThetaExp(pbeam.z, beamMass, PROTON_MASS,
-                                   resonance_mass, baryonmass, slope);
+            costheta = cosThetaExp(
+                pbeam.z, beamMass, PROTON_MASS, resonance_mass, baryonmass, slope
+            );
             //     costheta = 1.0;
         }
 
@@ -4616,7 +4537,6 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
                     std::cerr << "  Resonance mass: " << resonance_mass << endl;
                     std::cerr << "  Resonance CMmomentum: " << resonance_p
                               << endl;
-                    std::cerr << "  t: " << t << endl;
                     std::cerr << "  Resonance:\n " << resonance << endl;
                     std::cerr << "recoil: \n  " << recoil << endl;
                     std::cerr << "pi+ :\n  " << piplus << endl;
@@ -4732,22 +4652,16 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
 /* double Dalitz */
 void
 doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
-             Particle_t Pi2, Particle_t Recoil, int decay) {
-    int icount = 0;
-    int Print = 0,
-            maxevents = 9999999,
-            nevents = 0,
-            lfevents = 5000;
+             Particle_t Pi2, int decay) {
+    int maxevents = 9999999,
+        lfevents = 5000;
     Particle_t Baryon;
     double
             masslow = Mass(Pi1) + Mass(Pi2),
             masshigh = 0.,
-            t_max,
-            expt_max,
             LorentzFactor = 0,
             lfmax = 0,
-            resonance_mass,
-            isobar1_mass;
+            resonance_mass;
     math::VFour
             beam,
             target,
@@ -4764,9 +4678,6 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
     math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass;
-    float baryonmass;
-    int printBaryon = 0;
-    int printGamma = 0;
     int debug = 0;
     Particle_t Target = Proton;
     float tMin;
@@ -4794,26 +4705,14 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
                     ptr++;
                     masshigh = atof(ptr);
                     break;
-                case 'p':
-                    Print = 1;
-                    break;
                 case 'M':
                     break;
                 case 'b':
                     beamMass = atof(++ptr);
                     break;
-                case 'B':
-                    printBaryon = 1;
-                    break;
-                case 'g':
-                    printGamma = 1;
-                    break;
                 case 'D':
                     debug = 1;
                     break;
-                case 'h':
-                    UsagedoubleDalitz(argv[0]);
-                    return;
                 default:
                     std::cerr << "unrecognized argument: " << *ptr << std::endl;
                     break;
@@ -4839,7 +4738,6 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
 
 
     beamMass = Mass(Beam);
-    baryonmass = Mass(Baryon);
 
     if (masslow < pipiThreshold)
         masslow = pipiThreshold;
@@ -4890,7 +4788,7 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
             resonance_mass = sqrt(resonance_mass);
         } while (resonance_mass < pipiThreshold);
 
-        double e1_p, e2_p, gamma1_p, gamma2_p, pi_p;
+        double e1_p = 0.0, e2_p = 0.0, gamma1_p = 0.0, gamma2_p = 0.0, pi_p;
         double beam_p = CMmomentum(CMenergy, Mass(Beam), PROTON_MASS);
         double resonance_p = CMmomentum(CMenergy, resonance_mass, Mass(Baryon));
         double resonance_E = sqrt(
@@ -4900,12 +4798,8 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
 
         /* use distribution t' * exp(-slope*t'), where t' = abs(t - tmin) and
        0 <= t' <= 4*pbeam*presonance in CM */
-        tMin = tmin(pbeam.z, Mass(Beam), PROTON_MASS, resonance_mass,
-                    Mass(Baryon));
+        tMin = tmin(pbeam.z, Mass(Beam), PROTON_MASS, resonance_mass, Mass(Baryon));
         //    std::cerr << tMin << std::endl;
-        t_max = 4. * beam_p * resonance_p;
-        expt_max = exp(-1.) / slope;
-
 
         if (Isotropic)
             twoBodyDecay(CMenergy, resonance_mass, Mass(Baryon), resonance,
@@ -4944,7 +4838,7 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
             math::VFour tmp;
 
             math::VFour x;
-            double epemMass;
+            double epemMass = 0.0;
             twoBodyDecay(Mass(Pi1), 0.0, epemMass, gamma1, x);
             gamma1_p = CMmomentum(Mass(Pi1), epemMass, Mass(Gamma));
 
@@ -5199,13 +5093,10 @@ void cpcmn0N(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
             maxevents = 9999999,
             nevents = 0,
             lfevents = 5000;
-    int PrintGammas = 0;
     Particle_t Baryon;
     double
             masslow = Mass(Cplus) + Mass(Cminus) + Mass(N0),
             masshigh = 0.,
-            t_max,
-            expt_max,
             LorentzFactor = 0,
             lfmax = 0,
             resonance_mass,
@@ -5231,7 +5122,6 @@ void cpcmn0N(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
     int printGamma = 0;
     int debug = 0;
     Particle_t Target = Proton;
-    float tMin;
 
     for (int iarg = 1; iarg < argc; ++iarg) {
         char *ptr = argv[iarg];
@@ -5354,20 +5244,14 @@ void cpcmn0N(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
         } while (resonance_mass < cpcmn0Threshold);
         isobar1_mass = randm(cpcmThreshold, (resonance_mass - Mass(N0)));
 
-        double beam_p = CMmomentum(CMenergy, Mass(Beam), PROTON_MASS);
         double resonance_p = CMmomentum(CMenergy, resonance_mass, Mass(Baryon));
         double resonance_E = sqrt(
                 pow(resonance_mass, 2.0) + pow(resonance_p, 2.0));
         double costheta;
-        double t;
 
         /* use distribution t' * exp(-slope*t'), where t' = abs(t - tmin) and
        0 <= t' <= 4*pbeam*presonance in CM */
-        tMin = tmin(pbeam.z, Mass(Beam), PROTON_MASS, resonance_mass,
-                    Mass(Baryon));
         //    std::cerr << tMin << std::endl;
-        t_max = 4. * beam_p * resonance_p;
-        expt_max = exp(-1.) / slope;
 
 
         if (Isotropic)
@@ -5502,7 +5386,6 @@ void cpcmn0N(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
                     std::cerr << "Resonance\n";
                     std::cerr << "  Resonance mass: " << resonance_mass << endl;
                     std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
-                    std::cerr << "  t: " << t << endl;
                     std::cerr << "  Resonance:\n " << resonance << endl;
                     std::cerr << "recoil: \n  " << recoil << endl;
                     std::cerr << "isobar1\n";
@@ -5651,12 +5534,9 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
     double
             masslow = Mass(Cplus) + Mass(Cminus),
             masshigh = 0.,
-            t_max,
-            expt_max,
             LorentzFactor = 0,
             lfmax = 0,
-            resonance_mass,
-            isobar1_mass;
+            resonance_mass;
     math::VFour
             beam,
             target,
@@ -5670,7 +5550,6 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
     vector3_t vbeam, pbeam;
     float beamMass;
     float baryonmass;
-    int printBaryon = 0;
     int debug = 0;
 
     Particle_t Target = Proton;
@@ -5711,9 +5590,6 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
                 case 'b':
                     beamMass = atof(++ptr);
                     break;
-                case 'B':
-                    printBaryon = 1;
-                    break;
                 case 'D':
                     debug = 1;
                     break;
@@ -5728,7 +5604,6 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
     }
 
     double slope = (Slope > 0.0) ? Slope : 10.0;
-    int qtot = Q(Beam) + Q(Proton) - Q(Cplus) - Q(Cminus);
     double cpcmThreshold = Mass(Cplus) + Mass(Cminus);
 
     Baryon = Recoil;
@@ -5783,18 +5658,10 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
             resonance_mass = randm(masslow, masshigh);
         } while (resonance_mass < cpcmThreshold);
 
-        double beam_p = CMmomentum(CMenergy, Mass(Beam), PROTON_MASS);
         double resonance_p = CMmomentum(CMenergy, resonance_mass, Mass(Baryon));
         double resonance_E = sqrt(
                 pow(resonance_mass, 2.0) + pow(resonance_p, 2.0));
         double costheta;
-        double costhetax, tx;
-        double t;
-        double mTot = beamMass + TARGET_MASS + Mass(Baryon) + Mass(Cplus) -
-                      Mass(Cminus);
-        double s = pow(sqrt(beam_p * beam_p + beamMass * beamMass) +
-                       sqrt(beam_p * beam_p + TARGET_MASS * TARGET_MASS),
-                       2);
 
         tMin = tmin(pbeam.z, Mass(Beam), PROTON_MASS, resonance_mass,
                     Mass(Baryon));
@@ -5805,17 +5672,11 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
        0 <= t' <= 4*pbeam*presonance in CM */
         tMin = tmin(pbeam.z, beamMass, PROTON_MASS, resonance_mass, baryonmass);
         //    std::cerr << tMin << std::endl;
-        t_max = 4. * beam_p * resonance_p;
-        expt_max = exp(-1.) / slope;
-
 
         if (Isotropic)
             costheta = randm(-1.0, 1.0);
         else {
 
-            double tp = tprimeExp(pbeam.z, beamMass, PROTON_MASS,
-                                  resonance_mass, baryonmass, slope);
-            costheta = 1. - 2. * t / t_max;
             costheta = cosThetaExp(pbeam.z, beamMass, PROTON_MASS,
                                    resonance_mass, baryonmass, slope);
             //     costheta = 1.0;
@@ -5892,7 +5753,6 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
                     std::cerr << "Resonance\n";
                     std::cerr << "  Resonance mass: " << resonance_mass << endl;
                     std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
-                    std::cerr << "  t: " << t << endl;
                     std::cerr << "  Resonance:\n " << resonance << endl;
                     std::cerr << "recoil: \n  " << recoil << endl;
                     std::cerr << "c+ :\n  " << cplus << endl;
@@ -5914,9 +5774,8 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
                     std::cout << std::endl;
                 } else if (debug) {
                     std::cout << "T " << (beam - cplus - cminus).getLenSq() << " "
-                              << (target - recoil).getLenSq() << " " << t
-                              << " " << tMin << " " << costheta << " "
-                              << costhetax << " " << (t - tMin) << " " << tx
+                              << (target - recoil).getLenSq() << " " << " "
+                              << tMin << " " << costheta << " "
                               << " " << std::endl;
                 }
                 if (txt2part_style) {
@@ -5994,13 +5853,10 @@ void etaprimepi(int argc, char *argv[], Particle_t Beam, Particle_t Pi) {
             maxevents = 9999999,
             nevents = 0,
             lfevents = 5000;
-    int PrintGammas = 0;
-    Particle_t Baryon;
+    Particle_t Baryon {};
     double
             masslow = ETAPRIME_MASS + PI_MASS,
             masshigh = 0.,
-            t_max,
-            expt_max,
             LorentzFactor = 0,
             lfmax = 0,
             resonance_mass,
@@ -6459,14 +6315,10 @@ void test100(int argc, char *argv[]) {
     int printGamma = 0;
     int Print = 0,
             maxevents = 9999999,
-            nevents = 0,
             lfevents = 5000;
     double
             masslow = 3 * PI_MASS,
             masshigh = 0.,
-            t_max,
-            slope = 10.0,
-            expt_max,
             LorentzFactor = 0,
             lfmax = 0,
             resonance_mass,
@@ -6490,14 +6342,12 @@ void test100(int argc, char *argv[]) {
 
     math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
-    float beamMass = BEAM_MASS;
     int printBaryon = 0;
 
     double ep_low = 1, ep_high = 4, theta_low = 0.5, theta_high = 1.2;
     double ep, thet, thetg, wsq, qx, qy;
     double px, py, pz, phi;
 
-    float tMin;
     float setMassHigh = 0.0;
 
     int debug = 0;
@@ -6532,9 +6382,6 @@ void test100(int argc, char *argv[]) {
                     debug = 1;
                     break;
                 case 'M':
-                    break;
-                case 'b':
-                    beamMass = atof(++ptr);
                     break;
                 case 'B':
                     printBaryon = 1;
@@ -6628,7 +6475,6 @@ void test100(int argc, char *argv[]) {
         double resonance_E = sqrt(
                 pow(resonance_mass, 2.0) + pow(resonance_p, 2.0));
         double costheta;
-        double t;
 
         // Only isotropic right now
         costheta = randm(-1.0, 1.0);
@@ -6740,7 +6586,6 @@ void test100(int argc, char *argv[]) {
                     std::cerr << "Resonance\n";
                     std::cerr << "  Resonance mass: " << resonance_mass << endl;
                     std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
-                    std::cerr << "  t: " << t << endl;
                     std::cerr << "  Resonance:\n " << resonance << endl;
                     std::cerr << "recoil: \n  " << recoil << endl;
                     std::cerr << "isobar1\n";
@@ -6808,9 +6653,6 @@ void test100(int argc, char *argv[]) {
             }
         }
     }
-}
-
-void UsagedoubleDalitz(char *ProcessName) {
 }
 
 void UsageM100(char *ProcessName) {
@@ -7328,9 +7170,6 @@ tprimeExp(double plab, double beamMass, double targetMass, double resonanceMass,
           double recoilMass, double slope) {
     float tMin = tmin(plab, beamMass, targetMass, resonanceMass, recoilMass);
     float tMax = tmax(plab, beamMass, targetMass, resonanceMass, recoilMass);
-    float W = sqrt(s(plab, beamMass, targetMass));
-    float resonance_p = pprime(W, resonanceMass, recoilMass);
-    float beam_p = pprime(W, beamMass, targetMass);
     double t0 = fabs(tMin);
     double t1 = fabs(tMax);
     double A = slope / (exp(-slope * t0) - exp(-slope * t1));
@@ -7564,18 +7403,13 @@ c1c2(int argc, char **argv, Particle_t Beam, Particle_t Target, Particle_t C1,
      Particle_t C2, Particle_t P2_1, Particle_t P2_2, Particle_t Recoil) {
     int Print = 0,
             maxevents = 9999999,
-            nevents = 0,
             lfevents = 5000;
     Particle_t Baryon;
     double
             masslow = Mass(C1) + Mass(C2),
             masshigh = 0.,
-            t_max,
-            expt_max,
             LorentzFactor = 0,
-            lfmax = 0,
-            resonance_mass,
-            isobar1_mass;
+            resonance_mass;
     math::VFour
             beam,
             target,
@@ -7589,8 +7423,6 @@ c1c2(int argc, char **argv, Particle_t Beam, Particle_t Target, Particle_t C1,
     math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass;
-    float baryonmass;
-    int printBaryon = 0;
     int debug = 0;
     double targetMass;
     int massHighSet = 0;
@@ -7633,9 +7465,6 @@ c1c2(int argc, char **argv, Particle_t Beam, Particle_t Target, Particle_t C1,
                 case 'b':
                     beamMass = atof(++ptr);
                     break;
-                case 'B':
-                    printBaryon = 1;
-                    break;
                 case 'D':
                     debug = 1;
                     break;
@@ -7650,13 +7479,11 @@ c1c2(int argc, char **argv, Particle_t Beam, Particle_t Target, Particle_t C1,
     }
 
     double slope = (Slope > 0.0) ? Slope : 10.0;
-    int qtot = Q(Beam) + Q(Proton) - Q(C1) - Q(C2);
     double c1c2Threshold = Mass(C1) + Mass(C2);
 
     Baryon = Recoil;
 
     beamMass = Mass(Beam);
-    baryonmass = Mass(Baryon);
     targetMass = Mass(Target);
 
     if (masslow < c1c2Threshold)
@@ -7953,13 +7780,10 @@ void body3(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
             maxevents = 9999999,
             nevents = 0,
             lfevents = 5000;
-    int PrintGammas = 0;
     Particle_t Baryon;
     double
             masslow = Mass(Cplus) + Mass(Cminus) + Mass(N0),
             masshigh = 0.,
-            t_max,
-            expt_max,
             LorentzFactor = 0,
             lfmax = 0,
             resonance_mass,
@@ -7980,12 +7804,10 @@ void body3(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
     math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass;
-    float baryonmass;
     int printBaryon = 0;
     int printGamma = 0;
     int debug = 0;
     Particle_t Target = Proton;
-    float tMin;
 
     for (int iarg = 1; iarg < argc; ++iarg) {
         char *ptr = argv[iarg];
@@ -8037,8 +7859,6 @@ void body3(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
         }
     }
 
-    double slope = (Slope > 0.0) ? Slope : 10.0;
-    double cpcmn0Threshold = Mass(Cplus) + Mass(Cminus) + Mass(N0);
     double cpcmThreshold = Mass(Cplus) + Mass(Cminus);
     int qtot = Q(Beam) + Q(Proton) - Q(Cplus) - Q(Cminus) - Q(N0);
     switch (qtot) {
@@ -8084,16 +7904,11 @@ void body3(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
         Boost.set(beam + target);
         math::VFour CMbeam = Boost * beam;
         math::VFour CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).getT();
 
         resonance_mass = (beam + target).getMass();
         isobar1_mass = randm(cpcmThreshold, resonance_mass - Mass(N0));
 
-        double beam_p = CMmomentum(CMenergy, Mass(Beam), PROTON_MASS);
         double resonance_p = 0.0;
-        double resonance_E = sqrt(
-                pow(resonance_mass, 2.0) + pow(resonance_p, 2.0));
-
 
         resonance = math::VFour(resonance_mass, math::VThree(0.0, 0.0, 0.0));
 
@@ -8340,12 +8155,9 @@ void bcpcm(int argc, char *argv[], Particle_t Beam, Particle_t Part1,
     double
             masslow = Mass(Part2) + Mass(Part3),
             masshigh = 0.,
-            t_max,
-            expt_max,
             LorentzFactor = 0,
             lfmax = 0,
-            resonance_mass,
-            isobar1_mass;
+            resonance_mass;
     math::VFour
             beam,
             target,
@@ -8358,7 +8170,6 @@ void bcpcm(int argc, char *argv[], Particle_t Beam, Particle_t Part1,
     math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass;
-    int printBaryon = 0;
     int debug = 0;
 
     Particle_t Target = Proton;
@@ -8399,9 +8210,6 @@ void bcpcm(int argc, char *argv[], Particle_t Beam, Particle_t Part1,
                 case 'b':
                     beamMass = atof(++ptr);
                     break;
-                case 'B':
-                    printBaryon = 1;
-                    break;
                 case 'D':
                     debug = 1;
                     break;
@@ -8416,7 +8224,6 @@ void bcpcm(int argc, char *argv[], Particle_t Beam, Particle_t Part1,
     }
 
     double slope = (Slope > 0.0) ? Slope : 4.0;
-    int qtot = Q(Beam) + Q(Proton) - Q(Part1) - Q(Part2) - Q(Part3);
     double Threshold = Mass(Part2) + Mass(Part3);
 
     beamMass = Mass(Beam);
@@ -8475,11 +8282,6 @@ void bcpcm(int argc, char *argv[], Particle_t Beam, Particle_t Part1,
         double costheta;
         double costhetax, tx;
         double t;
-        double mTot = beamMass + TARGET_MASS + Mass(Part1) + Mass(Part2) -
-                      Mass(Part3);
-        double s = pow(sqrt(beam_p * beam_p + beamMass * beamMass) +
-                       sqrt(beam_p * beam_p + TARGET_MASS * TARGET_MASS),
-                       2);
 
         tMin = tmin(pbeam.z, Mass(Beam), PROTON_MASS, Mass(Part1),
                     resonance_mass);

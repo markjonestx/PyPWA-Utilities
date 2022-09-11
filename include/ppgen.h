@@ -81,8 +81,6 @@ void Usagecpcm(char *ProcessName);
 
 void Usagec1c2(char *ProcessName);
 
-void UsagedoubleDalitz(char *ProcessName);
-
 void MUsage(char *ProcessName);
 
 
@@ -150,7 +148,7 @@ twoBodyDecay(double mass, double mass1, double mass2, math::VFour &p1, math::VFo
 
 void
 doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
-             Particle_t Pi2, Particle_t Recoil, int decay);
+             Particle_t Pi2, int decay);
 
 void generateBeamMCinsideTarget(vector3_t *, vector3_t *);
 
