@@ -36,7 +36,7 @@ using namespace std;
 
 int yylex(void);
 
-void yyerror(char *s);
+void yyerror(const char *s);
 
 #define YYDEBUG 1
 
