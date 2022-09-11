@@ -5,8 +5,8 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
-#include <lib/math/VFour.h>
-#include <lib/math/VThree.h>
+#include <shared/math/VFour.h>
+#include <shared/math/VThree.h>
 
 
 template<class Type>

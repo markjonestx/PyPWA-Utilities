@@ -13,8 +13,8 @@
 #include <ctime>
 #include <string>
 #include <ppgen/txtEvent.h>
-#include <lib/event.h>
-#include <lib/math/io.h>
+#include <shared/event.h>
+#include <shared/math/io.h>
 
 
 using namespace std;

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <complex>
+#include <shared/particle.h>
+
+
 #ifndef YYSTYPE
 typedef union {
     int num;

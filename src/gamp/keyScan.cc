@@ -28,7 +28,7 @@
 
 #include <cstdio>
 #include <unistd.h>
-#include <lib/particleData.h>
+#include <shared/particleData.h>
 
 
 /* cfront 1.2 defines "c_plusplus" instead of "__cplusplus" */
@@ -438,7 +438,7 @@ char *yytext;
 #line 5 "keyScan.ll"
 
 #include <iostream>
-#include "lib/particle.h"
+#include <shared/particle.h>
 #include "keyParse.h"
 
 using namespace std;

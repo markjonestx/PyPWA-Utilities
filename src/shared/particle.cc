@@ -1,7 +1,16 @@
 #include "particle.h"
 
-#include <lib/particleData.h>
-#include <lib/math/io.h>
+#include <list>
+#include <string>
+#include <shared/event.h>
+#include <shared/lorentz.h>
+#include <shared/massDep.h>
+#include <shared/matrix.h>
+#include <shared/particleData.h>
+#include <shared/pputil.h>
+#include <shared/math/io.h>
+#include <shared/math/VFour.h>
+#include <shared/math/VThree.h>
 
 
 using std::cout;

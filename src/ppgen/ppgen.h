@@ -12,9 +12,9 @@
 #include <cstdlib>
 #include <string>
 #include <ppgen/ntypes.h>
-#include <lib/lorentz.h>
-#include <lib/particleType.h>
-#include <lib/math/VFour.h>
+#include <shared/lorentz.h>
+#include <shared/particleType.h>
+#include <shared/math/VFour.h>
 
 
 /* units:  Energy, Mass: GeV

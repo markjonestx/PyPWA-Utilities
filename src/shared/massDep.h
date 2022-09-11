@@ -3,8 +3,8 @@
 #include <iostream>
 #include <complex>
 #include <vector>
-#include <lib/particle.h>
-#include <lib/matrix.h>
+#include <shared/particle.h>
+#include <shared/matrix.h>
 
 
 class particle;

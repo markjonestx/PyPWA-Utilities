@@ -1,6 +1,11 @@
 #include "massDep.h"
 
-#include <lib/particleData.h>
+#include <iostream>
+#include <complex>
+#include <vector>
+#include <shared/particle.h>
+#include <shared/particleData.h>
+#include <shared/matrix.h>
 
 
 using std::complex;

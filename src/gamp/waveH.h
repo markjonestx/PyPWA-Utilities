@@ -2,11 +2,11 @@
 
 #include <complex>
 #include <string>
-#include "lib/pputil.h"
-#include <lib/event.h>
-#include <lib/lorentz.h>
-#include <lib/particle.h>
-#include <lib/math/VFour.h>
+#include <shared/pputil.h>
+#include <shared/event.h>
+#include <shared/lorentz.h>
+#include <shared/particle.h>
+#include <shared/math/VFour.h>
 
 #define getsign(x) (((x)>0)?"+":"-")
 

@@ -6,6 +6,6 @@ set(PPGEN_SOURCES
 )
 
 add_executable(ppgen ${PPGEN_SOURCES})
-target_link_libraries(ppgen lib)
+target_link_libraries(ppgen shared)
 
 install(TARGETS ppgen DESTINATION bin)

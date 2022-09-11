@@ -1,7 +1,7 @@
 
 add_subdirectory(math)
 
-add_library(lib
+add_library(shared
         event.cc
         lorentz.cc
         particle.cc
@@ -11,7 +11,7 @@ add_library(lib
 )
 
 
-target_link_libraries(lib
+target_link_libraries(shared
         PUBLIC
-        libMath
+        math
 )

@@ -1,8 +1,9 @@
 
 #include <cstdlib>
 #include <unistd.h>
-#include <lib/pputil.h>
 #include <gamp/keyfile.h>
+#include <shared/particleData.h>
+#include <shared/pputil.h>
 
 
 extern int keydebug;

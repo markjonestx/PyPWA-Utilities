@@ -1,6 +1,6 @@
 #include "txtEvent.h"
 
-#include <lib/math/io.h>
+#include <shared/math/io.h>
 
 
 using std::list;

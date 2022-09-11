@@ -5,7 +5,7 @@
 #pragma once
 
 #include <compare>
-#include <lib/math/VThree.h>
+#include <shared/math/VThree.h>
 
 
 namespace math {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <lib/matrix.h>
+#include <shared/matrix.h>
 
 
 double randm(double low, double high);

@@ -3,6 +3,9 @@
 //
 
 #include "io.h"
+#include <shared/math/VFour.h>
+#include <shared/math/VThree.h>
+
 
 namespace math {
 

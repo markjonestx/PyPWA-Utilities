@@ -1,7 +1,14 @@
 #include "waveH.h"
 
-#include <lib/math/VFour.h>
-#include <lib/math/io.h>
+#include <complex>
+#include <string>
+#include <shared/pputil.h>
+#include <shared/event.h>
+#include <shared/lorentz.h>
+#include <shared/particle.h>
+#include <shared/math/io.h>
+#include <shared/math/VFour.h>
+#include <shared/math/VThree.h>
 
 
 wave::wave(const wave &wv) : particle(wv) {

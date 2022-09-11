@@ -3,12 +3,12 @@
 #include <iostream>
 #include <list>
 #include <string>
-#include <lib/pputil.h>
-#include <lib/lorentz.h>
-#include <lib/particle.h>
-#include <lib/math/io.h>
-#include <lib/math/VFour.h>
-#include <lib/math/VThree.h>
+#include <shared/pputil.h>
+#include <shared/lorentz.h>
+#include <shared/particle.h>
+#include <shared/math/io.h>
+#include <shared/math/VFour.h>
+#include <shared/math/VThree.h>
 
 
 using std::list;

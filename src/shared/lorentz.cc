@@ -1,5 +1,10 @@
 #include "lorentz.h"
 
+#include <cmath>
+#include <shared/matrix.h>
+#include <shared/math/VFour.h>
+#include <shared/math/VThree.h>
+
 
 rotation rotation::set(double alpha, double beta, double gamma) {
     double ca, sa, cb, sb, cg, sg;

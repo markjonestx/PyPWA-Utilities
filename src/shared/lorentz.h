@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cmath>
-#include <lib/matrix.h>
-#include <lib/math/VFour.h>
-#include <lib/math/VThree.h>
+#include <shared/matrix.h>
+#include <shared/math/VFour.h>
+#include <shared/math/VThree.h>
 
 
 class rotation : public matrix<double> {

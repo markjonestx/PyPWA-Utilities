@@ -2,14 +2,14 @@
 
 #include <list>
 #include <string>
-#include <lib/event.h>
-#include <lib/lorentz.h>
-#include <lib/massDep.h>
-#include <lib/matrix.h>
-#include <lib/particleData.h>
-#include <lib/pputil.h>
-#include <lib/math/VFour.h>
-#include <lib/math/VThree.h>
+#include <shared/event.h>
+#include <shared/lorentz.h>
+#include <shared/massDep.h>
+#include <shared/matrix.h>
+#include <shared/particleData.h>
+#include <shared/pputil.h>
+#include <shared/math/VFour.h>
+#include <shared/math/VThree.h>
 
 
 class Decay;

@@ -7,6 +7,8 @@
 #include <compare>
 #include <cmath>
 #include <stdexcept>
+#include <shared/math/VThree.h>
+
 
 namespace math {
 

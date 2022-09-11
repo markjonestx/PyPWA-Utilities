@@ -2,9 +2,9 @@
 
 #include <list>
 #include <string>
-#include <lib/lorentz.h>
-#include <lib/particle.h>
-#include <lib/pputil.h>
+#include <shared/lorentz.h>
+#include <shared/particle.h>
+#include <shared/pputil.h>
 
 
 extern particleDataTable PDGtable;

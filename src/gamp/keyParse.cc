@@ -26,10 +26,10 @@
 
 #include <iostream>
 #include <gamp/keyfile.h>
-#include <lib/massDep.h>
 #include <gamp/wave.h>
-#include <lib/particle.h>
-#include <lib/particleData.h>
+#include <shared/massDep.h>
+#include <shared/particle.h>
+#include <shared/particleData.h>
 
 #define stoi(x) strcmp((x),"+")?-1:1
 
