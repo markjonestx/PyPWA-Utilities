@@ -2,8 +2,8 @@
 
 #include <string>
 #include <list>
+
 #include <pputil.h>
-#include <Vec.h>
 #include <lorentz.h>
 #include <particle.h>
 

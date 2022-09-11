@@ -14,7 +14,7 @@ complex<double> breitWigner::val(particle &p) {
     double Gamma0 = p.Width();
     double q = p.q();
     double q0 = p.q0();
-    double m = ~(p.get4P());
+    double m = p.get4P().getMass();
     double GammaV;
     int l = p.get_decay()->L();
 
@@ -81,7 +81,7 @@ complex<double> AMP_M::val(particle &p) {
     double K_mass = PDGtable.get("K").Mass();
     double K0_mass = PDGtable.get("K0").Mass();
     double Kmean_mass = 0.5 * (K_mass + K0_mass);
-    double My_mass = ~(p.get4P());
+    double My_mass = p.get4P().getMass();
     double s = My_mass * My_mass;
     if (fabs(s - _sP.el(0, 1)) < 1e-6) {
         My_mass += 1e-6;

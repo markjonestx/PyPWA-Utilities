@@ -1,10 +1,14 @@
 #pragma once
+
+#include <complex>
+#include <string>
+
 #include <lorentz.h>
 #include <particle.h>
 #include <event.h>
 #include <pputil.h>
-#include <complex>
-#include <string>
+#include <math/VFour.h>
+
 
 #define getsign(x) (((x)>0)?"+":"-")
 
@@ -14,8 +18,8 @@ class wave : public particle {
 private:
     int _m;
     int _epsilon;
-    fourVec _beam;
-    fourVec _target;
+    math::VFour _beam;
+    math::VFour _target;
     string _channel;
     double _b;
     double _t;
@@ -47,9 +51,9 @@ public:
         return (*this);
     }
 
-    fourVec getBeam() const { return this->_beam; }
+    math::VFour getBeam() const { return this->_beam; }
 
-    fourVec getTarget() const { return this->_target; }
+    math::VFour getTarget() const { return this->_target; }
 
     wave channel(char *c) {
         this->_channel = c;

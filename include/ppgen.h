@@ -11,8 +11,9 @@
 
 #include <cstdlib>
 #include <string>
+
 #include <ntypes.h>
-#include <Vec.h>
+#include <math/VFour.h>
 #include <lorentz.h>
 #include <particleType.h>
 
@@ -136,7 +137,7 @@ void body3(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
            Particle_t Cminus, Particle_t N0, int decay);
 
 double
-Decay2(fourVec &Rest, double massRest, fourVec &P1, double massP1, fourVec &P2,
+Decay2(math::VFour &Rest, double massRest, math::VFour &P1, double massP1, math::VFour &P2,
        double massP2);
 
 void
@@ -145,7 +146,7 @@ c1c2(int argc, char **argv, Particle_t Beam, Particle_t Target, Particle_t C1,
      Particle_t C2, Particle_t P2_1, Particle_t P2_2, Particle_t Recoil);
 
 void
-twoBodyDecay(double mass, double mass1, double mass2, fourVec &p1, fourVec &p2);
+twoBodyDecay(double mass, double mass1, double mass2, math::VFour &p1, math::VFour &p2);
 
 void
 doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,

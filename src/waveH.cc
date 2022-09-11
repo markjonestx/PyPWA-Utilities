@@ -1,4 +1,5 @@
 #include "waveH.h"
+#include <math/io.h>
 
 wave::wave(const wave &wv) : particle(wv) {
     this->_m = wv._m;
@@ -22,10 +23,8 @@ wave &wave::operator=(const wave &wv) {
 
 void wave::print() const {
     cout << "wave: " << endl;
-    cout << "beam: ";
-    this->_beam.print();
-    cout << "target: ";
-    this->_target.print();
+    cout << "beam: " << _beam << endl;
+    cout << "target: " << _target << endl;
     if (this->_b == 0.0) {
         cout << this->I() << getsign(this->G());
         cout << "(" << this->J() << getsign(this->P()) << getsign(this->C())
@@ -34,25 +33,24 @@ void wave::print() const {
     } else {
         cout << "b: " << this->_b << " t: " << this->_t;
     }
-    cout << "momentum: ";
-    this->get4P().print();
+    cout << "momentum: " << get4P() << endl;
     cout << "decays to:" << endl;
     if (!(this->Stable())) this->get_decay()->print();
 }
 
 wave wave::fill(const event &e, int debug) {
     Decay *d;
-    fourVec p;
+    math::VFour p;
 
     if (debug) {
         cout << "Filling wave" << endl;
         cout << "Setting beam p to:" << endl;
-        e.beam().get4P().print();
+        cout << e.beam().get4P() << endl;
     }
     this->_beam = e.beam().get4P();
     if (debug) {
         cout << "Setting target p to:" << endl;
-        e.target().get4P().print();
+        cout << e.target().get4P() << endl;
     }
     this->_target = e.target().get4P();
     d = this->get_decay();
@@ -62,7 +60,7 @@ wave wave::fill(const event &e, int debug) {
     p = d->fill(e, debug);
     if (debug) {
         cout << "Setting p of wave to: " << endl;
-        p.print();
+        cout << p << endl;
     }
     this->set4P(p);
 
@@ -78,9 +76,9 @@ wave &wave::setupFrames(int debug) {
         lorentzTransform L, T;
         matrix<double> X(4, 4);
         rotation R;
-        fourVec tempX, tempX_copy, tempBeam, tempTarget, tempChild1;
+        math::VFour tempX, tempX_copy, tempBeam, tempTarget, tempChild1;
         list<particle>::iterator child1 = this->get_decay()->_children.begin();
-        threeVec N;
+        math::VThree N;
 
         tempX = this->get4P();
         tempBeam = this->_beam;
@@ -89,24 +87,20 @@ wave &wave::setupFrames(int debug) {
 
         if (debug) {
             cout << "initially in lab:" << endl;
-            cout << "tempX: ";
-            tempX.print();
-            cout << "tempBeam: ";
-            tempBeam.print();
-            cout << "tempTarget: ";
-            tempTarget.print();
-            cout << "tempChild1: ";
-            tempChild1.print();
+            cout << "tempX: " << tempX << endl;
+            cout << "tempBeam: " << tempBeam << endl;
+            cout << "tempTarget: " << tempTarget << endl;
+            cout << "tempChild1: " << tempChild1 << endl;
         }
 
         if (this->channel() == "t") {
             // put normal to production plane along y
-            N = tempBeam.V() / tempX.V();
+            N = tempBeam.getVector().crossMultiply(tempX.getVector());
         } else if (this->channel() == "s" || this->channel() == "expt") {
             // use lab y
-            N = threeVec(0.0, 1.0, 0.0);
+            N = math::VThree(0.0, 1.0, 0.0);
         }
-        T.set(R.set(N.phi(), N.theta() - M_PI / 2.0, -M_PI / 2.0));
+        T.set(R.set(N.getPhi(), N.getTheta() - M_PI / 2.0, -M_PI / 2.0));
         L = T;
         tempX *= T;
         tempBeam *= T;
@@ -114,14 +108,10 @@ wave &wave::setupFrames(int debug) {
         tempChild1 *= T;
         if (debug) {
             cout << "put normal to PP along y:" << endl;
-            cout << "tempX: ";
-            tempX.print();
-            cout << "tempBeam: ";
-            tempBeam.print();
-            cout << "tempTarget: ";
-            tempTarget.print();
-            cout << "tempChild1: ";
-            tempChild1.print();
+            cout << "tempX: " << tempX << endl;
+            cout << "tempBeam: " << tempBeam << endl;
+            cout << "tempTarget: " << tempTarget << endl;
+            cout << "tempChild1: " << tempChild1 << endl;
         }
 
         // boost to CM frame
@@ -134,18 +124,14 @@ wave &wave::setupFrames(int debug) {
         tempChild1 *= T;
         if (debug) {
             cout << "boost to CM frame:" << endl;
-            cout << "tempX: ";
-            tempX.print();
-            cout << "tempBeam: ";
-            tempBeam.print();
-            cout << "tempTarget: ";
-            tempTarget.print();
-            cout << "tempChild1: ";
-            tempChild1.print();
+            cout << "tempX: " << tempX << endl;
+            cout << "tempBeam: " << tempBeam << endl;
+            cout << "tempTarget: " << tempTarget << endl;
+            cout << "tempChild1: " << tempChild1 << endl;
         }
 
-        //tempX_copy = new fourVec();
-        tempX_copy.set(tempX.t(), tempX.x(), tempX.y(), tempX.z());
+        //tempX_copy = new math::VFour();
+        tempX_copy = math::VFour(tempX.getT(), tempX.getVector());
 
         // boost to X rest frame
         T.set(tempX);
@@ -157,19 +143,15 @@ wave &wave::setupFrames(int debug) {
         tempChild1 *= T;
         if (debug) {
             cout << "boost to XRF:" << endl;
-            cout << "tempX: ";
-            tempX.print();
-            cout << "tempBeam: ";
-            tempBeam.print();
-            cout << "tempTarget: ";
-            tempTarget.print();
-            cout << "tempChild1: ";
-            tempChild1.print();
+            cout << "tempX: " << tempX << endl;
+            cout << "tempBeam: " << tempBeam << endl;
+            cout << "tempTarget: " << tempTarget << endl;
+            cout << "tempChild1: " << tempChild1 << endl;
         }
 
         // put z along X
         // T.set (R.set (tempBeam.V ()));
-        T.set(R.set(0.0, signof(tempX_copy.x()) * tempX_copy.V().theta(), 0.0));
+        T.set(R.set(0.0, signof(tempX_copy.getX()) * tempX_copy.getVector().getTheta(), 0.0));
         X = T * L;
         L = *((lorentzTransform *) &X);
         tempX *= T;
@@ -178,14 +160,10 @@ wave &wave::setupFrames(int debug) {
         tempChild1 *= T;
         if (debug) {
             cout << "put beam along z:" << endl;
-            cout << "tempX: ";
-            tempX.print();
-            cout << "tempBeam: ";
-            tempBeam.print();
-            cout << "tempTarget: ";
-            tempTarget.print();
-            cout << "tempChild1: ";
-            tempChild1.print();
+            cout << "tempX: " << tempX << endl;
+            cout << "tempBeam: " << tempBeam << endl;
+            cout << "tempTarget: " << tempTarget << endl;
+            cout << "tempChild1: " << tempChild1 << endl;
         }
 
         // boost the beam and the target

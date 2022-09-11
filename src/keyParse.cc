@@ -995,9 +995,9 @@ YYPARSE_PARAM_DECL
             if (mode == "binary") {
                 cout.write((char *) yyvsp[-1].Cnum, sizeof(complex<double>));
             } else {
-                cout << "Mass = " << ~(wv.get4P()) << "\t";
+                cout << "Mass = " << wv.get4P().getMass() << "\t";
                 if (wv.channel() == "t") {
-                    cout << "t = " << (e.beam().get4P() - wv.get4P()).lenSq()
+                    cout << "t = " << (e.beam().get4P() - wv.get4P()).getLenSq()
                          << "\t";
                 }
                 cout << "Amp = " << *yyvsp[-1].Cnum << endl;
@@ -1119,7 +1119,7 @@ YYPARSE_PARAM_DECL
                 cout << "This should compute Decay amplitude expt wave" << endl;
             }
             double t = 0.0;
-            fourVec t_init(0.0, threeVec(0.0, 0.0, 0.0));
+            math::VFour t_init;
             if (t_part_init == "beam") {
                 t_init = wv.getBeam();
             } else if (t_part_init == "target") {
@@ -1128,7 +1128,7 @@ YYPARSE_PARAM_DECL
                 cerr << "unknown initial t specifier: " << t_part_init << endl;
                 abort();
             }
-            t = (t_init - *wv.get4P(t_part_final, debug)).lenSq();
+            t = (t_init - *wv.get4P(t_part_final, debug)).getLenSq();
             if (debug) {
                 cout << "calulating amplitude with t = " << t << endl;
             }

@@ -1,6 +1,8 @@
 #pragma once
 #include <cmath>
-#include <Vec.h>
+
+#include <math/VFour.h>
+#include <math/VThree.h>
 #include <matrix.h>
 
 
@@ -15,15 +17,15 @@ public:
 
     rotation set(double, double, double);
 
-    rotation set(const threeVec &);
+    rotation set(const math::VThree &);
 
-    friend threeVec operator*=(threeVec &, const rotation &);
+    friend math::VThree operator*=(math::VThree &, const rotation &);
 
 };
 
 
 class lorentzTransform : public matrix<double> {
-    friend class fourVec;
+    friend class math::VFour;
 
 private:
     double _gamma;
@@ -35,19 +37,19 @@ public:
 
     lorentzTransform(double, double, double);
 
-    lorentzTransform(const threeVec &beta);
+    lorentzTransform(const math::VThree &beta);
 
-    lorentzTransform(const fourVec &);
+    lorentzTransform(const math::VFour &);
 
     lorentzTransform(const rotation &);
 
     ~lorentzTransform() { ; }
 
     lorentzTransform set(double, double, double); // rotation
-    lorentzTransform set(const threeVec &beta); // boost
-    lorentzTransform set(const fourVec &); //boost to rest frame
+    lorentzTransform set(const math::VThree &beta); // boost
+    lorentzTransform set(const math::VFour &); //boost to rest frame
     lorentzTransform set(const rotation &);
 
-    friend fourVec operator*=(fourVec &, const lorentzTransform &);
+    friend math::VFour operator*=(math::VFour &, const lorentzTransform &);
 
 };

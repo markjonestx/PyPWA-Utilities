@@ -4,13 +4,16 @@
 #include <cstring>
 #include <cmath>
 #include <complex>
-#include <Vec.h>
+
+#include <math/VFour.h>
+#include <math/VThree.h>
+
 
 template<class Type>
 class matrix;
 
 template<class Type>
-fourVec operator*=(fourVec &, const matrix<Type> &);
+math::VFour operator*=(math::VFour &, const matrix<Type> &);
 
 template<class Type>
 matrix<Type> operator*(Type, matrix<Type> &);
@@ -73,13 +76,13 @@ public:
 
     matrix zero();
 
-    threeVec operator*(const threeVec &) const;
+    math::VThree operator*(const math::VThree &) const;
 
-    fourVec operator*(const fourVec &) const;
+    math::VFour operator*(const math::VFour &) const;
 
     matrix operator*(Type);
 
-    friend fourVec operator*=<>(fourVec &, const matrix &);
+    friend math::VFour operator*=<>(math::VFour &, const matrix &);
     // friend matrix operator*<>(Type,matrix&);
 
     const matrix &print(std::ostream &os = std::cout) const;
@@ -434,16 +437,16 @@ matrix<Type> matrix<Type>::zero() {
 }
 
 template<class Type>
-threeVec matrix<Type>::operator*(const threeVec &V) const {
+math::VThree matrix<Type>::operator*(const math::VThree &V) const {
 
-    threeVec R;
+    math::VThree R;
 
     assert((this->_nrows == 3) && (this->_ncols == 3));
 
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
-            R.el(i) += (const_cast<matrix<Type> *>(this))->el(i, j) *
-                       (const_cast<threeVec *>(&V))->el(j);
+            R.at(i) += (const_cast<matrix<Type> *>(this))->el(i, j) *
+                       (const_cast<math::VThree *>(&V))->at(j);
         }
     }
     return (R);
@@ -451,16 +454,16 @@ threeVec matrix<Type>::operator*(const threeVec &V) const {
 }
 
 template<class Type>
-fourVec matrix<Type>::operator*(const fourVec &v) const {
+math::VFour matrix<Type>::operator*(const math::VFour &v) const {
 
-    fourVec r;
+    math::VFour r;
 
     assert((this->_nrows == 4) && (this->_ncols == 4));
 
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            r.el(i) += (const_cast<matrix<Type> *>(this))->el(i, j) *
-                       (const_cast<fourVec *>(&v))->el(j);
+            r.at(i) += (const_cast<matrix<Type> *>(this))->el(i, j) *
+                       (const_cast<math::VFour *>(&v))->at(j);
         }
     }
     return (r);
@@ -468,7 +471,7 @@ fourVec matrix<Type>::operator*(const fourVec &v) const {
 }
 
 template<class Type>
-fourVec operator*=(fourVec &v, const matrix<Type> &M) {
+math::VFour operator*=(math::VFour &v, const matrix<Type> &M) {
     v = M * v;
     return v;
 }

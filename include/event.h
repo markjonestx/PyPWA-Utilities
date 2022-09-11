@@ -3,8 +3,10 @@
 #include <iostream>
 #include <string>
 #include <list>
+
 #include <pputil.h>
-#include <Vec.h>
+#include <math/VFour.h>
+#include <math/VThree.h>
 #include <lorentz.h>
 #include <particle.h>
 
@@ -45,8 +47,8 @@ public:
 
     particle target() const;
 
-    fourVec
-    getPartPFinal(std::string name, int charge, int index, int debug = 0) const;
+    math::VFour
+    getPartPFinal(const std::string& name, int charge, int index, int debug = 0) const;
 
     void print() const;
 

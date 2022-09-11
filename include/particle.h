@@ -2,7 +2,9 @@
 
 #include <list>
 #include <string>
-#include <Vec.h>
+
+#include <math/VFour.h>
+#include <math/VThree.h>
 #include <matrix.h>
 #include <lorentz.h>
 #include <particleData.h>
@@ -21,7 +23,7 @@ private:
     static int _particle_debug;
     int _lambda;
     int _charge;
-    fourVec _p;
+    math::VFour _p;
     Decay *_decay;
     int _index;
     std::list<int> _helicities;
@@ -40,7 +42,7 @@ public:
 
     particle &operator=(const particle &);
 
-    particle &set4P(const fourVec &);
+    particle &set4P(const math::VFour &);
 
     particle &Index(int);
 
@@ -65,11 +67,11 @@ public:
 
     int operator<(const particle &);
 
-    fourVec get4P() const;
+    math::VFour get4P() const;
 
-    fourVec *get4P(particle *p, int debug = 0) const;
+    math::VFour *get4P(particle *p, int debug = 0) const;
 
-    threeVec get3P() const;
+    math::VThree get3P() const;
 
     int Index() const;
 
@@ -81,7 +83,7 @@ public:
 
     int is(std::string) const;
 
-    fourVec setupFrames(int debug = 0);
+    math::VFour setupFrames(int debug = 0);
 
     std::string sprint(std::string space = " ");
 
@@ -138,9 +140,9 @@ public:
 
     Decay &calculateS();
 
-    fourVec fill(const event &, int debug = 0);
+    math::VFour fill(const event &, int debug = 0);
 
-    fourVec *get4P(particle *part, int debug = 0);
+    math::VFour *get4P(particle *part, int debug = 0);
 
     Decay &setupFrames(lorentzTransform T, int debug = 0);
 

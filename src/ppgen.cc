@@ -27,16 +27,17 @@ using namespace std;
 #include <ppgen.h>
 #include <event.h>
 #include <txtEvent.h>
+#include <math/io.h>
 
 using namespace std;
 
 #define SPEED_OF_LIGHT 3.0E8
 
-void pParticle_txt2part(Particle_t type, threeVec v, fourVec p);
+void pParticle_txt2part(Particle_t type, math::VThree v, math::VFour p);
 
-void pParticle(Particle_t, threeVec, fourVec);
+void pParticle(Particle_t, math::VThree, math::VFour);
 
-void pParticleGamp(Particle_t, fourVec);
+void pParticleGamp(Particle_t, math::VFour);
 
 int Q(Particle_t pid);
 
@@ -436,9 +437,9 @@ void pippim(int argc, char *argv[]) {
             expt_max,
             lfmax = 0,
             resonance_mass;
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
 
-    fourVec beam,
+    math::VFour beam,
             target,
             resonance,
             recoil,
@@ -459,12 +460,12 @@ void pippim(int argc, char *argv[]) {
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -505,19 +506,19 @@ void pippim(int argc, char *argv[]) {
      *-- beam and target in lab frame
      */
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
-                     pow(BEAM_MASS, 2.0)), threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                     pow(BEAM_MASS, 2.0)), math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
         double pi_pi_threshold = 2 * PI_MASS;
 
         /* in case it was not set */
@@ -569,29 +570,34 @@ void pippim(int argc, char *argv[]) {
         do {
             expt = randm(expt_min, expt_max);
             t = -log(expt) / slope;
-            costheta = (CMbeam.t() * resonance_E
+            costheta = (CMbeam.getT() * resonance_E
                         - 0.5 *
                           (t + pow(PI_MASS, 2.0) + pow(resonance_mass, 2.0)))
-                       / (~CMbeam.V() * resonance_p);
-        } while (fabs(costheta) > 1.0);
-        resonance.polar(resonance_p, acos(costheta), randm(-3.1415, 3.1415));
-        resonance.t(resonance_E);
+                       / (CMbeam.getVector().getLen() * resonance_p);
+        } while (abs(costheta) > 1.0);
+        resonance.setPolar(resonance_p, acos(costheta), randm(-3.1415, 3.1415));
+        resonance.setT(resonance_E);
 
         /*
      *-- recoil particle
      */
 
-        recoil.set(sqrt(resonance.V().lenSq() + pow(PROTON_MASS, 2.0)),
-                   zeroVec - resonance.V());
+        recoil = math::VFour(
+            sqrt(resonance.getVector().getLenSq() + pow(PROTON_MASS, 2.0)),
+            zeroVec - resonance.getVector()
+        );
 
         /*
      *  now do Decay in resonance rest frame
      */
         double pip_p = CMmomentum(resonance_mass, PI_MASS, PI_MASS);
-        pip.polar(pip_p, acos(randm(-0.9999, 0.9999)), randm(-M_PI, M_PI));
-        pip.t(sqrt(pip.V().lenSq() + pow(PI_MASS, 2.0)));
+        pip.setPolar(pip_p, acos(randm(-0.9999, 0.9999)), randm(-M_PI, M_PI));
+        pip.setT(sqrt(pip.getVector().getLenSq() + pow(PI_MASS, 2.0)));
 
-        pim.set(sqrt(pip.V().lenSq() + pow(PI_MASS, 2.0)), zeroVec - pip.V());
+        pim = math::VFour(
+            sqrt(pip.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+            zeroVec - pip.getVector()
+        );
 
         /*
      *  compute lorentz factor
@@ -601,15 +607,15 @@ void pippim(int argc, char *argv[]) {
             lfmax = LorentzFactor > lfmax ? LorentzFactor : lfmax;
         else {
             if (LorentzFactor > randm(0.0, lfmax)) {
-                //	fourVec tmpvec;
+                //	math::VFour tmpvec;
                 /*
 	 *  transform all 4-vectors back to lab frame
 	 */
-                fourVec tmp;
+                math::VFour tmp;
 
                 // boost from pi_pi rest frame to CM
-                tmp.V() = zeroVec - resonance.V();
-                tmp.t(resonance.t());
+                tmp.setVector(zeroVec - resonance.getVector());
+                tmp.setT(resonance.getT());
                 Boost.set(tmp);
                 pip *= Boost;
                 pim *= Boost;
@@ -625,7 +631,7 @@ void pippim(int argc, char *argv[]) {
 	 *  generate vertices
 	 */
                 // e852 values
-                threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+                math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
                 //	ThreeVector Decay;
 
                 if (Print) {
@@ -634,24 +640,24 @@ void pippim(int argc, char *argv[]) {
                     // std::cerr << "Beam in CM:\n  " << CMbeam;
                     // std::cerr << "Target in CM:\n  " << CMtarget;
                     // std::cerr << "Resonance\n";
-                    // std::cerr << "  Resonance mass: " << resonance_mass << "\n";
-                    // std::cerr << "  Resonance CMmomentum: " << resonance_p << "\n";
-                    // std::cerr << "  expt: " << expt << "\n";
-                    // std::cerr << "  t: " << t << "\n";
+                    // std::cerr << "  Resonance mass: " << resonance_mass << endl;
+                    // std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
+                    // std::cerr << "  expt: " << expt << endl;
+                    // std::cerr << "  t: " << t << endl;
                     // std::cerr << "  Resonance:\n     " << resonance;
                     // std::cerr << "recoil: \n  " << recoil;
                     // std::cerr << "pip\n";
-                    // std::cerr << "  pip mass: " << PI_MASS << "\n";
-                    // std::cerr << "  pip momentum: " << pip_p << "\n";
+                    // std::cerr << "  pip mass: " << PI_MASS << endl;
+                    // std::cerr << "  pip momentum: " << pip_p << endl;
                     // std::cerr << "  pip:\n    " << pip;
                     // std::cerr << "pim :\n  " << pim;
                     // std::cerr << "vertices:\n";
                     // std::cerr << "  prod: " << production;
-                    // std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    // std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
-                    std::cerr << pow(~(pip + pim), 2.0) << std::endl;
+                    std::cerr << pow((pip + pim).getMass(), 2.0) << std::endl;
                 }
                 /*
 	 *  write event
@@ -687,7 +693,7 @@ void pipipi(int argc, char *argv[]) {
             lfmax = 0,
             resonance_mass,
             isobar1_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             resonance,
@@ -698,7 +704,7 @@ void pipipi(int argc, char *argv[]) {
             isobar1;
     lorentzTransform Boost;
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass = BEAM_MASS;
     int printBaryon = 0;
@@ -713,12 +719,12 @@ void pipipi(int argc, char *argv[]) {
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -767,20 +773,20 @@ void pipipi(int argc, char *argv[]) {
      *-- beam and target in lab frame
      */
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
                      pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
 
         /*
      *-- generate the resonance and isobar
@@ -827,31 +833,33 @@ void pipipi(int argc, char *argv[]) {
         costheta = 1. - 2. * t / t_max;
         //   costheta = 1.0;
 
-        resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
+        resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
         /*
      *-- recoil particle
      */
-        recoil.set(sqrt(resonance.V().lenSq() + pow(PROTON_MASS, 2.0)),
-                   zeroVec - resonance.V());
+        recoil = math::VFour(
+            sqrt(resonance.getVector().getLenSq() + pow(PROTON_MASS, 2.0)),
+            zeroVec - resonance.getVector()
+       );
 
         /*
      *  now do Decay in resonance rest frame
      */
         double isobar1_p = CMmomentum(resonance_mass, isobar1_mass, PI_MASS);
 
-        isobar1.polar(isobar1_p, acos(randm(-0.999999, 0.999999)),
+        isobar1.setPolar(isobar1_p, acos(randm(-0.999999, 0.999999)),
                       randm(-M_PI, M_PI));
-        //   isobar1.polar( isobar1_p, acos (1.0), 0.0);
+        //   isobar1.setPolar( isobar1_p, acos (1.0), 0.0);
 
-        isobar1.t(sqrt(isobar1.V().lenSq() + pow(isobar1_mass, 2.0)));
+        isobar1.setT(sqrt(isobar1.getVector().getLenSq() + pow(isobar1_mass, 2.0)));
 
-        piminus1.set(sqrt(isobar1.V().lenSq() + pow(PI_MASS, 2.0)),
-                     zeroVec - isobar1.V());
-
-
+        piminus1 = math::VFour(
+            sqrt(isobar1.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+            zeroVec - isobar1.getVector()
+        );
 
 
         /*
@@ -860,12 +868,14 @@ void pipipi(int argc, char *argv[]) {
         // pi pi case
         double piplus_p = CMmomentum(isobar1_mass, PI_MASS, PI_MASS);
 
-        piplus.polar(piplus_p, acos(randm(-0.999999, 0.999999)),
+        piplus.setPolar(piplus_p, acos(randm(-0.999999, 0.999999)),
                      randm(-M_PI, M_PI));
-        //   piplus.polar( piplus_p,acos (1.0),0.0);
-        piplus.t(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)));
-        piminus2.set(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)),
-                     zeroVec - piplus.V());
+        //   piplus.setPolar( piplus_p,acos (1.0),0.0);
+        piplus.setT(sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)));
+        piminus2 = math::VFour(
+            sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+            zeroVec - piplus.getVector()
+        );
 
 
         /*
@@ -877,17 +887,17 @@ void pipipi(int argc, char *argv[]) {
         else {
             if (LorentzFactor > randm(0.0, lfmax)) {
                 /* transform all 4-vectors back to lab frame */
-                fourVec tmp;
+                math::VFour tmp;
 
                 // boost from pi_pi(rho) rest frame to pi_pi_pi(a2/M) rest frame
 
-                tmp.set(isobar1.t(), zeroVec - isobar1.V());
+                tmp = math::VFour(isobar1.getT(), zeroVec - isobar1.getVector());
                 Boost.set(tmp);
                 piplus = Boost * piplus;
                 piminus2 = Boost * piminus2;
 
                 // boost from pi_pi_pi rest frame to CM
-                tmp.set(resonance.t(), zeroVec - resonance.V());
+                tmp = math::VFour(resonance.getT(), zeroVec - resonance.getVector());
                 Boost.set(tmp);
 
                 isobar1 = Boost * isobar1;
@@ -905,46 +915,37 @@ void pipipi(int argc, char *argv[]) {
                 piminus1 = Boost * piminus1;
 
                 /* generate vertices */
-                threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+                math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
                 if (Print) {
                     std::cerr << "\n\n*** New Event\n";
-                    std::cerr << "Beam:\n  ";
-                    beam.print();
-                    std::cerr << "Beam in CM:\n  ";
-                    CMbeam.print();
-                    std::cerr << "Target in CM:\n  ";
-                    CMtarget.print();
+                    std::cerr << "Beam:\n  " << beam << std::endl;
+                    std::cerr << "Beam in CM:\n  " << CMbeam << endl;
+                    std::cerr << "Target in CM:\n  " << CMtarget << endl;
                     std::cerr << "Resonance\n";
-                    std::cerr << "  Resonance mass: " << resonance_mass << "\n";
+                    std::cerr << "  Resonance mass: " << resonance_mass << endl;
                     std::cerr << "  Resonance CMmomentum: " << resonance_p
-                              << "\n";
-                    std::cerr << "  t: " << t << "\n";
-                    std::cerr << "  Resonance:\n ";
-                    resonance.print();
-                    std::cerr << "recoil: \n  ";
-                    recoil.print();
+                              << endl;
+                    std::cerr << "  t: " << t << endl;
+                    std::cerr << "  Resonance:\n " << resonance << endl;
+                    std::cerr << "recoil: \n  " << recoil << endl;
                     std::cerr << "isobar1\n";
-                    std::cerr << "  isobar1 mass: " << isobar1_mass << "\n";
-                    std::cerr << "  isobar1 momentum: " << isobar1_p << "\n";
-                    std::cerr << "  isobar1:\n    ";
-                    isobar1.print();
-                    std::cerr << "pi+ :\n  ";
-                    piplus.print();
-                    std::cerr << "pi-2:\n  ";
-                    piminus2.print();
-                    std::cerr << "pi-1:\n  ";
-                    piminus1.print();
+                    std::cerr << "  isobar1 mass: " << isobar1_mass << endl;
+                    std::cerr << "  isobar1 momentum: " << isobar1_p << endl;
+                    std::cerr << "  isobar1:\n    " << isobar1 << endl;
+                    std::cerr << "pi+ :\n  " << piplus << endl;
+                    std::cerr << "pi-2:\n  " << piminus2 << endl;
+                    std::cerr << "pi-1:\n  " << piminus1 << endl;
                     //	   std::cerr << "vertices:\n";
                     //	   std::cerr << "  prod: " << production;
-                    std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                     std::cerr << "icount: " << icount << std::endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
-                    std::cerr << pow(~(piminus2 + piplus), 2.0) << " "
-                              << pow(~(piminus2 + piminus1), 2.0) << " "
-                              << pow(~(piplus + piminus1), 2.0) << std::endl;
+                    std::cerr << pow((piminus2 + piplus).getMass(), 2.0) << " "
+                              << pow((piminus2 + piminus1).getMass(), 2.0) << " "
+                              << pow((piplus + piminus1).getMass(), 2.0) << std::endl;
                 }
                 /*
 	 *  write event
@@ -982,7 +983,7 @@ void pipipi0(int argc, char *argv[]) {
             lfmax = 0,
             resonance_mass,
             isobar1_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             elec,
@@ -994,7 +995,7 @@ void pipipi0(int argc, char *argv[]) {
             isobar1;
     lorentzTransform Boost;
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass = BEAM_MASS;
     int printBaryon = 0;
@@ -1009,12 +1010,12 @@ void pipipi0(int argc, char *argv[]) {
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -1062,20 +1063,20 @@ void pipipi0(int argc, char *argv[]) {
      *-- beam and target in lab frame
      */
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
                      pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
 
         /*
      *-- generate the resonance and isobar
@@ -1122,31 +1123,33 @@ void pipipi0(int argc, char *argv[]) {
         costheta = 1. - 2. * t / t_max;
         //   costheta = 1.0;
 
-        resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
+        resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
         /*
      *-- recoil particle
      */
-        recoil.set(sqrt(resonance.V().lenSq() + pow(PROTON_MASS, 2.0)),
-                   zeroVec - resonance.V());
+        recoil = math::VFour(
+            sqrt(resonance.getVector().getLenSq() + pow(PROTON_MASS, 2.0)),
+            zeroVec - resonance.getVector()
+        );
 
         /*
      *  now do Decay in resonance rest frame
      */
         double isobar1_p = CMmomentum(resonance_mass, isobar1_mass, PI_MASS);
 
-        isobar1.polar(isobar1_p, acos(randm(-0.999999, 0.999999)),
+        isobar1.setPolar(isobar1_p, acos(randm(-0.999999, 0.999999)),
                       randm(-M_PI, M_PI));
-        //   isobar1.polar( isobar1_p, acos (1.0), 0.0);
+        //   isobar1.setPolar( isobar1_p, acos (1.0), 0.0);
 
-        isobar1.t(sqrt(isobar1.V().lenSq() + pow(isobar1_mass, 2.0)));
+        isobar1.setT(sqrt(isobar1.getVector().getLenSq() + pow(isobar1_mass, 2.0)));
 
-        piminus.set(sqrt(isobar1.V().lenSq() + pow(PI_MASS, 2.0)),
-                    zeroVec - isobar1.V());
-
-
+        piminus = math::VFour(
+            sqrt(isobar1.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+            zeroVec - isobar1.getVector()
+        );
 
 
         /*
@@ -1155,12 +1158,14 @@ void pipipi0(int argc, char *argv[]) {
         // pi pi case
         double piplus_p = CMmomentum(isobar1_mass, PI_MASS, PI_MASS);
 
-        piplus.polar(piplus_p, acos(randm(-0.999999, 0.999999)),
+        piplus.setPolar(piplus_p, acos(randm(-0.999999, 0.999999)),
                      randm(-M_PI, M_PI));
-        //   piplus.polar( piplus_p,acos (1.0),0.0);
-        piplus.t(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)));
-        pizero.set(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)),
-                   zeroVec - piplus.V());
+        //   piplus.setPolar( piplus_p,acos (1.0),0.0);
+        piplus.setT(sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)));
+        pizero = math::VFour(
+            sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+            zeroVec - piplus.getVector()
+        );
 
 
         /*
@@ -1172,17 +1177,17 @@ void pipipi0(int argc, char *argv[]) {
         else {
             if (LorentzFactor > randm(0.0, lfmax)) {
                 /* transform all 4-vectors back to lab frame */
-                fourVec tmp;
+                math::VFour tmp;
 
                 // boost from pi_pi(rho) rest frame to pi_pi_pi(a2/M) rest frame
 
-                tmp.set(isobar1.t(), zeroVec - isobar1.V());
+                tmp = math::VFour(isobar1.getT(), zeroVec - isobar1.getVector());
                 Boost.set(tmp);
                 piplus = Boost * piplus;
                 pizero = Boost * pizero;
 
                 // boost from pi_pi_pi rest frame to CM
-                tmp.set(resonance.t(), zeroVec - resonance.V());
+                tmp = math::VFour(resonance.getT(), zeroVec - resonance.getVector());
                 Boost.set(tmp);
 
                 isobar1 = Boost * isobar1;
@@ -1203,54 +1208,45 @@ void pipipi0(int argc, char *argv[]) {
                 elec = beam + target - recoil - piminus - piplus - pizero;
 
                 /* generate vertices */
-                threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+                math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
                 if (Print) {
                     std::cerr << "\n\n*** New Event\n";
-                    std::cerr << "Beam:\n  ";
-                    beam.print();
-                    std::cerr << "Beam in CM:\n  ";
-                    CMbeam.print();
-                    std::cerr << "Target in CM:\n  ";
-                    CMtarget.print();
+                    std::cerr << "Beam:\n  " << beam << std::endl;
+                    std::cerr << "Beam in CM:\n  " << CMbeam << std::endl;
+                    std::cerr << "Target in CM:\n  " << CMtarget << std::endl;
                     std::cerr << "Resonance\n";
-                    std::cerr << "  Resonance mass: " << resonance_mass << "\n";
+                    std::cerr << "  Resonance mass: " << resonance_mass << endl;
                     std::cerr << "  Resonance CMmomentum: " << resonance_p
-                              << "\n";
-                    std::cerr << "  t: " << t << "\n";
-                    std::cerr << "  Resonance:\n ";
-                    resonance.print();
-                    std::cerr << "recoil: \n  ";
-                    recoil.print();
+                              << endl;
+                    std::cerr << "  t: " << t << endl;
+                    std::cerr << "  Resonance:\n " << resonance << endl;
+                    std::cerr << "recoil: \n  " << recoil << endl;
                     std::cerr << "isobar1\n";
-                    std::cerr << "  isobar1 mass: " << isobar1_mass << "\n";
-                    std::cerr << "  isobar1 momentum: " << isobar1_p << "\n";
-                    std::cerr << "  isobar1:\n    ";
-                    isobar1.print();
-                    std::cerr << "pi+ :\n  ";
-                    piplus.print();
-                    std::cerr << "pi-2:\n  ";
-                    pizero.print();
-                    std::cerr << "pi-1:\n  ";
-                    piminus.print();
+                    std::cerr << "  isobar1 mass: " << isobar1_mass << endl;
+                    std::cerr << "  isobar1 momentum: " << isobar1_p << endl;
+                    std::cerr << "  isobar1:\n    " << isobar1 << endl;
+                    std::cerr << "pi+ :\n  " << piplus << endl;
+                    std::cerr << "pi-2:\n  " << pizero << endl;
+                    std::cerr << "pi-1:\n  " << piminus << endl;
                     //	   std::cerr << "vertices:\n";
                     //	   std::cerr << "  prod: " << production;
-                    std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                     std::cerr << "icount: " << icount << std::endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
-                    std::cerr << pow(~(pizero + piplus), 2.0) << " "
-                              << pow(~(pizero + piminus), 2.0) << " "
-                              << pow(~(piplus + piminus), 2.0) << std::endl;
+                    std::cerr << pow((pizero + piplus).getMass(), 2.0) << " "
+                              << pow((pizero + piminus).getMass(), 2.0) << " "
+                              << pow((piplus + piminus).getMass(), 2.0) << std::endl;
                 } else if (txt2part_style) {
                     if (printGamma) {
                         std::cout << "6" << std::endl;
                     } else {
                         std::cout << "5" << std::endl;
                     }
-                    std::cout << EbeamZ << " " << beam.t() << " "
-                              << -production.z() / SPEED_OF_LIGHT << std::endl;
+                    std::cout << EbeamZ << " " << beam.getT() << " "
+                              << -production.getZ() / SPEED_OF_LIGHT << std::endl;
                     pParticle_txt2part(Electron, production, elec);
                     pParticle_txt2part(Proton, production, recoil);
                     pParticle_txt2part(PiMinus, production, piminus);
@@ -1295,7 +1291,7 @@ void pipipi0X(int argc, char *argv[]) {
             lfmax = 0,
             resonance_mass,
             isobar1_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             virtualBeam,
@@ -1309,9 +1305,9 @@ void pipipi0X(int argc, char *argv[]) {
             isobar1;
     lorentzTransform Boost;
 
-    fourVec CMbeam;
+    math::VFour CMbeam;
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass = BEAM_MASS;
     int printBaryon = 0;
@@ -1332,12 +1328,12 @@ void pipipi0X(int argc, char *argv[]) {
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -1399,34 +1395,34 @@ void pipipi0X(int argc, char *argv[]) {
      *-- beam and target in lab frame
      */
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
                      pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
         /* get a w and a qsq */
 
         do {
             w = randm(wlo, whi);
             q = randm(qlo, qhi);
-            thet = theta(q, w, beam.t());
+            thet = theta(q, w, beam.getT());
         } while (thet < -500.0);
-        ep = eprime(thet, q, beam.t());
+        ep = eprime(thet, q, beam.getT());
         phi = randm(0, 2.0 * M_PI);
         pz = cos(thet) * ep;
         px = sin(thet) * cos(phi) * ep;
         py = sin(thet) * sin(phi) * ep;
 
-        electron = fourVec(sqrt(ep * ep + pow((double) beamMass, 2.0)),
-                           threeVec(px, py, pz));
+        electron = math::VFour(sqrt(ep * ep + pow((double) beamMass, 2.0)),
+                           math::VThree(px, py, pz));
 
         // the W system is left- W in lab
 
         W = beam + target - electron;
 
-        double CMenergy = W.t();
+        double CMenergy = W.getT();
 
         /*
      *-- generate the resonance and isobar
@@ -1452,31 +1448,33 @@ void pipipi0X(int argc, char *argv[]) {
         costheta = randm(-1.0, 1.0);
 
 
-        resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
+        resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
         /*
      *-- recoil particle
      */
-        recoil.set(sqrt(resonance.V().lenSq() + pow(PROTON_MASS, 2.0)),
-                   zeroVec - resonance.V());
+        recoil = math::VFour(
+            sqrt(resonance.getVector().getLenSq() + pow(PROTON_MASS, 2.0)),
+           zeroVec - resonance.getVector()
+       );
 
         /*
      *  now do Decay in resonance rest frame
      */
         double isobar1_p = CMmomentum(resonance_mass, isobar1_mass, PI_MASS);
 
-        isobar1.polar(isobar1_p, acos(randm(-0.999999, 0.999999)),
+        isobar1.setPolar(isobar1_p, acos(randm(-0.999999, 0.999999)),
                       randm(-M_PI, M_PI));
-        //   isobar1.polar( isobar1_p, acos (1.0), 0.0);
+        //   isobar1.setPolar( isobar1_p, acos (1.0), 0.0);
 
-        isobar1.t(sqrt(isobar1.V().lenSq() + pow(isobar1_mass, 2.0)));
+        isobar1.setT(sqrt(isobar1.getVector().getLenSq() + pow(isobar1_mass, 2.0)));
 
-        piminus.set(sqrt(isobar1.V().lenSq() + pow(PI_MASS, 2.0)),
-                    zeroVec - isobar1.V());
-
-
+        piminus = math::VFour(
+            sqrt(isobar1.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+            zeroVec - isobar1.getVector()
+        );
 
 
         /*
@@ -1485,12 +1483,14 @@ void pipipi0X(int argc, char *argv[]) {
         // pi pi case
         double piplus_p = CMmomentum(isobar1_mass, PI_MASS, PI_MASS);
 
-        piplus.polar(piplus_p, acos(randm(-0.999999, 0.999999)),
+        piplus.setPolar(piplus_p, acos(randm(-0.999999, 0.999999)),
                      randm(-M_PI, M_PI));
-        //   piplus.polar( piplus_p,acos (1.0),0.0);
-        piplus.t(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)));
-        pizero.set(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)),
-                   zeroVec - piplus.V());
+        //   piplus.setPolar( piplus_p,acos (1.0),0.0);
+        piplus.setT(sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)));
+        pizero = math::VFour(
+            sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+           zeroVec - piplus.getVector()
+        );
 
 
         /*
@@ -1502,17 +1502,17 @@ void pipipi0X(int argc, char *argv[]) {
         else {
             if (LorentzFactor > randm(0.0, lfmax)) {
                 /* transform all 4-vectors back to lab frame */
-                fourVec tmp;
+                math::VFour tmp;
 
                 // boost from pi_pi(rho) rest frame to pi_pi_pi(a2/M) rest frame
 
-                tmp.set(isobar1.t(), zeroVec - isobar1.V());
+                tmp = math::VFour(isobar1.getT(), zeroVec - isobar1.getVector());
                 Boost.set(tmp);
                 piplus = Boost * piplus;
                 pizero = Boost * pizero;
 
                 // boost to W
-                tmp.set(W.t(), zeroVec - W.V());
+                tmp = math::VFour(W.getT(), zeroVec - W.getVector());
                 Boost.set(tmp);
 
                 isobar1 = Boost * isobar1;
@@ -1533,54 +1533,45 @@ void pipipi0X(int argc, char *argv[]) {
 
 
                 /* generate vertices */
-                threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+                math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
                 if (Print) {
                     std::cerr << "\n\n*** New Event\n";
-                    std::cerr << "Beam:\n  ";
-                    beam.print();
-                    std::cerr << "W:\n  ";
-                    W.print();
-                    std::cerr << "Beam  in CM:\n  ";
-                    CMbeam.print();
+                    std::cerr << "Beam:\n  " << beam << endl;
+                    std::cerr << "W:\n  " << W << endl;
+                    std::cerr << "Beam  in CM:\n  " << CMbeam << endl;
                     std::cerr << "Resonance\n";
-                    std::cerr << "  Resonance mass: " << resonance_mass << "\n";
+                    std::cerr << "  Resonance mass: " << resonance_mass << endl;
                     std::cerr << "  Resonance CMmomentum: " << resonance_p
-                              << "\n";
-                    std::cerr << "  t: " << t << "\n";
-                    std::cerr << "  Resonance:\n ";
-                    resonance.print();
-                    std::cerr << "recoil: \n  ";
-                    recoil.print();
+                              << endl;
+                    std::cerr << "  t: " << t << endl;
+                    std::cerr << "  Resonance:\n " << resonance << endl;
+                    std::cerr << "recoil: \n  " << recoil << endl;
                     std::cerr << "isobar1\n";
-                    std::cerr << "  isobar1 mass: " << isobar1_mass << "\n";
-                    std::cerr << "  isobar1 momentum: " << isobar1_p << "\n";
-                    std::cerr << "  isobar1:\n    ";
-                    isobar1.print();
-                    std::cerr << "pi+ :\n  ";
-                    piplus.print();
-                    std::cerr << "pi-2:\n  ";
-                    pizero.print();
-                    std::cerr << "pi-1:\n  ";
-                    piminus.print();
+                    std::cerr << "  isobar1 mass: " << isobar1_mass << endl;
+                    std::cerr << "  isobar1 momentum: " << isobar1_p << endl;
+                    std::cerr << "  isobar1:\n    " << isobar1 << endl;
+                    std::cerr << "pi+ :\n  " << piplus << endl;
+                    std::cerr << "pi-2:\n  " << pizero << endl;
+                    std::cerr << "pi-1:\n  " << piminus << endl;
                     //	   std::cerr << "vertices:\n";
                     //	   std::cerr << "  prod: " << production;
-                    std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                     std::cerr << "icount: " << icount << std::endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
-                    std::cerr << pow(~(pizero + piplus), 2.0) << " "
-                              << pow(~(pizero + piminus), 2.0) << " "
-                              << pow(~(piplus + piminus), 2.0) << std::endl;
+                    std::cerr << pow((pizero + piplus).getMass(), 2.0) << " "
+                              << pow((pizero + piminus).getMass(), 2.0) << " "
+                              << pow((piplus + piminus).getMass(), 2.0) << std::endl;
                 } else if (txt2part_style) {
                     if (printGamma) {
                         std::cout << "6" << std::endl;
                     } else {
                         std::cout << "5" << std::endl;
                     }
-                    std::cout << EbeamZ << " " << beam.t() << " "
-                              << -production.z() / SPEED_OF_LIGHT << std::endl;
+                    std::cout << EbeamZ << " " << beam.getT() << " "
+                              << -production.getZ() / SPEED_OF_LIGHT << std::endl;
                     pParticle_txt2part(Electron, production, electron);
                     pParticle_txt2part(Proton, production, recoil);
                     pParticle_txt2part(PiMinus, production, piminus);
@@ -1631,7 +1622,7 @@ void npip(int argc, char *argv[]) {
             expt_max,
             lfmax = 0,
             resonance_mass;
-    fourVec beam,
+    math::VFour beam,
             target,
             electron,
             resonance,
@@ -1652,12 +1643,12 @@ void npip(int argc, char *argv[]) {
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -1699,19 +1690,19 @@ void npip(int argc, char *argv[]) {
      *-- beam and target in lab frame
      */
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) + pow(BEAM_MASS, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
 
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
         double n_pi_threshold = NEUTRON_MASS + PI_MASS;
 
         /* in case it was not set */
@@ -1749,22 +1740,22 @@ void npip(int argc, char *argv[]) {
         double t;
         double tmin;
         tmin = pow(resonance_mass, 2.0) + pow(PROTON_MASS, 2) -
-               2.0 * CMtarget.t() * resonance_E +
-               2.0 * ~CMtarget.V() * resonance_p;
+               2.0 * CMtarget.getT() * resonance_E +
+               2.0 * CMtarget.getVector().getLen() * resonance_p;
         expt_min = exp(-slope * tmin);
 
         do {
             expt = randm(expt_min, expt_max);
             t = -log(expt) / slope;
             /* t -s really -t */
-            costheta = -(CMtarget.t() * resonance_E
+            costheta = -(CMtarget.getT() * resonance_E
                          - 0.5 * (t + pow(PROTON_MASS, 2.0) +
                                   pow(resonance_mass, 2.0)))
-                       / (~CMtarget.V() * resonance_p);
+                       / (CMtarget.getVector().getLen() * resonance_p);
         } while (fabs(costheta) > 1.0);
 
-        resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
+        resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
 
@@ -1774,10 +1765,10 @@ void npip(int argc, char *argv[]) {
         double pip_p = CMmomentum(resonance_mass, NEUTRON_MASS, PI_MASS);
 
 
-        pip.polar(pip_p, acos(randm(-0.9999, 0.9999)), randm(-M_PI, M_PI));
-        pip.t(sqrt(pip.V().lenSq() + pow(PI_MASS, 2.0)));
-        neutron.V() = threeVec(0.0, 0.0, 0.0) - pip.V();
-        neutron.t(sqrt(neutron.V().lenSq() + pow(NEUTRON_MASS, 2.0)));
+        pip.setPolar(pip_p, acos(randm(-0.9999, 0.9999)), randm(-M_PI, M_PI));
+        pip.setT(sqrt(pip.getVector().getLenSq() + pow(PI_MASS, 2.0)));
+        neutron.getVector() = math::VThree(0.0, 0.0, 0.0) - pip.getVector();
+        neutron.setT(sqrt(neutron.getVector().getLenSq() + pow(NEUTRON_MASS, 2.0)));
 
         /*
      *  compute lorentz factor
@@ -1787,16 +1778,16 @@ void npip(int argc, char *argv[]) {
             lfmax = LorentzFactor > lfmax ? LorentzFactor : lfmax;
         else {
             if (LorentzFactor > randm(0.0, lfmax)) {
-                //	fourVec tmpvec;
+                //	math::VFour tmpvec;
                 /*
 	 *  transform all 4-vectors back to lab frame
 	 */
-                fourVec tmp;
-                threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+                math::VFour tmp;
+                math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
 
                 // boost from n_pi rest frame to CM
-                tmp.V() = zeroVec - resonance.V();
-                tmp.t(resonance.t());
+                tmp.getVector() = zeroVec - resonance.getVector();
+                tmp.setT(resonance.getT());
                 Boost.set(tmp);
                 pip *= Boost;
                 neutron *= Boost;
@@ -1811,7 +1802,7 @@ void npip(int argc, char *argv[]) {
 	 *  generate vertices
 	 */
                 // e852 values
-                threeVec production = threeVec(0.0, 0.0, 0.0);
+                math::VThree production = math::VThree(0.0, 0.0, 0.0);
                 //	ThreeVector Decay;
                 electron = beam + target - neutron - pip;
                 if (Print) {
@@ -1820,26 +1811,26 @@ void npip(int argc, char *argv[]) {
                     // std::cerr << "Beam in CM:\n  " << CMbeam;
                     // std::cerr << "Target in CM:\n  " << CMtarget;
                     // std::cerr << "Resonance\n";
-                    // std::cerr << "  Resonance mass: " << resonance_mass << "\n";
-                    // std::cerr << "  Resonance CMmomentum: " << resonance_p << "\n";
-                    // std::cerr << "  expt: " << expt << "\n";
-                    // std::cerr << "  t: " << t << "\n";
-                    // std::cerr << " Qsq: "  << -(beam - electron).lenSq() << std::endl;
-                    // std::cerr << " t: " << (target - neutron - pip).lenSq() << std::endl;
+                    // std::cerr << "  Resonance mass: " << resonance_mass << endl;
+                    // std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
+                    // std::cerr << "  expt: " << expt << endl;
+                    // std::cerr << "  t: " << t << endl;
+                    // std::cerr << " Qsq: "  << -(beam - electron).getLenSq() << std::endl;
+                    // std::cerr << " t: " << (target - neutron - pip).getLenSq() << std::endl;
                     // std::cerr << "  Resonance:\n     " << resonance;
                     // std::cerr << "pip\n";
-                    // std::cerr << "  pip mass: " << PI_MASS << "\n";
-                    // std::cerr << "  pip momentum: " << pip_p << "\n";
+                    // std::cerr << "  pip mass: " << PI_MASS << endl;
+                    // std::cerr << "  pip momentum: " << pip_p << endl;
                     // std::cerr << "  pip:\n    " << pip;
                     // std::cerr << "  neutron :\n  " << neutron;
                     // std::cerr << "  electron :\n  " << electron;
                     // std::cerr << "vertices:\n";
                     // std::cerr << "  prod: " << production;
-                    // std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    // std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
-                    std::cerr << pow(~(pip + neutron), 2.0) << std::endl;
+                    std::cerr << pow((pip + neutron).getMass(), 2.0) << std::endl;
                 }
                 /*
 	 *  write event
@@ -1862,7 +1853,7 @@ void npip_gamma(int argc, char *argv[], int nw, int *wlist) {
     double mass,
             resonance_mass;
     double beamMass = 0.0;
-    fourVec beam,
+    math::VFour beam,
             target,
             resonance,
             neutron,
@@ -1882,12 +1873,12 @@ void npip_gamma(int argc, char *argv[], int nw, int *wlist) {
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'p':
                     Print = 1;
@@ -1921,20 +1912,20 @@ void npip_gamma(int argc, char *argv[], int nw, int *wlist) {
      *-- beam and target in lab frame
      */
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) + pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
         double n_pi_threshold = NEUTRON_MASS + PI_MASS;
-        threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+        math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
         mass = CMenergy;
 
 
@@ -1956,24 +1947,26 @@ void npip_gamma(int argc, char *argv[], int nw, int *wlist) {
         double expt;
         double t;
 
-        resonance.set(resonance_mass, zeroVec);
+        resonance = math::VFour(resonance_mass, zeroVec);
 
         /*
      *  now do Decay in resonance rest frame
      */
         double pip_p = CMmomentum(resonance_mass, NEUTRON_MASS, PI_MASS);
 
-        pip.polar(pip_p, acos(randm(-0.9999, 0.9999)), randm(-M_PI, M_PI));
-        pip.t(sqrt(pip.V().lenSq() + pow(PI_MASS, 2.0)));
-        neutron.set(sqrt(pip.V().lenSq() + pow(NEUTRON_MASS, 2.0)),
-                    zeroVec - pip.V());
+        pip.setPolar(pip_p, acos(randm(-0.9999, 0.9999)), randm(-M_PI, M_PI));
+        pip.setT(sqrt(pip.getVector().getLenSq() + pow(PI_MASS, 2.0)));
+        neutron = math::VFour(
+            sqrt(pip.getVector().getLenSq() + pow(NEUTRON_MASS, 2.0)),
+            zeroVec - pip.getVector()
+        );
 
 
 
         /*
 	 *  transform all 4-vectors back to lab frame
 	 */
-        fourVec tmp;
+        math::VFour tmp;
 
 
         // boost from CM to target rest frame (lab)
@@ -1985,7 +1978,7 @@ void npip_gamma(int argc, char *argv[], int nw, int *wlist) {
         /*
 	 *  generate vertices
 	 */
-        threeVec production = threeVec(0.0, 0.0, 0.0);
+        math::VThree production = math::VThree(0.0, 0.0, 0.0);
         //	ThreeVector Decay;
         if (Print) {
             // std::cerr << "\n\n*** New Event\n";
@@ -1993,12 +1986,12 @@ void npip_gamma(int argc, char *argv[], int nw, int *wlist) {
             // std::cerr << "Beam in CM:\n  " << CMbeam;
             // std::cerr << "Target in CM:\n  " << CMtarget;
             // std::cerr << "Resonance\n";
-            // std::cerr << "  Resonance mass: " << resonance_mass << "\n";
-            // std::cerr << "  Resonance CMmomentum: " << resonance_p << "\n";
+            // std::cerr << "  Resonance mass: " << resonance_mass << endl;
+            // std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
             // std::cerr << "  Resonance:\n     " << resonance;
             // std::cerr << "  pip\n";
-            // std::cerr << "  pip mass: " << PI_MASS << "\n";
-            // std::cerr << "  pip momentum: " << pip_p << "\n";
+            // std::cerr << "  pip mass: " << PI_MASS << endl;
+            // std::cerr << "  pip momentum: " << pip_p << endl;
             // std::cerr << "  pip:\n    " << pip;
             // std::cerr << "  neutron :\n  " << neutron;
             // std::cerr << "vertices:\n";
@@ -2011,8 +2004,8 @@ void npip_gamma(int argc, char *argv[], int nw, int *wlist) {
 
         if (txt2part_style) {
             std::cout << "2" << std::endl;
-            std::cout << EbeamZ << " " << beam.t() << " "
-                      << -production.z() / SPEED_OF_LIGHT << std::endl;
+            std::cout << EbeamZ << " " << beam.getT() << " "
+                      << -production.getZ() / SPEED_OF_LIGHT << std::endl;
             pParticle_txt2part(Neutron, production, neutron);
             pParticle_txt2part(PiPlus, production, pip);
         } else {
@@ -2035,7 +2028,7 @@ void ppi0_gamma(int argc, char *argv[]) {
     int debug = 0;
     double mass,
             resonance_mass;
-    fourVec beam,
+    math::VFour beam,
             target,
             resonance,
             proton,
@@ -2062,12 +2055,12 @@ void ppi0_gamma(int argc, char *argv[]) {
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'p':
                     Print = 1;
@@ -2112,20 +2105,20 @@ void ppi0_gamma(int argc, char *argv[]) {
      *-- beam and target in lab frame
      */
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) + pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
         double p_pi0_threshold = PROTON_MASS + PI0_MASS;
-        threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+        math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
         mass = CMenergy;
 
 
@@ -2147,33 +2140,37 @@ void ppi0_gamma(int argc, char *argv[]) {
         double expt;
         double t;
 
-        resonance.set(resonance_mass, zeroVec);
+        resonance = math::VFour(resonance_mass, zeroVec);
 
         /*
      *  now do Decay in resonance rest frame
      */
         double pi0_p = CMmomentum(resonance_mass, PROTON_MASS, PI0_MASS);
 
-        pi0.polar(pi0_p, acos(randm(-0.9999, 0.9999)), randm(-M_PI, M_PI));
-        pi0.t(sqrt(pi0.V().lenSq() + pow(PI0_MASS, 2.0)));
-        proton.set(sqrt(pi0.V().lenSq() + pow(PROTON_MASS, 2.0)),
-                   zeroVec - pi0.V());
+        pi0.setPolar(pi0_p, acos(randm(-0.9999, 0.9999)), randm(-M_PI, M_PI));
+        pi0.setT(sqrt(pi0.getVector().getLenSq() + pow(PI0_MASS, 2.0)));
+        proton = math::VFour(
+            sqrt(pi0.getVector().getLenSq() + pow(PROTON_MASS, 2.0)),
+            zeroVec - pi0.getVector()
+        );
 
         // pi0 Decay to 2gamma, in pi0 rest frame
         double gam1_p = CMmomentum(PI0_MASS, 0.0, 0.0);
-        gamma1.polar(gam1_p, acos(randm(-0.999999, 0.999999)),
+        gamma1.setPolar(gam1_p, acos(randm(-0.999999, 0.999999)),
                      randm(-M_PI, M_PI));
-        gamma1.t(gam1_p);
-        gamma2.set(gam1_p, threeVec(0.0, 0.0, 0.0) - gamma1.V());
-        gamma2.t(gam1_p);
+        gamma1.setT(gam1_p);
+        gamma2 = math::VFour(
+            gam1_p, math::VThree(0.0, 0.0, 0.0) - gamma1.getVector()
+        );
+        gamma2.setT(gam1_p);
 
         /*
      *  transform all 4-vectors back to lab frame
      */
-        fourVec tmp;
+        math::VFour tmp;
 
         // boost gammas to pi0 rest frame
-        tmp.set(pi0.t(), zeroVec - pi0.V());
+        tmp = math::VFour(pi0.getT(), zeroVec - pi0.getVector());
         Boost.set(tmp);
         gamma1 = Boost * gamma1;
         gamma2 = Boost * gamma2;
@@ -2190,7 +2187,7 @@ void ppi0_gamma(int argc, char *argv[]) {
         /*
      *  generate vertices
      */
-        threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+        math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
         //	ThreeVector Decay;
         if (Print) {
             // std::cerr << "\n\n*** New Event\n";
@@ -2198,12 +2195,12 @@ void ppi0_gamma(int argc, char *argv[]) {
             // std::cerr << "Beam in CM:\n  " << CMbeam;
             // std::cerr << "Target in CM:\n  " << CMtarget;
             // std::cerr << "Resonance\n";
-            // std::cerr << "  Resonance mass: " << resonance_mass << "\n";
-            // std::cerr << "  Resonance CMmomentum: " << resonance_p << "\n";
+            // std::cerr << "  Resonance mass: " << resonance_mass << endl;
+            // std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
             // std::cerr << "  Resonance:\n     " << resonance;
             // std::cerr << "  pi0\n";
-            // std::cerr << "  pi0 mass: " << PI0_MASS << "\n";
-            // std::cerr << "  pi0 momentum: " << pi0_p << "\n";
+            // std::cerr << "  pi0 mass: " << PI0_MASS << endl;
+            // std::cerr << "  pi0 momentum: " << pi0_p << endl;
             // std::cerr << "  pi0:\n    " << pi0;
             // std::cerr << "  proton :\n  " << proton;
             // std::cerr << "vertices:\n";
@@ -2212,7 +2209,7 @@ void ppi0_gamma(int argc, char *argv[]) {
 
         if (debug) {
 
-            std::cout << (proton + pi0).lenSq() << " ";
+            std::cout << (proton + pi0).getLenSq() << " ";
             std::cout << std::endl;
 
         } else {
@@ -2226,8 +2223,8 @@ void ppi0_gamma(int argc, char *argv[]) {
                     std::cout << "3" << std::endl;
                 else
                     std::cout << "2" << std::endl;
-                std::cout << EbeamZ << " " << beam.t() << " "
-                          << -production.z() / SPEED_OF_LIGHT << std::endl;
+                std::cout << EbeamZ << " " << beam.getT() << " "
+                          << -production.getZ() / SPEED_OF_LIGHT << std::endl;
                 pParticle_txt2part(Proton, production, proton);
                 if (printGamma) {
                     pParticle_txt2part(Gamma, production, gamma1);
@@ -2278,7 +2275,7 @@ void ppi0(int argc, char *argv[]) {
             expt_max,
             lfmax = 0,
             resonance_mass;
-    fourVec beam,
+    math::VFour beam,
             target,
             electron,
             resonance,
@@ -2299,12 +2296,12 @@ void ppi0(int argc, char *argv[]) {
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -2346,18 +2343,18 @@ void ppi0(int argc, char *argv[]) {
      *-- beam and target in lab frame
      */
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) + pow(BEAM_MASS, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
         double n_pi_threshold = PROTON_MASS + PI_MASS;
 
         /* in case it was not set */
@@ -2395,22 +2392,22 @@ void ppi0(int argc, char *argv[]) {
         double t;
         double tmin;
         tmin = pow(resonance_mass, 2.0) + pow(PROTON_MASS, 2) -
-               2.0 * CMtarget.t() * resonance_E +
-               2.0 * ~CMtarget.V() * resonance_p;
+               2.0 * CMtarget.getT() * resonance_E +
+               2.0 * CMtarget.getVector().getLen() * resonance_p;
         expt_min = exp(-slope * tmin);
 
         do {
             expt = randm(expt_min, expt_max);
             t = -log(expt) / slope;
             /* t -s really -t */
-            costheta = -(CMtarget.t() * resonance_E
+            costheta = -(CMtarget.getT() * resonance_E
                          - 0.5 * (t + pow(PROTON_MASS, 2.0) +
                                   pow(resonance_mass, 2.0)))
-                       / (~CMtarget.V() * resonance_p);
+                       / (CMtarget.getVector().getLen() * resonance_p);
         } while (fabs(costheta) > 1.0);
 
-        resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
+        resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
 
@@ -2419,10 +2416,10 @@ void ppi0(int argc, char *argv[]) {
      */
         double pi0_p = CMmomentum(resonance_mass, PROTON_MASS, PI_MASS);
 
-        pi0.polar(pi0_p, acos(randm(-0.9999, 0.9999)), randm(-M_PI, M_PI));
-        pi0.t(sqrt(pi0.V().lenSq() + pow(PI_MASS, 2.0)));
-        proton.V() = threeVec(0.0, 0.0, 0.0) - pi0.V();
-        proton.t(sqrt(proton.V().lenSq() + pow(PROTON_MASS, 2.0)));
+        pi0.setPolar(pi0_p, acos(randm(-0.9999, 0.9999)), randm(-M_PI, M_PI));
+        pi0.setT(sqrt(pi0.getVector().getLenSq() + pow(PI_MASS, 2.0)));
+        proton.getVector() = math::VThree(0.0, 0.0, 0.0) - pi0.getVector();
+        proton.setT(sqrt(proton.getVector().getLenSq() + pow(PROTON_MASS, 2.0)));
 
         /*
      *  compute lorentz factor
@@ -2432,16 +2429,16 @@ void ppi0(int argc, char *argv[]) {
             lfmax = LorentzFactor > lfmax ? LorentzFactor : lfmax;
         else {
             if (LorentzFactor > randm(0.0, lfmax)) {
-                //	fourVec tmpvec;
+                //	math::VFour tmpvec;
                 /*
 	 *  transform all 4-vectors back to lab frame
 	 */
-                fourVec tmp;
-                threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+                math::VFour tmp;
+                math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
 
                 // boost from n_pi rest frame to CM
-                tmp.V() = zeroVec - resonance.V();
-                tmp.t(resonance.t());
+                tmp.getVector() = zeroVec - resonance.getVector();
+                tmp.setT(resonance.getT());
                 Boost.set(tmp);
                 pi0 *= Boost;
                 proton *= Boost;
@@ -2456,7 +2453,7 @@ void ppi0(int argc, char *argv[]) {
 	 *  generate vertices
 	 */
                 // e852 values
-                threeVec production = threeVec(0.0, 0.0, 0.0);
+                math::VThree production = math::VThree(0.0, 0.0, 0.0);
                 //	ThreeVector Decay;
                 electron = beam + target - proton - pi0;
                 if (Print) {
@@ -2465,26 +2462,26 @@ void ppi0(int argc, char *argv[]) {
                     // std::cerr << "Beam in CM:\n  " << CMbeam;
                     // std::cerr << "Target in CM:\n  " << CMtarget;
                     // std::cerr << "Resonance\n";
-                    // std::cerr << "  Resonance mass: " << resonance_mass << "\n";
-                    // std::cerr << "  Resonance CMmomentum: " << resonance_p << "\n";
-                    // std::cerr << "  expt: " << expt << "\n";
-                    // std::cerr << "  t: " << t << "\n";
-                    // std::cerr << " Qsq: "  << -(beam - electron).lenSq() << std::endl;
-                    // std::cerr << " t: " << (target - proton - pi0).lenSq() << std::endl;
+                    // std::cerr << "  Resonance mass: " << resonance_mass << endl;
+                    // std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
+                    // std::cerr << "  expt: " << expt << endl;
+                    // std::cerr << "  t: " << t << endl;
+                    // std::cerr << " Qsq: "  << -(beam - electron).getLenSq() << std::endl;
+                    // std::cerr << " t: " << (target - proton - pi0).getLenSq() << std::endl;
                     // std::cerr << "  Resonance:\n     " << resonance;
                     // std::cerr << "pi0\n";
-                    // std::cerr << "  pi0 mass: " << PI_MASS << "\n";
-                    // std::cerr << "  pi0 momentum: " << pi0_p << "\n";
+                    // std::cerr << "  pi0 mass: " << PI_MASS << endl;
+                    // std::cerr << "  pi0 momentum: " << pi0_p << endl;
                     // std::cerr << "  pi0:\n    " << pi0;
                     // std::cerr << "  proton :\n  " << proton;
                     // std::cerr << "  electron :\n  " << electron;
                     // std::cerr << "vertices:\n";
                     // std::cerr << "  prod: " << production;
-                    // std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    // std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
-                    std::cerr << pow(~(pi0 + proton), 2.0) << std::endl;
+                    std::cerr << pow((pi0 + proton).getMass(), 2.0) << std::endl;
                 }
                 /*
 	 *  write event
@@ -2517,7 +2514,7 @@ void kpkspim(int argc, char *argv[]) {
             lfmax = 0,
             resonance_mass,
             isobar1_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             resonance,
@@ -2544,12 +2541,12 @@ void kpkspim(int argc, char *argv[]) {
                     case 'm':
                         ptr++;
                         maxevents = atoi(ptr);
-                        std::cerr << "maxevents: " << maxevents << "\n";
+                        std::cerr << "maxevents: " << maxevents << endl;
                         break;
                     case 'l':
                         ptr++;
                         lfevents = atoi(ptr);
-                        std::cerr << "lfevents: " << lfevents << "\n";
+                        std::cerr << "lfevents: " << lfevents << endl;
                         break;
                     case 'L':
                         ptr++;
@@ -2597,20 +2594,20 @@ void kpkspim(int argc, char *argv[]) {
      *-- beam and target in lab frame
      */
 /* beam mass changed to K- mass (kdb 11-18-96) */
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
                      pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
 
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
 
         /*
      *-- generate the resonance and isobar
@@ -2644,54 +2641,53 @@ void kpkspim(int argc, char *argv[]) {
         do {
             expt = randm(expt_min, expt_max);
             t = -log(expt) / slope;
-            costheta = (CMbeam.t() * resonance_E
+            costheta = (CMbeam.getT() * resonance_E
                         - 0.5 *
                           (t + pow(PI_MASS, 2.0) + pow(resonance_mass, 2.0)))
-                       / (~CMbeam.V() * resonance_p);
+                       / (CMbeam.getVector().getLen() * resonance_p);
         } while (fabs(costheta) > 1.0);
 
-        resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
-
+        resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
         /*
      *-- recoil particle
      */
-        recoil.V() = threeVec(0.0, 0.0, 0.0) - (resonance.V());
-        recoil.t(sqrt(recoil.V().lenSq() + pow(PROTON_MASS, 2.0)));
+        recoil.getVector() = math::VThree(0.0, 0.0, 0.0) - (resonance.getVector());
+        recoil.setT(sqrt(recoil.getVector().getLenSq() + pow(PROTON_MASS, 2.0)));
 
         /*
      *  now do Decay in resonance rest frame
      */
         double isobar1_p = CMmomentum(resonance_mass, isobar1_mass,
                                       KCHARGED_MASS);
-        isobar1.polar(isobar1_p, acos(randm(-0.999999, 0.999999)),
+        isobar1.setPolar(isobar1_p, acos(randm(-0.999999, 0.999999)),
                       randm(-M_PI, M_PI));
-        isobar1.t(sqrt(isobar1.V().lenSq() + pow(isobar1_mass, 2.0)));
-        kplus.V() = threeVec(0.0, 0.0, 0.0) - isobar1.V();
-        kplus.t(sqrt(kplus.V().lenSq() + pow(KCHARGED_MASS, 2.0)));
+        isobar1.setT(sqrt(isobar1.getVector().getLenSq() + pow(isobar1_mass, 2.0)));
+        kplus.getVector() = math::VThree(0.0, 0.0, 0.0) - isobar1.getVector();
+        kplus.setT(sqrt(kplus.getVector().getLenSq() + pow(KCHARGED_MASS, 2.0)));
 
         /*
      *  now do Decay in isobar1 rest frame
      */
         // k pi case
         double kshort_p = CMmomentum(isobar1_mass, KZERO_MASS, PI_MASS);
-        kshort.polar(kshort_p, acos(randm(-0.999999, 0.999999)),
+        kshort.setPolar(kshort_p, acos(randm(-0.999999, 0.999999)),
                      randm(-M_PI, M_PI));
-        kshort.t(sqrt(kshort.V().lenSq() + pow(KCHARGED_MASS, 2.0)));
-        piminus.V() = threeVec(0.0, 0.0, 0.0) - kshort.V();
-        piminus.t(sqrt(piminus.V().lenSq() + pow(PI0_MASS, 2.0)));
+        kshort.setT(sqrt(kshort.getVector().getLenSq() + pow(KCHARGED_MASS, 2.0)));
+        piminus.getVector() = math::VThree(0.0, 0.0, 0.0) - kshort.getVector();
+        piminus.setT(sqrt(piminus.getVector().getLenSq() + pow(PI0_MASS, 2.0)));
 
         /* Kshort Decay */
 
 
         double pi1_p = CMmomentum(KZERO_MASS, PI_MASS, PI_MASS);
 
-        pi1.polar(pi1_p, acos(randm(-1.0, 1.0)), randm(-M_PI, M_PI));
-        pi1.t(sqrt(pi1.V().lenSq() + pow(PI_MASS, 2.0)));
-        pi2.V() = threeVec(0.0, 0.0, 0.0) - pi1.V();
-        pi2.t(pi1.t());
+        pi1.setPolar(pi1_p, acos(randm(-1.0, 1.0)), randm(-M_PI, M_PI));
+        pi1.setT(sqrt(pi1.getVector().getLenSq() + pow(PI_MASS, 2.0)));
+        pi2.getVector() = math::VThree(0.0, 0.0, 0.0) - pi1.getVector();
+        pi2.setT(pi1.getT());
 
 
         /*
@@ -2705,19 +2701,19 @@ void kpkspim(int argc, char *argv[]) {
                 /*
          *  transform all 4-vectors back to lab frame
          */
-                fourVec tmp;
-                threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+                math::VFour tmp;
+                math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
                 /* Boost the pions  to Isobar  rest frame */
-                tmp.V() = zeroVec - kshort.V();
-                tmp.t(kshort.t());
+                tmp.getVector() = zeroVec - kshort.getVector();
+                tmp.setT(kshort.getT());
                 Boost.set(tmp);
                 pi1 = Boost * pi1;
                 pi2 = Boost * pi2;
 
                 // boost to resonance rest frame
 
-                tmp.V() = zeroVec - isobar1.V();
-                tmp.t(isobar1.t());
+                tmp.getVector() = zeroVec - isobar1.getVector();
+                tmp.setT(isobar1.getT());
                 Boost.set(tmp);
                 kshort = Boost * kshort;
                 piminus = Boost * piminus;
@@ -2726,8 +2722,8 @@ void kpkspim(int argc, char *argv[]) {
 
 
                 // boost from resonance rest frame to CM
-                tmp.V() = zeroVec - resonance.V();
-                tmp.t(resonance.t());
+                tmp.getVector() = zeroVec - resonance.getVector();
+                tmp.setT(resonance.getT());
                 Boost.set(tmp);
                 isobar1 = Boost * isobar1;
                 kshort = Boost * kshort;
@@ -2752,7 +2748,7 @@ void kpkspim(int argc, char *argv[]) {
          *  generate vertices
          */
                 // e852 values
-                threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+                math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
                 //    ThreeVector Decay;
 
 
@@ -2763,14 +2759,14 @@ void kpkspim(int argc, char *argv[]) {
                     // std::cerr << "Beam in CM:\n  " << CMbeam;
                     // std::cerr << "Target in CM:\n  " << CMtarget;
                     // std::cerr << "Resonance\n";
-                    // std::cerr << "  Resonance mass: " << resonance_mass << "\n";
-                    // std::cerr << "  Resonance CMmomentum: " << resonance_p << "\n";
-                    // std::cerr << "  t: " << t << "\n";
+                    // std::cerr << "  Resonance mass: " << resonance_mass << endl;
+                    // std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
+                    // std::cerr << "  t: " << t << endl;
                     // std::cerr << "  Resonance:\n     " << resonance;
                     // std::cerr << "recoil: \n  " << recoil;
                     // std::cerr << "isobar1\n";
-                    // std::cerr << "  isobar1 mass: " << isobar1_mass << "\n";
-                    // std::cerr << "  isobar1 momentum: " << isobar1_p << "\n";
+                    // std::cerr << "  isobar1 mass: " << isobar1_mass << endl;
+                    // std::cerr << "  isobar1 momentum: " << isobar1_p << endl;
                     // std::cerr << "  isobar1:\n    " << isobar1;
                     // std::cerr << "kshort :\n  " << kshort;
                     // std::cerr << "pi-:\n  " << piminus;
@@ -2780,7 +2776,7 @@ void kpkspim(int argc, char *argv[]) {
                     // std::cerr << "pi pi mass: " << ~(pi1 + pi2) << std::endl;
                     // std::cerr << "vertices:\n";
                     // std::cerr << "  prod: " << production;
-                    // std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    // std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                 }
 
                 /*
@@ -2817,7 +2813,7 @@ void ppipiX_gamma(int argc, char *argv[]) {
             lfmax = 0,
             resonance_mass,
             isobar1_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             resonance,
@@ -2828,7 +2824,7 @@ void ppipiX_gamma(int argc, char *argv[]) {
 
     char mode = '-';
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass = GAMMA_MASS;
     int printBaryon = 0;
@@ -2843,12 +2839,12 @@ void ppipiX_gamma(int argc, char *argv[]) {
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -2899,20 +2895,20 @@ void ppipiX_gamma(int argc, char *argv[]) {
      */
 
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
                      pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
 
         /*
      *-- generate the resonance and isobar
@@ -2964,15 +2960,17 @@ void ppipiX_gamma(int argc, char *argv[]) {
         }
 
 
-        resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
+        resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
         /*
      *-- recoil particle (the pi-)
      */
-        piminus.set(sqrt(resonance.V().lenSq() + pow(PI_MASS, 2.0)),
-                    zeroVec - resonance.V());
+        piminus = math::VFour(
+            sqrt(resonance.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+            zeroVec - resonance.getVector()
+        );
 
         /*
      *  now do Decay in resonance rest frame
@@ -2980,12 +2978,14 @@ void ppipiX_gamma(int argc, char *argv[]) {
         // pi pi case
         double piplus_p = CMmomentum(resonance_mass, PROTON_MASS, PI_MASS);
 
-        piplus.polar(piplus_p, acos(randm(-0.999999, 0.999999)),
+        piplus.setPolar(piplus_p, acos(randm(-0.999999, 0.999999)),
                      randm(-M_PI, M_PI));
 
-        piplus.t(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)));
-        recoil.set(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)),
-                   zeroVec - piplus.V());
+        piplus.setT(sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)));
+        recoil = math::VFour(
+            sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+            zeroVec - piplus.getVector()
+        );
 
         /*
      *  compute lorentz factor
@@ -2996,12 +2996,11 @@ void ppipiX_gamma(int argc, char *argv[]) {
         else {
             if (LorentzFactor > randm(0.0, lfmax)) {
                 /* transform all 4-vectors back to lab frame */
-                fourVec tmp;
+                math::VFour tmp;
 
                 // boost from p_pi rest frame to CM
-                tmp.set(resonance.t(), zeroVec - resonance.V());
+                tmp = math::VFour(resonance.getT(), zeroVec - resonance.getVector());
                 Boost.set(tmp);
-
 
                 piplus = Boost * piplus;
                 recoil = Boost * recoil;
@@ -3014,7 +3013,7 @@ void ppipiX_gamma(int argc, char *argv[]) {
                 piminus = Boost * piminus;
 
                 /* generate vertices */
-                threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+                math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
                 if (mode == '+') {
                     tmp = piminus;
@@ -3025,43 +3024,36 @@ void ppipiX_gamma(int argc, char *argv[]) {
 
                 if (Print) {
                     std::cerr << "\n\n*** New Event\n";
-                    std::cerr << "Beam:\n  ";
-                    beam.print();
-                    std::cerr << "Beam in CM:\n  ";
-                    CMbeam.print();
-                    std::cerr << "Target in CM:\n  ";
-                    CMtarget.print();
+                    std::cerr << "Beam:\n  " << beam << endl;
+                    std::cerr << "Beam in CM:\n  " << CMbeam << endl;
+                    std::cerr << "Target in CM:\n  " << CMtarget << endl;
                     std::cerr << "Resonance\n";
-                    std::cerr << "  Resonance mass: " << resonance_mass << "\n";
+                    std::cerr << "  Resonance mass: " << resonance_mass << endl;
                     std::cerr << "  Resonance CMmomentum: " << resonance_p
-                              << "\n";
-                    std::cerr << "  t: " << t << "\n";
-                    std::cerr << "  Resonance:\n ";
-                    resonance.print();
-                    std::cerr << "recoil: \n  ";
-                    recoil.print();
-                    std::cerr << "pi+ :\n  ";
-                    piplus.print();
-                    std::cerr << "pi-:\n  ";
-                    piminus.print();
+                              << endl;
+                    std::cerr << "  t: " << t << endl;
+                    std::cerr << "  Resonance:\n " << resonance << endl;
+                    std::cerr << "recoil: \n  " << recoil << endl;
+                    std::cerr << "pi+ :\n  " << piplus << endl;
+                    std::cerr << "pi-:\n  " << piminus << endl;
                     //	   std::cerr << "vertices:\n";
                     //	   std::cerr << "  prod: " << production;
-                    std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                     std::cerr << "icount: " << icount << std::endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
                     std::cout << resonance_mass << " "
                               << isobar1_mass * isobar1_mass << " ";
-                    std::cout << ~(piminus + piplus) << " ";
-                    std::cout << pow(~(piplus + piminus), 2.0) << " ";
+                    std::cout << (piminus + piplus).getMass() << " ";
+                    std::cout << pow((piplus + piminus).getMass(), 2.0) << " ";
                     std::cout << masslow << " " << masshigh << " ";
-                    std::cout << (piminus + piplus + recoil).lenSq() << " ";
+                    std::cout << (piminus + piplus + recoil).getLenSq() << " ";
                     std::cout << std::endl;
                 } else if (txt2part_style) {
                     std::cout << "3" << std::endl;
-                    std::cout << EbeamZ << " " << beam.t() << " "
-                              << production.z() / SPEED_OF_LIGHT << std::endl;
+                    std::cout << EbeamZ << " " << beam.getT() << " "
+                              << production.getZ() / SPEED_OF_LIGHT << std::endl;
                     pParticle_txt2part(Proton, production, recoil);
                     pParticle_txt2part(PiMinus, production, piminus);
                     pParticle_txt2part(PiPlus, production, piplus);
@@ -3117,7 +3109,7 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
             lfmax = 0,
             resonance_mass,
             isobar1_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             resonance,
@@ -3130,12 +3122,12 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
             pizero,
             gamma1,
             gamma2;
-    fourVec isobar1, isobar2;
+    math::VFour isobar1, isobar2;
     // isobar1 is pi pi isobar off of omega pi pi system
     // isobar2 is pi+ pi- isobar from omega Decay
     lorentzTransform Boost;
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass = GAMMA_MASS;
     int printBaryon = 0;
@@ -3158,12 +3150,12 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -3238,20 +3230,20 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
      */
 
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
                      pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
 
         /*
      *-- generate the resonance and isobar
@@ -3305,31 +3297,33 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
         }
 
 
-        resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
+        resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
         /*
      *-- recoil particle
      */
-        recoil.set(sqrt(resonance.V().lenSq() + pow(PROTON_MASS, 2.0)),
-                   zeroVec - resonance.V());
-
-
+        recoil = math::VFour(
+            sqrt(resonance.getVector().getLenSq() + pow(PROTON_MASS, 2.0)),
+            zeroVec - resonance.getVector()
+        );
 
         /*
      *  now do Decay in resonance rest frame
      */
         double isobar1_p = CMmomentum(resonance_mass, isobar1_mass, OMEGA_MASS);
 
-        isobar1.polar(isobar1_p, acos(randm(-0.999999, 0.999999)),
+        isobar1.setPolar(isobar1_p, acos(randm(-0.999999, 0.999999)),
                       randm(-M_PI, M_PI));
-        //   isobar1.polar( isobar1_p, acos (1.0), 0.0);
+        //   isobar1.setPolar( isobar1_p, acos (1.0), 0.0);
 
-        isobar1.t(sqrt(isobar1.V().lenSq() + pow(isobar1_mass, 2.0)));
+        isobar1.setT(sqrt(isobar1.getVector().getLenSq() + pow(isobar1_mass, 2.0)));
 
-        omeg.set(sqrt(isobar1.V().lenSq() + pow(OMEGA_MASS, 2.0)),
-                 zeroVec - isobar1.V());
+        omeg = math::VFour(
+            sqrt(isobar1.getVector().getLenSq() + pow(OMEGA_MASS, 2.0)),
+             zeroVec - isobar1.getVector()
+         );
 
         /*
      *  now do Decay in isobar1 rest frame
@@ -3337,10 +3331,13 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
         // pi pi case
         double pi1_p = CMmomentum(isobar1_mass, pi1mass, pi2mass);
 
-        pi1.polar(pi1_p, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
-        //   piplus.polar( piplus_p,acos (1.0),0.0);
-        pi1.t(sqrt(pi1.V().lenSq() + pow(pi1mass, 2.0)));
-        pi2.set(sqrt(pi1.V().lenSq() + pow(pi2mass, 2.0)), zeroVec - pi1.V());
+        pi1.setPolar(pi1_p, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
+        //   piplus.setPolar( piplus_p,acos (1.0),0.0);
+        pi1.setT(sqrt(pi1.getVector().getLenSq() + pow(pi1mass, 2.0)));
+        pi2 = math::VFour(
+            sqrt(pi1.getVector().getLenSq() + pow(pi2mass, 2.0)),
+            zeroVec - pi1.getVector()
+        );
 
 
         // code to do omega Decay
@@ -3348,43 +3345,46 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
         double lomass = 2 * PI_MASS;
         double isobar2_mass = randm(lomass, himass);
         double isobar2_p = CMmomentum(OMEGA_MASS, isobar2_mass, PI0_MASS);
-        isobar2.polar(isobar2_p, acos(randm(-0.999999, 0.999999)),
+        isobar2.setPolar(isobar2_p, acos(randm(-0.999999, 0.999999)),
                       randm(-M_PI, M_PI));
-        isobar2.t(sqrt(isobar2.V().lenSq() + pow(isobar2_mass, 2.0)));
-        pizero.set(sqrt(isobar2.V().lenSq() + pow(PI0_MASS, 2.0)),
-                   zeroVec - isobar2.V());
+        isobar2.setT(sqrt(isobar2.getVector().getLenSq() + pow(isobar2_mass, 2.0)));
+        pizero = math::VFour(
+            sqrt(isobar2.getVector().getLenSq() + pow(PI0_MASS, 2.0)),
+            zeroVec - isobar2.getVector()
+        );
 
 
         // isobar2 Decay
         double piplus_p = CMmomentum(isobar2_mass, PI_MASS, PI_MASS);
 
-        piplus.polar(piplus_p, acos(randm(-0.999999, 0.999999)),
+        piplus.setPolar(piplus_p, acos(randm(-0.999999, 0.999999)),
                      randm(-M_PI, M_PI));
-        piplus.t(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)));
-        piminus.set(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)),
-                    zeroVec - piplus.V());
+        piplus.setT(sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)));
+        piminus = math::VFour(
+            sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+            zeroVec - piplus.getVector()
+        );
+
         if (debug) {
-            std::cout << "\n";
+            std::cout << endl;
             std::cout << "pi+ (isobar2) : ";
             pParticleGamp(PiPlus, piplus);
             std::cout << "pi- (isobar2) : ";
             pParticleGamp(PiMinus, piminus);
-            std::cout << "mass " << ~(piminus + piplus) << " " << ~isobar2
+            std::cout << "mass " << (piminus + piplus).getMass() << " " << isobar2.getMass()
                       << " " << isobar2_mass << " " << piplus_p
-                      << " " << piplus.r() << std::endl;
+                      << " " << piplus.getR() << std::endl;
             std::cout << std::endl << std::endl;
         }
 
 
-
-
         // pi0 Decay to 2 gamma, in pi0 rest frame
         double gam1_p = CMmomentum(PI0_MASS, 0.0, 0.0);
-        gamma1.polar(gam1_p, acos(randm(-0.999999, 0.999999)),
+        gamma1.setPolar(gam1_p, acos(randm(-0.999999, 0.999999)),
                      randm(-M_PI, M_PI));
-        gamma1.t(gam1_p);
-        gamma2.set(gam1_p, threeVec(0.0, 0.0, 0.0) - gamma1.V());
-        gamma2.t(gam1_p);
+        gamma1.setT(gam1_p);
+        gamma2 = math::VFour(gam1_p, math::VThree(0.0, 0.0, 0.0) - gamma1.getVector());
+        gamma2.setT(gam1_p);
         /*
      *  compute lorentz factor
      */
@@ -3395,16 +3395,16 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
         else {
             if (LorentzFactor > randm(0.0, lfmax)) {
                 /* transform all 4-vectors back to lab frame */
-                fourVec tmp;
+                math::VFour tmp;
 
                 // boost gammas to omega  rest frame
-                tmp.set(pizero.t(), zeroVec - pizero.V());
+                tmp = math::VFour(pizero.getT(), zeroVec - pizero.getVector());
                 Boost.set(tmp);
                 gamma1 = Boost * gamma1;
                 gamma2 = Boost * gamma2;
 
                 // boost pi+ pi- to omega rest frame
-                tmp.set(isobar2.t(), zeroVec - isobar2.V());
+                tmp = math::VFour(isobar2.getT(), zeroVec - isobar2.getVector());
                 Boost.set(tmp);
 
 
@@ -3412,20 +3412,20 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
                 piminus = Boost * piminus;
 
                 if (debug) {
-                    std::cout << "\n";
+                    std::cout << endl;
                     std::cout << "pi+ (isobar2) : ";
                     pParticleGamp(PiPlus, piplus);
                     std::cout << "pi- (isobar2) : ";
                     pParticleGamp(PiMinus, piminus);
-                    std::cout << "mass " << ~(piminus + piplus) << " "
-                              << ~isobar2 << " " << isobar2_mass << std::endl;
+                    std::cout << "mass " << (piminus + piplus).getMass() << " "
+                              << isobar2.getMass() << " " << isobar2_mass << std::endl;
                     std::cout << std::endl << std::endl;
                 }
 
 
 
                 // boost omega progeny
-                tmp.set(omeg.t(), zeroVec - omeg.V());
+                tmp = math::VFour(omeg.getT(), zeroVec - omeg.getVector());
                 Boost.set(tmp);
                 gamma1 = Boost * gamma1;
                 gamma2 = Boost * gamma2;
@@ -3434,24 +3434,24 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
                 pizero = Boost * pizero;
                 isobar2 = Boost * isobar2;
                 if (debug) {
-                    std::cout << "\n";
+                    std::cout << endl;
                     std::cout << "pi1 : ";
                     pParticleGamp(Pi1, pi1);
                     std::cout << "pi2 : ";
                     pParticleGamp(Pi2, pi2);
-                    std::cout << "mass " << ~(pi1 + pi2) << std::endl;
+                    std::cout << "mass " << (pi1 + pi2).getMass() << std::endl;
                     std::cout << std::endl << std::endl;
                 }
 
                 // boost progeny of isobar1
-                tmp.set(isobar1.t(), zeroVec - isobar1.V());
+                tmp = math::VFour(isobar1.getT(), zeroVec - isobar1.getVector());
                 Boost.set(tmp);
                 pi1 = Boost * pi1;
                 pi2 = Boost * pi2;
 
                 if (debug) {
-                    std::cout << "\n";
-                    std::cout << "isobar1: " << ~isobar1 << " ";
+                    std::cout << endl;
+                    std::cout << "isobar1: " << isobar1.getMass() << " ";
                     pParticleGamp(Rho0, isobar1);
                     std::cout << "pi1 : ";
                     pParticleGamp(Pi1, pi1);
@@ -3462,7 +3462,7 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
 
                 // boost  everyone to resonance   frame
 
-                tmp.set(resonance.t(), zeroVec - resonance.V());
+                tmp = math::VFour(resonance.getT(), zeroVec - resonance.getVector());
                 Boost.set(tmp);
                 piplus = Boost * piplus;
                 piminus = Boost * piminus;
@@ -3478,7 +3478,7 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
 
 
                 // boost from CM to target rest frame (lab)
-                tmp.set(CMtarget.t(), zeroVec - CMtarget.V());
+                tmp = math::VFour(CMtarget.getT(), zeroVec - CMtarget.getVector());
                 Boost.set(CMtarget);
                 CMtarget = Boost * CMtarget;
                 resonance = Boost * resonance;
@@ -3495,52 +3495,43 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
                 isobar2 = Boost * isobar2;
 
                 /* generate vertices */
-                threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+                math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
 
                 if (Print) {
                     std::cerr << "\n\n*** New Event\n";
-                    std::cerr << "Beam:\n  ";
-                    beam.print();
-                    std::cerr << "Beam in CM:\n  ";
-                    CMbeam.print();
-                    std::cerr << "Target in CM:\n  ";
-                    CMtarget.print();
+                    std::cerr << "Beam:\n  " << beam << endl;
+                    std::cerr << "Beam in CM:\n  " << CMbeam << endl;
+                    std::cerr << "Target in CM:\n  " << CMtarget << endl;
                     std::cerr << "Resonance\n";
-                    std::cerr << "  Resonance mass: " << resonance_mass << "\n";
+                    std::cerr << "  Resonance mass: " << resonance_mass << endl;
                     std::cerr << "  Resonance CMmomentum: " << resonance_p
-                              << "\n";
-                    std::cerr << "  t: " << t << "\n";
-                    std::cerr << "  Resonance:\n ";
-                    resonance.print();
-                    std::cerr << "recoil: \n  ";
-                    recoil.print();
+                              << endl;
+                    std::cerr << "  t: " << t << endl;
+                    std::cerr << "  Resonance:\n " << resonance << endl;
+                    std::cerr << "recoil: \n  " << recoil << endl;
                     std::cerr << "isobar1\n";
-                    std::cerr << "  isobar1 mass: " << isobar1_mass << "\n";
-                    std::cerr << "  isobar1 momentum: " << isobar1_p << "\n";
-                    std::cerr << "  isobar1:\n    ";
-                    isobar1.print();
-                    std::cerr << "pi+ :\n  ";
-                    piplus.print();
-                    std::cerr << "pi-2:\n  ";
-                    pizero.print();
-                    std::cerr << "pi-1:\n  ";
-                    piminus.print();
+                    std::cerr << "  isobar1 mass: " << isobar1_mass << endl;
+                    std::cerr << "  isobar1 momentum: " << isobar1_p << endl;
+                    std::cerr << "  isobar1:\n    " << isobar1 << endl;
+                    std::cerr << "pi+ :\n  " << piplus << endl;
+                    std::cerr << "pi-2:\n  " << pizero << endl;
+                    std::cerr << "pi-1:\n  " << piminus << endl;
                     //	   std::cerr << "vertices:\n";
                     //	   std::cerr << "  prod: " << production;
-                    std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                     std::cerr << "icount: " << icount << std::endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
                     std::cout << resonance_mass << " "
                               << isobar1_mass * isobar1_mass << " ";
-                    std::cout << ~(pizero + piminus + piplus) << " ";
-                    std::cout << pow(~(pizero + piplus), 2.0) << " "
-                              << pow(~(pizero + piminus), 2.0) << " "
-                              << pow(~(piplus + piminus), 2.0) << " ";
+                    std::cout << (pizero + piminus + piplus).getMass() << " ";
+                    std::cout << pow((pizero + piplus).getMass(), 2.0) << " "
+                              << pow((pizero + piminus).getMass(), 2.0) << " "
+                              << pow((piplus + piminus).getMass(), 2.0) << " ";
                     std::cout << masslow << " " << masshigh << " ";
-                    std::cout << (pizero + piminus + piplus + recoil).lenSq()
+                    std::cout << (pizero + piminus + piplus + recoil).getLenSq()
                               << " ";
                     std::cout << std::endl;
                 } else if (txt2part_style) {
@@ -3549,8 +3540,8 @@ void omegapipi(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
                     } else {
                         std::cout << "6" << std::endl;
                     }
-                    std::cout << EbeamZ << " " << beam.t() << " "
-                              << -production.z() / SPEED_OF_LIGHT << std::endl;;
+                    std::cout << EbeamZ << " " << beam.getT() << " "
+                              << -production.getZ() / SPEED_OF_LIGHT << std::endl;;
                     pParticle_txt2part(Baryon, production, recoil);
                     pParticle_txt2part(Pi1, production, pi1);
                     pParticle_txt2part(Pi2, production, pi2);
@@ -3662,7 +3653,7 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
             lfmax = 0,
             resonance_mass,
             isobar1_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             resonance,
@@ -3677,12 +3668,12 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
             gamma2,
             gamma3,
             gamma4;
-    fourVec isobar1, isobar2;
+    math::VFour isobar1, isobar2;
     // isobar1 is pi pi isobar off of omega pi pi system
     // isobar2 is pi+ pi- isobar from omega Decay
     lorentzTransform Boost;
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass = GAMMA_MASS;
     int printBaryon = 0;
@@ -3705,12 +3696,12 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -3785,20 +3776,20 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
      */
 
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
                      pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
 
         /*
      *-- generate the resonance and isobar
@@ -3852,16 +3843,17 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
         }
 
 
-        resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
+        resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
         /*
      *-- recoil particle
      */
-        recoil.set(sqrt(resonance.V().lenSq() + pow(PROTON_MASS, 2.0)),
-                   zeroVec - resonance.V());
-
+        recoil = math::VFour(
+            sqrt(resonance.getVector().getLenSq() + pow(PROTON_MASS, 2.0)),
+            zeroVec - resonance.getVector()
+        );
 
 
         /*
@@ -3869,14 +3861,16 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
      */
         double isobar1_p = CMmomentum(resonance_mass, isobar1_mass, OMEGA_MASS);
 
-        isobar1.polar(isobar1_p, acos(randm(-0.999999, 0.999999)),
+        isobar1.setPolar(isobar1_p, acos(randm(-0.999999, 0.999999)),
                       randm(-M_PI, M_PI));
-        //   isobar1.polar( isobar1_p, acos (1.0), 0.0);
+        //   isobar1.setPolar( isobar1_p, acos (1.0), 0.0);
 
-        isobar1.t(sqrt(isobar1.V().lenSq() + pow(isobar1_mass, 2.0)));
+        isobar1.setT(sqrt(isobar1.getVector().getLenSq() + pow(isobar1_mass, 2.0)));
 
-        omeg.set(sqrt(isobar1.V().lenSq() + pow(OMEGA_MASS, 2.0)),
-                 zeroVec - isobar1.V());
+        omeg = math::VFour(
+            sqrt(isobar1.getVector().getLenSq() + pow(OMEGA_MASS, 2.0)),
+            zeroVec - isobar1.getVector()
+        );
 
         /*
      *  now do Decay in isobar1 rest frame
@@ -3884,41 +3878,47 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
         // pi pi case
         double pi1_p = CMmomentum(isobar1_mass, pi1mass, pi2mass);
 
-        pi1.polar(pi1_p, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
-        //   piplus.polar( piplus_p,acos (1.0),0.0);
-        pi1.t(sqrt(pi1.V().lenSq() + pow(pi1mass, 2.0)));
-        pi2.set(sqrt(pi1.V().lenSq() + pow(pi2mass, 2.0)), zeroVec - pi1.V());
-
+        pi1.setPolar(pi1_p, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
+        //   piplus.setPolar( piplus_p,acos (1.0),0.0);
+        pi1.setT(sqrt(pi1.getVector().getLenSq() + pow(pi1mass, 2.0)));
+        pi2 = math::VFour(
+            sqrt(pi1.getVector().getLenSq() + pow(pi2mass, 2.0)),
+            zeroVec - pi1.getVector()
+        );
 
         // code to do omega Decay
         double himass = OMEGA_MASS - PI0_MASS;
         double lomass = 2 * PI_MASS;
         double isobar2_mass = randm(lomass, himass);
         double isobar2_p = CMmomentum(OMEGA_MASS, isobar2_mass, PI0_MASS);
-        isobar2.polar(isobar2_p, acos(randm(-0.999999, 0.999999)),
+        isobar2.setPolar(isobar2_p, acos(randm(-0.999999, 0.999999)),
                       randm(-M_PI, M_PI));
-        isobar2.t(sqrt(isobar2.V().lenSq() + pow(isobar2_mass, 2.0)));
-        pizero.set(sqrt(isobar2.V().lenSq() + pow(PI0_MASS, 2.0)),
-                   zeroVec - isobar2.V());
+        isobar2.setT(sqrt(isobar2.getVector().getLenSq() + pow(isobar2_mass, 2.0)));
+        pizero = math::VFour(
+            sqrt(isobar2.getVector().getLenSq() + pow(PI0_MASS, 2.0)),
+            zeroVec - isobar2.getVector()
+        );
 
 
         // isobar2 Decay
         double piplus_p = CMmomentum(isobar2_mass, PI_MASS, PI_MASS);
 
-        piplus.polar(piplus_p, acos(randm(-0.999999, 0.999999)),
+        piplus.setPolar(piplus_p, acos(randm(-0.999999, 0.999999)),
                      randm(-M_PI, M_PI));
-        piplus.t(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)));
-        piminus.set(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)),
-                    zeroVec - piplus.V());
+        piplus.setT(sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)));
+        piminus = math::VFour(
+            sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+            zeroVec - piplus.getVector()
+        );
         if (debug) {
-            std::cout << "\n";
+            std::cout << endl;
             std::cout << "pi+ (isobar2) : ";
             pParticleGamp(PiPlus, piplus);
             std::cout << "pi- (isobar2) : ";
             pParticleGamp(PiMinus, piminus);
-            std::cout << "mass " << ~(piminus + piplus) << " " << ~isobar2
+            std::cout << "mass " << (piminus + piplus).getMass() << " " << isobar2.getMass()
                       << " " << isobar2_mass << " " << piplus_p
-                      << " " << piplus.r() << std::endl;
+                      << " " << piplus.getR() << std::endl;
             std::cout << std::endl << std::endl;
         }
 
@@ -3927,17 +3927,17 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
 
         // pi0 Decay to 2 gamma, in pi0 rest frame pi0
         double gam1_p = CMmomentum(PI0_MASS, 0.0, 0.0);
-        gamma1.polar(gam1_p, acos(randm(-0.999999, 0.999999)),
+        gamma1.setPolar(gam1_p, acos(randm(-0.999999, 0.999999)),
                      randm(-M_PI, M_PI));
-        gamma1.t(gam1_p);
-        gamma2.set(gam1_p, threeVec(0.0, 0.0, 0.0) - gamma1.V());
-        gamma2.t(gam1_p);
+        gamma1.setT(gam1_p);
+        gamma2 = math::VFour(gam1_p, math::VThree(0.0, 0.0, 0.0) - gamma1.getVector());
+        gamma2.setT(gam1_p);
 
-        gamma3.polar(gam1_p, acos(randm(-0.999999, 0.999999)),
+        gamma3.setPolar(gam1_p, acos(randm(-0.999999, 0.999999)),
                      randm(-M_PI, M_PI));
-        gamma3.t(gam1_p);
-        gamma4.set(gam1_p, threeVec(0.0, 0.0, 0.0) - gamma3.V());
-        gamma4.t(gam1_p);
+        gamma3.setT(gam1_p);
+        gamma4 = math::VFour(gam1_p, math::VThree(0.0, 0.0, 0.0) - gamma3.getVector());
+        gamma4.setT(gam1_p);
         /*
      *  compute lorentz factor
      */
@@ -3948,43 +3948,42 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
         else {
             if (LorentzFactor > randm(0.0, lfmax)) {
                 /* transform all 4-vectors back to lab frame */
-                fourVec tmp;
+                math::VFour tmp;
 
                 // boost gammas to from first pi0 Decay
-                tmp.set(pi2.t(), zeroVec - pi2.V());
+                tmp = math::VFour(pi2.getT(), zeroVec - pi2.getVector());
                 Boost.set(tmp);
                 gamma3 = Boost * gamma3;
                 gamma4 = Boost * gamma4;
 
                 // boost gammas to omega  rest frame
-                tmp.set(pizero.t(), zeroVec - pizero.V());
+                tmp = math::VFour(pizero.getT(), zeroVec - pizero.getVector());
                 Boost.set(tmp);
                 gamma1 = Boost * gamma1;
                 gamma2 = Boost * gamma2;
 
                 // boost pi+ pi- to omega rest frame
-                tmp.set(isobar2.t(), zeroVec - isobar2.V());
+                tmp = math::VFour(isobar2.getT(), zeroVec - isobar2.getVector());
                 Boost.set(tmp);
-
 
                 piplus = Boost * piplus;
                 piminus = Boost * piminus;
 
                 if (debug) {
-                    std::cout << "\n";
+                    std::cout << endl;
                     std::cout << "pi+ (isobar2) : ";
                     pParticleGamp(PiPlus, piplus);
                     std::cout << "pi- (isobar2) : ";
                     pParticleGamp(PiMinus, piminus);
-                    std::cout << "mass " << ~(piminus + piplus) << " "
-                              << ~isobar2 << " " << isobar2_mass << std::endl;
+                    std::cout << "mass " << (piminus + piplus).getMass() << " "
+                              << isobar2.getMass() << " " << isobar2_mass << std::endl;
                     std::cout << std::endl << std::endl;
                 }
 
 
 
                 // boost omega progeny
-                tmp.set(omeg.t(), zeroVec - omeg.V());
+                tmp = math::VFour(omeg.getT(), zeroVec - omeg.getVector());
                 Boost.set(tmp);
                 gamma1 = Boost * gamma1;
                 gamma2 = Boost * gamma2;
@@ -3993,17 +3992,17 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
                 pizero = Boost * pizero;
                 isobar2 = Boost * isobar2;
                 if (debug) {
-                    std::cout << "\n";
+                    std::cout << endl;
                     std::cout << "pi1 : ";
                     pParticleGamp(Pi1, pi1);
                     std::cout << "pi2 : ";
                     pParticleGamp(Pi2, pi2);
-                    std::cout << "mass " << ~(pi1 + pi2) << std::endl;
+                    std::cout << "mass " << (pi1 + pi2).getMass() << std::endl;
                     std::cout << std::endl << std::endl;
                 }
 
                 // boost progeny of isobar1
-                tmp.set(isobar1.t(), zeroVec - isobar1.V());
+                tmp = math::VFour(isobar1.getT(), zeroVec - isobar1.getVector());
                 Boost.set(tmp);
                 pi1 = Boost * pi1;
                 pi2 = Boost * pi2;
@@ -4011,8 +4010,8 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
                 gamma4 = Boost * gamma4;
 
                 if (debug) {
-                    std::cout << "\n";
-                    std::cout << "isobar1: " << ~isobar1 << " ";
+                    std::cout << endl;
+                    std::cout << "isobar1: " << isobar1.getMass() << " ";
                     pParticleGamp(Rho0, isobar1);
                     std::cout << "pi1 : ";
                     pParticleGamp(Pi1, pi1);
@@ -4023,7 +4022,7 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
 
                 // boost  everyone to resonance   frame
 
-                tmp.set(resonance.t(), zeroVec - resonance.V());
+                tmp = math::VFour(resonance.getT(), zeroVec - resonance.getVector());
                 Boost.set(tmp);
                 piplus = Boost * piplus;
                 piminus = Boost * piminus;
@@ -4041,7 +4040,7 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
 
 
                 // boost from CM to target rest frame (lab)
-                tmp.set(CMtarget.t(), zeroVec - CMtarget.V());
+                tmp = math::VFour(CMtarget.getT(), zeroVec - CMtarget.getVector());
                 Boost.set(CMtarget);
                 CMtarget = Boost * CMtarget;
                 resonance = Boost * resonance;
@@ -4060,52 +4059,43 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
                 gamma4 = Boost * gamma4;
 
                 /* generate vertices */
-                threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+                math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
 
                 if (Print) {
                     std::cerr << "\n\n*** New Event\n";
-                    std::cerr << "Beam:\n  ";
-                    beam.print();
-                    std::cerr << "Beam in CM:\n  ";
-                    CMbeam.print();
-                    std::cerr << "Target in CM:\n  ";
-                    CMtarget.print();
+                    std::cerr << "Beam:\n  " << beam << endl;
+                    std::cerr << "Beam in CM:\n  " << CMbeam << endl;
+                    std::cerr << "Target in CM:\n  " << CMtarget << endl;
                     std::cerr << "Resonance\n";
-                    std::cerr << "  Resonance mass: " << resonance_mass << "\n";
+                    std::cerr << "  Resonance mass: " << resonance_mass << endl;
                     std::cerr << "  Resonance CMmomentum: " << resonance_p
-                              << "\n";
-                    std::cerr << "  t: " << t << "\n";
-                    std::cerr << "  Resonance:\n ";
-                    resonance.print();
-                    std::cerr << "recoil: \n  ";
-                    recoil.print();
+                              << endl;
+                    std::cerr << "  t: " << t << endl;
+                    std::cerr << "  Resonance:\n " << resonance << endl;
+                    std::cerr << "recoil: \n  " << recoil << endl;
                     std::cerr << "isobar1\n";
-                    std::cerr << "  isobar1 mass: " << isobar1_mass << "\n";
-                    std::cerr << "  isobar1 momentum: " << isobar1_p << "\n";
-                    std::cerr << "  isobar1:\n    ";
-                    isobar1.print();
-                    std::cerr << "pi+ :\n  ";
-                    piplus.print();
-                    std::cerr << "pi-2:\n  ";
-                    pizero.print();
-                    std::cerr << "pi-1:\n  ";
-                    piminus.print();
+                    std::cerr << "  isobar1 mass: " << isobar1_mass << endl;
+                    std::cerr << "  isobar1 momentum: " << isobar1_p << endl;
+                    std::cerr << "  isobar1:\n    " << isobar1 << endl;
+                    std::cerr << "pi+ :\n  " << piplus << endl;
+                    std::cerr << "pi-2:\n  " << pizero << endl;
+                    std::cerr << "pi-1:\n  " << piminus << endl;
                     //	   std::cerr << "vertices:\n";
                     //	   std::cerr << "  prod: " << production;
-                    std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                     std::cerr << "icount: " << icount << std::endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
                     std::cout << resonance_mass << " "
                               << isobar1_mass * isobar1_mass << " ";
-                    std::cout << ~(pizero + piminus + piplus) << " ";
-                    std::cout << pow(~(pizero + piplus), 2.0) << " "
-                              << pow(~(pizero + piminus), 2.0) << " "
-                              << pow(~(piplus + piminus), 2.0) << " ";
+                    std::cout << (pizero + piminus + piplus).getMass() << " ";
+                    std::cout << pow((pizero + piplus).getMass(), 2.0) << " "
+                              << pow((pizero + piminus).getMass(), 2.0) << " "
+                              << pow((piplus + piminus).getMass(), 2.0) << " ";
                     std::cout << masslow << " " << masshigh << " ";
-                    std::cout << (pizero + piminus + piplus + recoil).lenSq()
+                    std::cout << (pizero + piminus + piplus + recoil).getLenSq()
                               << " ";
                     std::cout << std::endl;
                 } else if (txt2part_style) {
@@ -4114,8 +4104,8 @@ void omegapipi0(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
                     } else {
                         std::cout << "6" << std::endl;
                     }
-                    std::cout << EbeamZ << " " << beam.t() << " "
-                              << -production.z() / SPEED_OF_LIGHT << std::endl;;
+                    std::cout << EbeamZ << " " << beam.getT() << " "
+                              << -production.getZ() / SPEED_OF_LIGHT << std::endl;;
                     pParticle_txt2part(Baryon, production, recoil);
                     pParticle_txt2part(Pi1, production, pi1);
                     pParticle_txt2part(PiMinus, production, piminus);
@@ -4245,7 +4235,7 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
             lfmax = 0,
             resonance_mass,
             isobar1_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             resonance,
@@ -4259,12 +4249,12 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
             pizero,
             gamma1,
             gamma2;
-    fourVec isobar2;
+    math::VFour isobar2;
     // isobar1 is pi pi isobar off of omega pi pi system
     // isobar2 is pi+ pi- isobar from omega Decay
     lorentzTransform Boost;
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass = GAMMA_MASS;
     int printBaryon = 0;
@@ -4286,12 +4276,12 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -4366,20 +4356,20 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
      */
 
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
                      pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
 
         /*
      *-- generate the resonance and isobar
@@ -4425,16 +4415,17 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
         }
 
 
-        resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
+        resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
         /*
      *-- recoil particle
      */
-        recoil.set(sqrt(resonance.V().lenSq() + pow(PROTON_MASS, 2.0)),
-                   zeroVec - resonance.V());
-
+        recoil = math::VFour(
+            sqrt(resonance.getVector().getLenSq() + pow(PROTON_MASS, 2.0)),
+            zeroVec - resonance.getVector()
+        );
 
 
         /*
@@ -4442,13 +4433,15 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
      */
         double phi_p = CMmomentum(resonance_mass, PHI_MASS, OMEGA_MASS);
 
-        phi.polar(phi_p, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
-        //   isobar1.polar( isobar1_p, acos (1.0), 0.0);
+        phi.setPolar(phi_p, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
+        //   isobar1.setPolar( isobar1_p, acos (1.0), 0.0);
 
-        phi.t(sqrt(phi.V().lenSq() + pow(PHI_MASS, 2.0)));
+        phi.setT(sqrt(phi.getVector().getLenSq() + pow(PHI_MASS, 2.0)));
 
-        omeg.set(sqrt(phi.V().lenSq() + pow(OMEGA_MASS, 2.0)),
-                 zeroVec - phi.V());
+        omeg = math::VFour(
+            sqrt(phi.getVector().getLenSq() + pow(OMEGA_MASS, 2.0)),
+            zeroVec - phi.getVector()
+        );
 
         /*
      *  now do Decay in phi rest frame
@@ -4456,13 +4449,13 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
         // K+ K- case
         double Kp_p = CMmomentum(PHI_MASS, KCHARGED_MASS, KCHARGED_MASS);
 
-        Kp.polar(Kp_p, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
+        Kp.setPolar(Kp_p, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
 
-        Kp.t(sqrt(Kp.V().lenSq() + pow(KCHARGED_MASS, 2.0)));
-        Km.set(sqrt(Kp.V().lenSq() + pow(KCHARGED_MASS, 2.0)),
-               zeroVec - Kp.V());
-
-
+        Kp.setT(sqrt(Kp.getVector().getLenSq() + pow(KCHARGED_MASS, 2.0)));
+        Km = math::VFour(
+            sqrt(Kp.getVector().getLenSq() + pow(KCHARGED_MASS, 2.0)),
+            zeroVec - Kp.getVector()
+        );
 
 
         // code to do omega Decay
@@ -4470,30 +4463,35 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
         double lomass = 2 * PI_MASS;
         double isobar2_mass = randm(lomass, himass);
         double isobar2_p = CMmomentum(OMEGA_MASS, isobar2_mass, PI0_MASS);
-        isobar2.polar(isobar2_p, acos(randm(-0.999999, 0.999999)),
+        isobar2.setPolar(isobar2_p, acos(randm(-0.999999, 0.999999)),
                       randm(-M_PI, M_PI));
-        isobar2.t(sqrt(isobar2.V().lenSq() + pow(isobar2_mass, 2.0)));
-        pizero.set(sqrt(isobar2.V().lenSq() + pow(PI0_MASS, 2.0)),
-                   zeroVec - isobar2.V());
+        isobar2.setT(sqrt(isobar2.getVector().getLenSq() + pow(isobar2_mass, 2.0)));
+        pizero = math::VFour(
+            sqrt(isobar2.getVector().getLenSq() + pow(PI0_MASS, 2.0)),
+            zeroVec - isobar2.getVector()
+       );
 
 
         // isobar2 Decay
         double piplus_p = CMmomentum(isobar2_mass, PI_MASS, PI_MASS);
 
-        piplus.polar(piplus_p, acos(randm(-0.999999, 0.999999)),
+        piplus.setPolar(piplus_p, acos(randm(-0.999999, 0.999999)),
                      randm(-M_PI, M_PI));
-        piplus.t(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)));
-        piminus.set(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)),
-                    zeroVec - piplus.V());
+        piplus.setT(sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)));
+        piminus = math::VFour(
+            sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+            zeroVec - piplus.getVector()
+        );
+
         if (debug) {
-            std::cout << "\n";
+            std::cout << endl;
             std::cout << "pi+ (isobar2) : ";
             pParticleGamp(PiPlus, piplus);
             std::cout << "pi- (isobar2) : ";
             pParticleGamp(PiMinus, piminus);
-            std::cout << "mass " << ~(piminus + piplus) << " " << ~isobar2
+            std::cout << "mass " << (piminus + piplus).getMass() << " " << isobar2.getMass()
                       << " " << isobar2_mass << " " << piplus_p
-                      << " " << piplus.r() << std::endl;
+                      << " " << piplus.getR() << std::endl;
             std::cout << std::endl << std::endl;
         }
 
@@ -4502,11 +4500,11 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
 
         // pi0 Decay to 2 gamma, in pi0 rest frame
         double gam1_p = CMmomentum(PI0_MASS, 0.0, 0.0);
-        gamma1.polar(gam1_p, acos(randm(-0.999999, 0.999999)),
+        gamma1.setPolar(gam1_p, acos(randm(-0.999999, 0.999999)),
                      randm(-M_PI, M_PI));
-        gamma1.t(gam1_p);
-        gamma2.set(gam1_p, threeVec(0.0, 0.0, 0.0) - gamma1.V());
-        gamma2.t(gam1_p);
+        gamma1.setT(gam1_p);
+        gamma2 = math::VFour(gam1_p, math::VThree(0.0, 0.0, 0.0) - gamma1.getVector());
+        gamma2.setT(gam1_p);
         /*
      *  compute lorentz factor
      */
@@ -4517,23 +4515,23 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
         else {
             if (LorentzFactor > randm(0.0, lfmax)) {
                 /* transform all 4-vectors back to lab frame */
-                fourVec tmp;
+                math::VFour tmp;
 
                 // Get K's back
 
-                tmp.set(phi.t(), zeroVec - phi.V());
+                tmp = math::VFour(phi.getT(), zeroVec - phi.getVector());
                 Boost.set(tmp);
                 Kp = Boost * Kp;
                 Km = Boost * Km;
 
                 // boost gammas to omega  rest frame
-                tmp.set(pizero.t(), zeroVec - pizero.V());
+                tmp = math::VFour(pizero.getT(), zeroVec - pizero.getVector());
                 Boost.set(tmp);
                 gamma1 = Boost * gamma1;
                 gamma2 = Boost * gamma2;
 
                 // boost pi+ pi- to omega rest frame
-                tmp.set(isobar2.t(), zeroVec - isobar2.V());
+                tmp = math::VFour(isobar2.getT(), zeroVec - isobar2.getVector());
                 Boost.set(tmp);
 
 
@@ -4541,20 +4539,19 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
                 piminus = Boost * piminus;
 
                 if (debug) {
-                    std::cout << "\n";
+                    std::cout << endl;
                     std::cout << "pi+ (isobar2) : ";
                     pParticleGamp(PiPlus, piplus);
                     std::cout << "pi- (isobar2) : ";
                     pParticleGamp(PiMinus, piminus);
-                    std::cout << "mass " << ~(piminus + piplus) << " "
-                              << ~isobar2 << " " << isobar2_mass << std::endl;
+                    std::cout << "mass " << (piminus + piplus).getMass() << " "
+                              << isobar2.getMass() << " " << isobar2_mass << std::endl;
                     std::cout << std::endl << std::endl;
                 }
 
 
-
                 // boost omega progeny
-                tmp.set(omeg.t(), zeroVec - omeg.V());
+                tmp = math::VFour(omeg.getT(), zeroVec - omeg.getVector());
                 Boost.set(tmp);
                 gamma1 = Boost * gamma1;
                 gamma2 = Boost * gamma2;
@@ -4565,7 +4562,7 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
 
 
                 if (debug) {
-                    std::cout << "\n";
+                    std::cout << endl;
                     std::cout << "Kp : ";
                     pParticleGamp(KPlus, Kp);
                     std::cout << "Km : ";
@@ -4575,7 +4572,7 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
 
                 // boost  everyone to resonance   frame
 
-                tmp.set(resonance.t(), zeroVec - resonance.V());
+                tmp = math::VFour(resonance.getT(), zeroVec - resonance.getVector());
                 Boost.set(tmp);
                 piplus = Boost * piplus;
                 piminus = Boost * piminus;
@@ -4590,7 +4587,7 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
 
 
                 // boost from CM to target rest frame (lab)
-                tmp.set(CMtarget.t(), zeroVec - CMtarget.V());
+                tmp = math::VFour(CMtarget.getT(), zeroVec - CMtarget.getVector());
                 Boost.set(CMtarget);
                 CMtarget = Boost * CMtarget;
                 resonance = Boost * resonance;
@@ -4607,45 +4604,37 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
                 isobar2 = Boost * isobar2;
 
                 /* generate vertices */
-                threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+                math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
 
                 if (Print) {
                     std::cerr << "\n\n*** New Event\n";
-                    std::cerr << "Beam:\n  ";
-                    beam.print();
-                    std::cerr << "Beam in CM:\n  ";
-                    CMbeam.print();
-                    std::cerr << "Target in CM:\n  ";
-                    CMtarget.print();
+                    std::cerr << "Beam:\n  " << beam << endl;
+                    std::cerr << "Beam in CM:\n  " << CMbeam << endl;
+                    std::cerr << "Target in CM:\n  " << CMtarget << endl;
                     std::cerr << "Resonance\n";
-                    std::cerr << "  Resonance mass: " << resonance_mass << "\n";
+                    std::cerr << "  Resonance mass: " << resonance_mass << endl;
                     std::cerr << "  Resonance CMmomentum: " << resonance_p
-                              << "\n";
-                    std::cerr << "  t: " << t << "\n";
-                    std::cerr << "  Resonance:\n ";
-                    resonance.print();
-                    std::cerr << "recoil: \n  ";
-                    recoil.print();
-                    std::cerr << "pi+ :\n  ";
-                    piplus.print();
-                    std::cerr << "pi-2:\n  ";
-                    pizero.print();
-                    std::cerr << "pi-1:\n  ";
-                    piminus.print();
+                              << endl;
+                    std::cerr << "  t: " << t << endl;
+                    std::cerr << "  Resonance:\n " << resonance << endl;
+                    std::cerr << "recoil: \n  " << recoil << endl;
+                    std::cerr << "pi+ :\n  " << piplus << endl;
+                    std::cerr << "pi-2:\n  " << pizero << endl;
+                    std::cerr << "pi-1:\n  " << piminus << endl;
                     //	   std::cerr << "vertices:\n";
                     //	   std::cerr << "  prod: " << production;
-                    std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                     std::cerr << "icount: " << icount << std::endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
-                    std::cout << ~(pizero + piminus + piplus) << " ";
-                    std::cout << pow(~(pizero + piplus), 2.0) << " "
-                              << pow(~(pizero + piminus), 2.0) << " "
-                              << pow(~(piplus + piminus), 2.0) << " ";
+                    std::cout << (pizero + piminus + piplus).getMass() << " ";
+                    std::cout << pow((pizero + piplus).getMass(), 2.0) << " "
+                              << pow((pizero + piminus).getMass(), 2.0) << " "
+                              << pow((piplus + piminus).getMass(), 2.0) << " ";
                     std::cout << masslow << " " << masshigh << " ";
-                    std::cout << (pizero + piminus + piplus + recoil).lenSq()
+                    std::cout << (pizero + piminus + piplus + recoil).getLenSq()
                               << " ";
                     std::cout << std::endl;
                 } else if (txt2part_style) {
@@ -4654,8 +4643,8 @@ void omegaphi(int argc, char *argv[], Particle_t Beam) {
                     } else {
                         std::cout << "6" << std::endl;
                     }
-                    std::cout << EbeamZ << " " << beam.t() << " "
-                              << -production.z() / SPEED_OF_LIGHT << std::endl;;
+                    std::cout << EbeamZ << " " << beam.getT() << " "
+                              << -production.getZ() / SPEED_OF_LIGHT << std::endl;;
                     pParticle_txt2part(Baryon, production, recoil);
                     pParticle_txt2part(KPlus, production, Kp);
                     pParticle_txt2part(KMinus, production, Km);
@@ -4759,7 +4748,7 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
             lfmax = 0,
             resonance_mass,
             isobar1_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             resonance,
@@ -4772,7 +4761,7 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
             isobar1;
     lorentzTransform Boost;
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass;
     float baryonmass;
@@ -4790,12 +4779,12 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -4866,20 +4855,20 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
      */
 
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
                      pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
 
         /*
      *-- generate the resonance and isobar
@@ -4933,10 +4922,12 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
             } while (fabs(costheta) >= 1.0);
 
 
-            resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-            resonance.t(resonance_E);
-            recoil.set(sqrt(resonance.V().lenSq() + pow(Mass(Baryon), 2.0)),
-                       zeroVec - resonance.V());
+            resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+            resonance.setT(resonance_E);
+            recoil = math::VFour(
+                sqrt(resonance.getVector().getLenSq() + pow(Mass(Baryon), 2.0)),
+                zeroVec - resonance.getVector()
+            );
         }
 
 
@@ -4950,35 +4941,35 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
         // neutral Decay to gamma e+ e-, in pi0 rest frame
 #define EPEMSLOPE 70.0
         if (decay) {
-            fourVec tmp;
+            math::VFour tmp;
 
-            fourVec x;
+            math::VFour x;
             double epemMass;
             twoBodyDecay(Mass(Pi1), 0.0, epemMass, gamma1, x);
             gamma1_p = CMmomentum(Mass(Pi1), epemMass, Mass(Gamma));
 
             if (debug) {
-                cout << "XXX " << ~(gamma1 + x) << " " << ~gamma1 << endl;
+                cout << "XXX " << (gamma1 + x).getMass() << " " << gamma1.getMass() << endl;
             }
             // x and gamma1 are in pi01 rest frame
             twoBodyDecay(epemMass, Mass(Electron), Mass(Positron), em1, ep1);
-            e1_p = em2.V().r();
+            e1_p = em2.getVector().getR();
             if (debug) {
-                cout << "DBG " << epemMass << " " << ~(ep1 + em1) << " ";
+                cout << "DBG " << epemMass << " " << (ep1 + em1).getMass() << " ";
             }
             // ep1 and em1 are in x rest frame, x is in rest frame of pi01
-            tmp.set(x.t(), zeroVec - x.V());
+            tmp = math::VFour(x.getT(), zeroVec - x.getVector());
             Boost.set(tmp);
             ep1 *= Boost;
             em1 *= Boost;
             // ep1 and em1 are now in frame of the parent pi01, as is x and gamma1
             if (debug) {
-                fourVec X = x - ep1 - em1;
-                cout << ~x << " " << ~(ep1 + em1) << " ";
-                cout << X.V().r() << " " << Mass(Pi1) << " ";
-                cout << ~(gamma1 + x) << " ";
+                math::VFour X = x - ep1 - em1;
+                cout << x.getMass() << " " << (ep1 + em1).getMass() << " ";
+                cout << X.getVector().getR() << " " << Mass(Pi1) << " ";
+                cout << (gamma1 + x).getMass() << " ";
             }
-            tmp.set(pi1.t(), zeroVec - pi1.V());
+            tmp = math::VFour(pi1.getT(), zeroVec - pi1.getVector());
             Boost.set(tmp);
             ep1 *= Boost;
             em1 *= Boost;
@@ -4988,12 +4979,12 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
             // now everything (x,gamma1,ep1,em1)  is in pi0 pi0  resonance rest frame
 
             if (debug) {
-                fourVec Xee = ep1 + em1;
-                fourVec X = x - Xee;
-                fourVec XXX = gamma1 + Xee;
-                fourVec X2 = pi1 - XXX;
-                cout << X.V().r() << " " << X2.V().r() << " " << " "
-                     << ~(gamma1 + x) << " " << ~(em1 + ep1) << " ";
+                math::VFour Xee = ep1 + em1;
+                math::VFour X = x - Xee;
+                math::VFour XXX = gamma1 + Xee;
+                math::VFour X2 = pi1 - XXX;
+                cout << X.getVector().getR() << " " << X2.getVector().getR() << " " << " "
+                     << (gamma1 + x).getMass() << " " << (em1 + ep1).getMass() << " ";
             }
 
             do {
@@ -5002,12 +4993,12 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
             twoBodyDecay(Mass(Pi2), 0.0, epemMass, gamma2, x);
             twoBodyDecay(epemMass, Mass(Electron), Mass(Positron), em2, ep2);
             gamma2_p = CMmomentum(Mass(Pi2), epemMass, Mass(Gamma));
-            e2_p = em2.V().r();
-            tmp.set(x.t(), zeroVec - x.V());
+            e2_p = em2.getVector().getR();
+            tmp = math::VFour(x.getT(), zeroVec - x.getVector());
             Boost.set(tmp);
             ep2 *= Boost;
             em2 *= Boost;
-            tmp.set(pi2.t(), zeroVec - pi2.V());
+            tmp = math::VFour(pi2.getT(), zeroVec - pi2.getVector());
             Boost.set(tmp);
             ep2 *= Boost;
             em2 *= Boost;
@@ -5016,17 +5007,17 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
 
 
             if (debug) {
-                fourVec Xee = ep2 + em2;
-                fourVec X = x - Xee;
-                fourVec XXX = gamma2 + Xee;
-                fourVec X2 = pi2 - XXX;
-                cout << epemMass << " " << ~(gamma2 + x) << " " << ~(em2 + ep2)
+                math::VFour Xee = ep2 + em2;
+                math::VFour X = x - Xee;
+                math::VFour XXX = gamma2 + Xee;
+                math::VFour X2 = pi2 - XXX;
+                cout << epemMass << " " << (gamma2 + x).getMass() << " " << (em2 + ep2).getMass()
                      << " ";
-                cout << X.V().r() << " " << X2.V().r() << " " << " "
-                     << ~(gamma2 + x) << " " << ~(em2 + ep2) << " ";
+                cout << X.getVector().getR() << " " << X2.getVector().getR() << " " << " "
+                     << (gamma2 + x).getMass() << " " << (em2 + ep2).getMass() << " ";
             }
             // first transform the pi0s
-            tmp.set(resonance.t(), zeroVec - resonance.V());
+            tmp = math::VFour(resonance.getT(), zeroVec - resonance.getVector());
             Boost.set(tmp);
             pi1 *= Boost;
             pi2 *= Boost;
@@ -5052,9 +5043,9 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
         }
 
         if (debug) {
-            cout << ~(em1 + ep1) << " " << ~(em2 + ep2) << " "
-                 << ~(em1 + ep1) / PI0_MASS << " "
-                 << ~(ep2 + em2) / PI0_MASS << endl;
+            cout << (em1 + ep1).getMass() << " " << (em2 + ep2).getMass() << " "
+                 << (em1 + ep1).getMass() / PI0_MASS << " "
+                 << (ep2 + em2).getMass() / PI0_MASS << endl;
         }
 
 
@@ -5184,13 +5175,13 @@ doubleDalitz(int argc, char *argv[], Particle_t Beam, Particle_t Pi1,
     }
 }
 
-void twoBodyDecay(double mass, double mass1, double mass2, fourVec &p1,
-                  fourVec &p2) {
+void twoBodyDecay(double mass, double mass1, double mass2, math::VFour &p1,
+                  math::VFour &p2) {
     double cmp = CMmomentum(mass, mass1, mass2);
-    p1.polar(cmp, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
-    p1.t(sqrt(mass1 * mass1 + cmp * cmp));
-    p2.set(cmp, threeVec(0.0, 0.0, 0.0) - p1.V());
-    p2.t(sqrt(cmp * cmp + mass2 * mass2));
+    p1.setPolar(cmp, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
+    p1.setT(sqrt(mass1 * mass1 + cmp * cmp));
+    p2 = math::VFour(cmp, math::VThree(0.0, 0.0, 0.0) - p1.getVector());
+    p2.setT(sqrt(cmp * cmp + mass2 * mass2));
 
 }
 
@@ -5219,7 +5210,7 @@ void cpcmn0N(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
             lfmax = 0,
             resonance_mass,
             isobar1_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             resonance,
@@ -5232,7 +5223,7 @@ void cpcmn0N(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
             isobar1;
     lorentzTransform Boost;
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass;
     float baryonmass;
@@ -5250,12 +5241,12 @@ void cpcmn0N(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -5328,20 +5319,20 @@ void cpcmn0N(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
      */
 
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
                      pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
 
         /*
      *-- generate the resonance and isobar
@@ -5393,29 +5384,33 @@ void cpcmn0N(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
             std::cerr << "Error" << std::endl;
         }
 
-        resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
+        resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
         /*
      *-- recoil particle
      */
-        recoil.set(sqrt(resonance.V().lenSq() + pow(Mass(Baryon), 2.0)),
-                   zeroVec - resonance.V());
+        recoil = math::VFour(
+            sqrt(resonance.getVector().getLenSq() + pow(Mass(Baryon), 2.0)),
+            zeroVec - resonance.getVector()
+        );
 
         /*
      *  now do Decay in resonance rest frame
      */
         double isobar1_p = CMmomentum(resonance_mass, isobar1_mass, Mass(N0));
 
-        isobar1.polar(isobar1_p, acos(randm(-0.999999, 0.999999)),
+        isobar1.setPolar(isobar1_p, acos(randm(-0.999999, 0.999999)),
                       randm(-M_PI, M_PI));
-        //   isobar1.polar( isobar1_p, acos (1.0), 0.0);
+        //   isobar1.setPolar( isobar1_p, acos (1.0), 0.0);
 
-        isobar1.t(sqrt(isobar1.V().lenSq() + pow(isobar1_mass, 2.0)));
+        isobar1.setT(sqrt(isobar1.getVector().getLenSq() + pow(isobar1_mass, 2.0)));
 
-        n0.set(sqrt(isobar1.V().lenSq() + pow(Mass(N0), 2.0)),
-               zeroVec - isobar1.V());
+        n0 = math::VFour(
+            sqrt(isobar1.getVector().getLenSq() + pow(Mass(N0), 2.0)),
+            zeroVec - isobar1.getVector()
+        );
 
 
 
@@ -5426,21 +5421,22 @@ void cpcmn0N(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
         // c+ c-
         double cplus_p = CMmomentum(isobar1_mass, Mass(Cplus), Mass(Cminus));
 
-        cplus.polar(cplus_p, acos(randm(-0.999999, 0.999999)),
+        cplus.setPolar(cplus_p, acos(randm(-0.999999, 0.999999)),
                     randm(-M_PI, M_PI));
-        //   cplus.polar( cplus_p,acos (1.0),0.0);
-        cplus.t(sqrt(cplus.V().lenSq() + pow(Mass(Cplus), 2.0)));
-        cminus.set(sqrt(cplus.V().lenSq() + pow(Mass(Cminus), 2.0)),
-                   zeroVec - cplus.V());
+        //   cplus.setPolar( cplus_p,acos (1.0),0.0);
+        cplus.setT(sqrt(cplus.getVector().getLenSq() + pow(Mass(Cplus), 2.0)));
+        cminus = math::VFour(
+            sqrt(cplus.getVector().getLenSq() + pow(Mass(Cminus), 2.0)),
+            zeroVec - cplus.getVector()
+        );
 
         // neutral Decay to 2gamma, in pi0 rest frame
         if (decay) {
             double gam1_p = CMmomentum(Mass(N0), 0.0, 0.0);
-            gamma1.polar(gam1_p, acos(randm(-0.999999, 0.999999)),
-                         randm(-M_PI, M_PI));
-            gamma1.t(gam1_p);
-            gamma2.set(gam1_p, threeVec(0.0, 0.0, 0.0) - gamma1.V());
-            gamma2.t(gam1_p);
+            gamma1.setPolar(gam1_p, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
+            gamma1.setT(gam1_p);
+            gamma2 = math::VFour(gam1_p, math::VThree(0.0, 0.0, 0.0) - gamma1.getVector());
+            gamma2.setT(gam1_p);
         }
         /*
      *  compute lorentz factor
@@ -5450,27 +5446,27 @@ void cpcmn0N(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
             lfmax = LorentzFactor > lfmax ? LorentzFactor : lfmax;
         else {
             /* generate vertices */
-            threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+            math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
             if (LorentzFactor > randm(0.0, lfmax)) {
                 /* transform all 4-vectors back to lab frame */
-                fourVec tmp;
+                math::VFour tmp;
 
                 // boost gammas to neutral rest frame
                 if (decay) {
-                    tmp.set(n0.t(), zeroVec - n0.V());
+                    tmp = math::VFour(n0.getT(), zeroVec - n0.getVector());
                     Boost.set(tmp);
                     gamma1 = Boost * gamma1;
                     gamma2 = Boost * gamma2;
                 }
                 // boost from c+ c- rest frame to c+ c- n0(X) rest frame
 
-                tmp.set(isobar1.t(), zeroVec - isobar1.V());
+                tmp = math::VFour(isobar1.getT(), zeroVec - isobar1.getVector());
                 Boost.set(tmp);
                 cplus = Boost * cplus;
                 cminus = Boost * cminus;
 
                 // boost from 3 particle meson  rest frame to CM
-                tmp.set(resonance.t(), zeroVec - resonance.V());
+                tmp = math::VFour(resonance.getT(), zeroVec - resonance.getVector());
                 Boost.set(tmp);
 
                 isobar1 = Boost * isobar1;
@@ -5500,54 +5496,44 @@ void cpcmn0N(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
                 if (Print) {
 
                     std::cerr << "\n\n*** New Event\n";
-                    std::cerr << "Beam:\n  ";
-                    beam.print();
-                    std::cerr << "Beam in CM:\n  ";
-                    CMbeam.print();
-                    std::cerr << "Target in CM:\n  ";
-                    CMtarget.print();
+                    std::cerr << "Beam:\n  " << beam << endl;
+                    std::cerr << "Beam in CM:\n  " << CMbeam << endl;
+                    std::cerr << "Target in CM:\n  " << CMtarget << endl;
                     std::cerr << "Resonance\n";
-                    std::cerr << "  Resonance mass: " << resonance_mass << "\n";
-                    std::cerr << "  Resonance CMmomentum: " << resonance_p
-                              << "\n";
-                    std::cerr << "  t: " << t << "\n";
-                    std::cerr << "  Resonance:\n ";
-                    resonance.print();
-                    std::cerr << "recoil: \n  ";
-                    recoil.print();
+                    std::cerr << "  Resonance mass: " << resonance_mass << endl;
+                    std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
+                    std::cerr << "  t: " << t << endl;
+                    std::cerr << "  Resonance:\n " << resonance << endl;
+                    std::cerr << "recoil: \n  " << recoil << endl;
                     std::cerr << "isobar1\n";
-                    std::cerr << "  isobar1 mass: " << isobar1_mass << "\n";
-                    std::cerr << "  isobar1 momentum: " << isobar1_p << "\n";
-                    std::cerr << "  isobar1:\n    ";
-                    isobar1.print();
-                    std::cerr << "c+ :\n  ";
-                    cplus.print();
-                    std::cerr << "n0:\n  ";
-                    n0.print();
-                    std::cerr << "c-:\n  ";
-                    cminus.print();
+                    std::cerr << "  isobar1 mass: " << isobar1_mass << endl;
+                    std::cerr << "  isobar1 momentum: " << isobar1_p << endl;
+                    std::cerr << "  isobar1:\n    " << isobar1 << endl;
+                    std::cerr << "c+ :\n  " << cplus << endl;
+                    std::cerr << "n0:\n  " << n0 << endl;
+                    std::cerr << "c-:\n  " << cminus << endl;
                     //	   std::cerr << "vertices:\n";
                     //	   std::cerr << "  prod: " << production;
-                    std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                     std::cerr << "icount: " << icount << std::endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
                     std::cout << resonance_mass << " "
                               << isobar1_mass * isobar1_mass << " ";
-                    std::cout << ~(n0 + cminus + cplus) << " ";
-                    std::cout << pow(~(n0 + cplus), 2.0) << " "
-                              << pow(~(n0 + cminus), 2.0) << " "
-                              << pow(~(cplus + cminus), 2.0) << " ";
+                    std::cout << (n0 + cminus + cplus).getMass() << " ";
+                    std::cout << pow((n0 + cplus).getMass(), 2.0) << " "
+                              << pow((n0 + cminus).getMass(), 2.0) << " "
+                              << pow((cplus + cminus).getMass(), 2.0) << " ";
                     std::cout << masslow << " " << masshigh << " ";
-                    std::cout << (n0 + cminus + cplus + recoil).lenSq() << " ";
+                    std::cout << (n0 + cminus + cplus + recoil).getLenSq() << " ";
                     std::cout
-                            << (beam - cminus - cplus - gamma1 - gamma2).lenSq()
+                            << (beam - cminus - cplus - gamma1 - gamma2).getLenSq()
                             << " ";
                     std::cout << std::endl;
                 } else if (debug) {
-                    std::cout << "Z " << production.x() << " " << production.y()
-                              << " " << production.z() << std::endl;
+                    std::cout << "Z " << production.getX() << " " << production.getY()
+                              << " " << production.getZ() << std::endl;
 
                 } else if (txt2part_style) {
                     if (decay && printGamma) {
@@ -5555,8 +5541,8 @@ void cpcmn0N(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
                     } else {
                         std::cout << "4" << std::endl;
                     }
-                    std::cout << EbeamZ << " " << beam.t() << " "
-                              << -production.z() / SPEED_OF_LIGHT << std::endl;;
+                    std::cout << EbeamZ << " " << beam.getT() << " "
+                              << -production.getZ() / SPEED_OF_LIGHT << std::endl;;
                     pParticle_txt2part(Baryon, production, recoil);
                     pParticle_txt2part(Cminus, production, cminus);
                     pParticle_txt2part(Cplus, production, cplus);
@@ -5671,7 +5657,7 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
             lfmax = 0,
             resonance_mass,
             isobar1_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             resonance,
@@ -5680,7 +5666,7 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
             cplus;
     lorentzTransform Boost;
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass;
     float baryonmass;
@@ -5690,7 +5676,7 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
     Particle_t Target = Proton;
 
     /* generate vertices */
-    threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+    math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
     float tMin;
 
@@ -5702,12 +5688,12 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -5765,20 +5751,20 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
      */
 
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
                      pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
 
         /*
      *-- generate the resonance and isobar
@@ -5837,19 +5823,20 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
 
 
         if (uChannel)
-            resonance.polar(resonance_p, M_PI + acos(costheta),
+            resonance.setPolar(resonance_p, M_PI + acos(costheta),
                             randm(-M_PI, M_PI));
         else
-            resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
+            resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
         /*
      *-- recoil particle
      */
-        recoil.set(sqrt(resonance.V().lenSq() + pow(Mass(Baryon), 2.0)),
-                   zeroVec - resonance.V());
-
+        recoil = math::VFour(
+            sqrt(resonance.getVector().getLenSq() + pow(Mass(Baryon), 2.0)),
+            zeroVec - resonance.getVector()
+        );
 
         /*
      *  now do Decay in isobar1 rest frame
@@ -5857,12 +5844,13 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
         // c+ c-
         double cplus_p = CMmomentum(resonance_mass, Mass(Cplus), Mass(Cminus));
 
-        cplus.polar(cplus_p, acos(randm(-0.999999, 0.999999)),
-                    randm(-M_PI, M_PI));
-        //     cplus.polar( cplus_p,acos (1.0),0.0);
-        cplus.t(sqrt(cplus.V().lenSq() + pow(Mass(Cplus), 2.0)));
-        cminus.set(sqrt(cplus.V().lenSq() + pow(Mass(Cminus), 2.0)),
-                   zeroVec - cplus.V());
+        cplus.setPolar(cplus_p, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
+        //     cplus.setPolar( cplus_p,acos (1.0),0.0);
+        cplus.setT(sqrt(cplus.getVector().getLenSq() + pow(Mass(Cplus), 2.0)));
+        cminus = math::VFour(
+            sqrt(cplus.getVector().getLenSq() + pow(Mass(Cminus), 2.0)),
+            zeroVec - cplus.getVector()
+        );
 
 
         /*
@@ -5874,12 +5862,12 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
         else {
             if (LorentzFactor > randm(0.0, lfmax)) {
                 /* transform all 4-vectors back to lab frame */
-                fourVec tmp;
+                math::VFour tmp;
 
 
                 // boost from c+ c- rest frame to CM rest frame
 
-                tmp.set(resonance.t(), zeroVec - resonance.V());
+                tmp = math::VFour(resonance.getT(), zeroVec - resonance.getVector());
                 Boost.set(tmp);
                 cplus = Boost * cplus;
                 cminus = Boost * cminus;
@@ -5893,56 +5881,48 @@ void cpcm(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
                 cminus = Boost * cminus;
 
                 /* generate vertices */
-                threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+                math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
 
                 if (Print) {
                     std::cerr << "\n\n*** New Event\n";
-                    std::cerr << "Beam:\n  ";
-                    beam.print();
-                    std::cerr << "Beam in CM:\n  ";
-                    CMbeam.print();
-                    std::cerr << "Target in CM:\n  ";
-                    CMtarget.print();
+                    std::cerr << "Beam:\n  " << beam << endl;
+                    std::cerr << "Beam in CM:\n  " << CMbeam << endl;
+                    std::cerr << "Target in CM:\n  " << CMtarget << endl;
                     std::cerr << "Resonance\n";
-                    std::cerr << "  Resonance mass: " << resonance_mass << "\n";
-                    std::cerr << "  Resonance CMmomentum: " << resonance_p
-                              << "\n";
-                    std::cerr << "  t: " << t << "\n";
-                    std::cerr << "  Resonance:\n ";
-                    resonance.print();
-                    std::cerr << "recoil: \n  ";
-                    recoil.print();
-                    std::cerr << "c+ :\n  ";
-                    cplus.print();
-                    std::cerr << "c-:\n  ";
-                    cminus.print();
+                    std::cerr << "  Resonance mass: " << resonance_mass << endl;
+                    std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
+                    std::cerr << "  t: " << t << endl;
+                    std::cerr << "  Resonance:\n " << resonance << endl;
+                    std::cerr << "recoil: \n  " << recoil << endl;
+                    std::cerr << "c+ :\n  " << cplus << endl;
+                    std::cerr << "c-:\n  " << cminus << endl;
                     //	   std::cerr << "vertices:\n";
                     //	   std::cerr << "  prod: " << production;
-                    std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                     std::cerr << "icount: " << icount << std::endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
                     std::cout << "DALITZ ";
                     std::cout << resonance_mass << " ";
-                    std::cout << ~(recoil + cminus + cplus) << " ";
-                    std::cout << pow(~(recoil + cplus), 2.0) << " "
-                              << pow(~(recoil + cminus), 2.0) << " "
-                              << pow(~(cplus + cminus), 2.0) << " ";
+                    std::cout << (recoil + cminus + cplus).getMass() << " ";
+                    std::cout << pow((recoil + cplus).getMass(), 2.0) << " "
+                              << pow((recoil + cminus).getMass(), 2.0) << " "
+                              << pow((cplus + cminus).getMass(), 2.0) << " ";
                     std::cout << masslow << " " << masshigh << " ";
                     std::cout << std::endl;
                 } else if (debug) {
-                    std::cout << "T " << (beam - cplus - cminus).lenSq() << " "
-                              << (target - recoil).lenSq() << " " << t
+                    std::cout << "T " << (beam - cplus - cminus).getLenSq() << " "
+                              << (target - recoil).getLenSq() << " " << t
                               << " " << tMin << " " << costheta << " "
                               << costhetax << " " << (t - tMin) << " " << tx
                               << " " << std::endl;
                 }
                 if (txt2part_style) {
                     std::cout << "3" << std::endl;
-                    std::cout << EbeamZ << " " << beam.t() << " "
-                              << -production.z() / SPEED_OF_LIGHT << std::endl;;
+                    std::cout << EbeamZ << " " << beam.getT() << " "
+                              << -production.getZ() / SPEED_OF_LIGHT << std::endl;;
                     pParticle_txt2part(Recoil, production, recoil);
                     pParticle_txt2part(Cminus, production, cminus);
                     pParticle_txt2part(Cplus, production, cplus);
@@ -6025,7 +6005,7 @@ void etaprimepi(int argc, char *argv[], Particle_t Beam, Particle_t Pi) {
             lfmax = 0,
             resonance_mass,
             etaprime_p;
-    fourVec
+    math::VFour
             beam,
             target,
             resonance,
@@ -6037,12 +6017,12 @@ void etaprimepi(int argc, char *argv[], Particle_t Beam, Particle_t Pi) {
             eta,
             gamma1,
             gamma2;
-    fourVec isobar1, isobar2;
+    math::VFour isobar1, isobar2;
     // isobar1 is pi pi isobar off of omega pi pi system
     // isobar2 is pi+ pi- isobar from omega Decay
     lorentzTransform Boost;
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass = GAMMA_MASS;
     int printBaryon = 0;
@@ -6065,12 +6045,12 @@ void etaprimepi(int argc, char *argv[], Particle_t Beam, Particle_t Pi) {
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -6144,20 +6124,20 @@ void etaprimepi(int argc, char *argv[], Particle_t Beam, Particle_t Pi) {
      */
 
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
                      pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
 
         /*
      *-- generate the resonance and isobar
@@ -6193,16 +6173,17 @@ void etaprimepi(int argc, char *argv[], Particle_t Beam, Particle_t Pi) {
         }
 
 
-        resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
+        resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
         /*
      *-- recoil particle
      */
-        recoil.set(sqrt(resonance.V().lenSq() + pow(baryonmass, 2.0)),
-                   zeroVec - resonance.V());
-
+        recoil = math::VFour(
+            sqrt(resonance.getVector().getLenSq() + pow(baryonmass, 2.0)),
+            zeroVec - resonance.getVector()
+        );
 
 
         /*
@@ -6210,41 +6191,46 @@ void etaprimepi(int argc, char *argv[], Particle_t Beam, Particle_t Pi) {
      */
 
         etaprime_p = CMmomentum(resonance_mass, ETAPRIME_MASS, pimass);
-        etaprime.polar(etaprime_p, acos(randm(-0.999999, 0.999999)),
+        etaprime.setPolar(etaprime_p, acos(randm(-0.999999, 0.999999)),
                        randm(-M_PI, M_PI));
-        etaprime.t(sqrt(etaprime.V().lenSq() + pow(ETAPRIME_MASS, 2.0)));
-        pi.set(sqrt(etaprime.V().lenSq() + pow(PI_MASS, 2.0)),
-               zeroVec - etaprime.V());
+        etaprime.setT(sqrt(etaprime.getVector().getLenSq() + pow(ETAPRIME_MASS, 2.0)));
+        pi = math::VFour(
+            sqrt(etaprime.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+            zeroVec - etaprime.getVector()
+        );
 
         // code to do etaprime Decay
         double himass = ETAPRIME_MASS - ETA_MASS;
         double lomass = 2 * PI_MASS;
         double isobar2_mass = randm(lomass, himass);
         double isobar2_p = CMmomentum(ETAPRIME_MASS, isobar2_mass, ETA_MASS);
-        isobar2.polar(isobar2_p, acos(randm(-0.999999, 0.999999)),
-                      randm(-M_PI, M_PI));
-        isobar2.t(sqrt(isobar2.V().lenSq() + pow(isobar2_mass, 2.0)));
-        eta.set(sqrt(isobar2.V().lenSq() + pow(ETA_MASS, 2.0)),
-                zeroVec - isobar2.V());
+        isobar2.setPolar(isobar2_p, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
+        isobar2.setT(sqrt(isobar2.getVector().getLenSq() + pow(isobar2_mass, 2.0)));
+        eta = math::VFour(
+            sqrt(isobar2.getVector().getLenSq() + pow(ETA_MASS, 2.0)),
+            zeroVec - isobar2.getVector()
+        );
 
 
         // isobar2 Decay
         double piplus_p = CMmomentum(isobar2_mass, PI_MASS, PI_MASS);
 
-        piplus.polar(piplus_p, acos(randm(-0.999999, 0.999999)),
+        piplus.setPolar(piplus_p, acos(randm(-0.999999, 0.999999)),
                      randm(-M_PI, M_PI));
-        piplus.t(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)));
-        piminus.set(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)),
-                    zeroVec - piplus.V());
+        piplus.setT(sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)));
+        piminus = math::VFour(
+            sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+            zeroVec - piplus.getVector()
+        );
         if (debug) {
-            std::cout << "\n";
+            std::cout << endl;
             std::cout << "pi+ (isobar2) : ";
             pParticleGamp(PiPlus, piplus);
             std::cout << "pi- (isobar2) : ";
             pParticleGamp(PiMinus, piminus);
-            std::cout << "mass " << ~(piminus + piplus) << " " << ~isobar2
+            std::cout << "mass " << (piminus + piplus).getMass() << " " << isobar2.getMass()
                       << " " << isobar2_mass << " " << piplus_p
-                      << " " << piplus.r() << std::endl;
+                      << " " << piplus.getR() << std::endl;
             std::cout << std::endl << std::endl;
         }
 
@@ -6253,51 +6239,48 @@ void etaprimepi(int argc, char *argv[], Particle_t Beam, Particle_t Pi) {
 
         // eta Decay to 2 gamma, in eta rest frame
         double gam1_p = CMmomentum(ETA_MASS, 0.0, 0.0);
-        gamma1.polar(gam1_p, acos(randm(-0.999999, 0.999999)),
-                     randm(-M_PI, M_PI));
-        gamma1.t(gam1_p);
-        gamma2.set(gam1_p, threeVec(0.0, 0.0, 0.0) - gamma1.V());
-        gamma2.t(gam1_p);
+        gamma1.setPolar(gam1_p, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
+        gamma1.setT(gam1_p);
+        gamma2 = math::VFour(gam1_p, math::VThree(0.0, 0.0, 0.0) - gamma1.getVector());
+        gamma2.setT(gam1_p);
         /*
      *  compute lorentz factor
      */
-        LorentzFactor = (resonance_p * isobar2_p * etaprime_p * piplus_p *
-                         gam1_p);
+        LorentzFactor = (resonance_p * isobar2_p * etaprime_p * piplus_p * gam1_p);
         if (lfevents-- > 0)
             lfmax = LorentzFactor > lfmax ? LorentzFactor : lfmax;
         else {
             if (LorentzFactor > randm(0.0, lfmax)) {
                 /* transform all 4-vectors back to lab frame */
-                fourVec tmp;
+                math::VFour tmp;
 
                 // boost gammas to eta rest frame
-                tmp.set(eta.t(), zeroVec - eta.V());
+                tmp = math::VFour(eta.getT(), zeroVec - eta.getVector());
                 Boost.set(tmp);
                 gamma1 = Boost * gamma1;
                 gamma2 = Boost * gamma2;
 
                 // boost pi+ pi-  to isobar2  rest frame
-                tmp.set(isobar2.t(), zeroVec - isobar2.V());
+                tmp = math::VFour(isobar2.getT(), zeroVec - isobar2.getVector());
                 Boost.set(tmp);
 
                 piplus = Boost * piplus;
                 piminus = Boost * piminus;
 
                 if (debug) {
-                    std::cout << "\n";
+                    std::cout << endl;
                     std::cout << "pi+ (isobar2) : ";
                     pParticleGamp(PiPlus, piplus);
                     std::cout << "pi- (isobar2) : ";
                     pParticleGamp(PiMinus, piminus);
-                    std::cout << "mass " << ~(piminus + piplus) << " "
-                              << ~isobar2 << " " << isobar2_mass << std::endl;
+                    std::cout << "mass " << (piminus + piplus).getMass() << " "
+                              << isobar2.getMass() << " " << isobar2_mass << std::endl;
                     std::cout << std::endl << std::endl;
                 }
 
 
-
                 // boost etaprime  progeny
-                tmp.set(etaprime.t(), zeroVec - etaprime.V());
+                tmp = math::VFour(etaprime.getT(), zeroVec - etaprime.getVector());
                 Boost.set(tmp);
                 gamma1 = Boost * gamma1;
                 gamma2 = Boost * gamma2;
@@ -6306,7 +6289,7 @@ void etaprimepi(int argc, char *argv[], Particle_t Beam, Particle_t Pi) {
                 eta = Boost * eta;
                 isobar2 = Boost * isobar2;
                 if (debug) {
-                    std::cout << "\n";
+                    std::cout << endl;
                     std::cout << "pi : ";
                     pParticleGamp(Pi, pi);
                     std::cout << std::endl << std::endl;
@@ -6314,7 +6297,7 @@ void etaprimepi(int argc, char *argv[], Particle_t Beam, Particle_t Pi) {
 
                 // boost  everyone to resonance   frame
 
-                tmp.set(resonance.t(), zeroVec - resonance.V());
+                tmp = math::VFour(resonance.getT(), zeroVec - resonance.getVector());
                 Boost.set(tmp);
                 piplus = Boost * piplus;
                 piminus = Boost * piminus;
@@ -6326,7 +6309,7 @@ void etaprimepi(int argc, char *argv[], Particle_t Beam, Particle_t Pi) {
                 etaprime = Boost * etaprime;
 
                 // boost from CM to target rest frame (lab)
-                tmp.set(CMtarget.t(), zeroVec - CMtarget.V());
+                tmp = math::VFour(CMtarget.getT(), zeroVec - CMtarget.getVector());
                 Boost.set(CMtarget);
                 CMtarget = Boost * CMtarget;
                 resonance = Boost * resonance;
@@ -6341,46 +6324,37 @@ void etaprimepi(int argc, char *argv[], Particle_t Beam, Particle_t Pi) {
                 isobar2 = Boost * isobar2;
 
                 /* generate vertices */
-                threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+                math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
 
                 if (Print) {
                     std::cerr << "\n\n*** New Event\n";
-                    std::cerr << "Beam:\n  ";
-                    beam.print();
-                    std::cerr << "Beam in CM:\n  ";
-                    CMbeam.print();
-                    std::cerr << "Target in CM:\n  ";
-                    CMtarget.print();
+                    std::cerr << "Beam:\n  " << beam << endl;
+                    std::cerr << "Beam in CM:\n  " << CMbeam << endl;
+                    std::cerr << "Target in CM:\n  " << CMtarget << endl;
                     std::cerr << "Resonance\n";
-                    std::cerr << "  Resonance mass: " << resonance_mass << "\n";
-                    std::cerr << "  Resonance CMmomentum: " << resonance_p
-                              << "\n";
-                    std::cerr << "  t: " << t << "\n";
-                    std::cerr << "  Resonance:\n ";
-                    resonance.print();
-                    std::cerr << "recoil: \n  ";
-                    recoil.print();
-                    std::cerr << "pi+ :\n  ";
-                    piplus.print();
-                    std::cerr << "eta:\n  ";
-                    eta.print();
-                    std::cerr << "pi- ((from etprime):\n  ";
-                    piminus.print();
+                    std::cerr << "  Resonance mass: " << resonance_mass << endl;
+                    std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
+                    std::cerr << "  t: " << t << endl;
+                    std::cerr << "  Resonance:\n " << resonance << endl;
+                    std::cerr << "recoil: \n  " << recoil << endl;
+                    std::cerr << "pi+ :\n  " << piplus << endl;
+                    std::cerr << "eta:\n  " << eta << endl;
+                    std::cerr << "pi- ((from etprime):\n  " << piminus << endl;
                     //	   std::cerr << "vertices:\n";
                     //	   std::cerr << "  prod: " << production;
-                    std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                     std::cerr << "icount: " << icount << std::endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
                     std::cout << resonance_mass << " ";
-                    std::cout << ~(eta + piminus + piplus) << " ";
-                    std::cout << pow(~(eta + piplus), 2.0) << " "
-                              << pow(~(eta + piminus), 2.0) << " "
-                              << pow(~(piplus + piminus), 2.0) << " ";
+                    std::cout << (eta + piminus + piplus).getMass() << " ";
+                    std::cout << pow((eta + piplus).getMass(), 2.0) << " "
+                              << pow((eta + piminus).getMass(), 2.0) << " "
+                              << pow((piplus + piminus).getMass(), 2.0) << " ";
                     std::cout << masslow << " " << masshigh << " ";
-                    std::cout << (eta + piminus + piplus + recoil).lenSq()
+                    std::cout << (eta + piminus + piplus + recoil).getLenSq()
                               << " ";
                     std::cout << std::endl;
                 } else if (txt2part_style) {
@@ -6389,8 +6363,8 @@ void etaprimepi(int argc, char *argv[], Particle_t Beam, Particle_t Pi) {
                     } else {
                         std::cout << "6" << std::endl;
                     }
-                    std::cout << EbeamZ << " " << beam.t() << " "
-                              << -production.z() / SPEED_OF_LIGHT << std::endl;;
+                    std::cout << EbeamZ << " " << beam.getT() << " "
+                              << -production.getZ() / SPEED_OF_LIGHT << std::endl;;
                     pParticle_txt2part(Baryon, production, recoil);
                     pParticle_txt2part(Pi, production, pi);
                     pParticle_txt2part(PiMinus, production, piminus);
@@ -6497,7 +6471,7 @@ void test100(int argc, char *argv[]) {
             lfmax = 0,
             resonance_mass,
             isobar1_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             virtualBeam,
@@ -6511,10 +6485,10 @@ void test100(int argc, char *argv[]) {
             isobar1;
     lorentzTransform Boost;
 
-    fourVec CMbeam;
+    math::VFour CMbeam;
 
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass = BEAM_MASS;
     int printBaryon = 0;
@@ -6536,12 +6510,12 @@ void test100(int argc, char *argv[]) {
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -6606,11 +6580,11 @@ void test100(int argc, char *argv[]) {
      *-- beam and target in lab frame
      */
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
-                     pow(ELEC_MASS, 2.0)), threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                     pow(ELEC_MASS, 2.0)), math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
         /* get an ep and a wsq */
 
@@ -6618,21 +6592,21 @@ void test100(int argc, char *argv[]) {
             ep = randm(ep_low, ep_high);
             thetg = randm(theta_low, theta_high);
             thet = thetg / CONV;   // convert to radians
-            qx = Qsq(beam.t(), ep, thet);
-            wsq = Wsq(beam.t(), ep, thet);
+            qx = Qsq(beam.getT(), ep, thet);
+            wsq = Wsq(beam.getT(), ep, thet);
         } while (1 < 0);
         phi = randm(0, 2.0 * M_PI);
         pz = cos(thet) * ep;
         px = sin(thet) * cos(phi) * ep;
         py = sin(thet) * sin(phi) * ep;
 
-        electron = fourVec(sqrt(ep * ep + pow(ELEC_MASS, 2.0)),
-                           threeVec(px, py, pz));
+        electron = math::VFour(sqrt(ep * ep + pow(ELEC_MASS, 2.0)),
+                           math::VThree(px, py, pz));
 
         // the W system is left- W in lab
 
         W = beam + target - electron;
-        qy = -(beam - electron).lenSq();
+        qy = -(beam - electron).getLenSq();
 
         double CMenergy = sqrt(wsq);
 
@@ -6660,29 +6634,32 @@ void test100(int argc, char *argv[]) {
         costheta = randm(-1.0, 1.0);
 
 
-        resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
+        resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
         /*
      *-- recoil particle
      */
-        recoil.set(sqrt(resonance.V().lenSq() + pow(PROTON_MASS, 2.0)),
-                   zeroVec - resonance.V());
+        recoil = math::VFour(
+            sqrt(resonance.getVector().getLenSq() + pow(PROTON_MASS, 2.0)),
+            zeroVec - resonance.getVector()
+        );
 
         /*
      *  now do Decay in resonance rest frame
      */
         double isobar1_p = CMmomentum(resonance_mass, isobar1_mass, PI_MASS);
 
-        isobar1.polar(isobar1_p, acos(randm(-0.999999, 0.999999)),
-                      randm(-M_PI, M_PI));
-        //   isobar1.polar( isobar1_p, acos (1.0), 0.0);
+        isobar1.setPolar(isobar1_p, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
+        //   isobar1.setPolar( isobar1_p, acos (1.0), 0.0);
 
-        isobar1.t(sqrt(isobar1.V().lenSq() + pow(isobar1_mass, 2.0)));
+        isobar1.setT(sqrt(isobar1.getVector().getLenSq() + pow(isobar1_mass, 2.0)));
 
-        piminus.set(sqrt(isobar1.V().lenSq() + pow(PI_MASS, 2.0)),
-                    zeroVec - isobar1.V());
+        piminus = math::VFour(
+            sqrt(isobar1.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+            zeroVec - isobar1.getVector()
+        );
 
 
 
@@ -6693,12 +6670,13 @@ void test100(int argc, char *argv[]) {
         // pi pi case
         double piplus_p = CMmomentum(isobar1_mass, PI_MASS, PI_MASS);
 
-        piplus.polar(piplus_p, acos(randm(-0.999999, 0.999999)),
-                     randm(-M_PI, M_PI));
-        //   piplus.polar( piplus_p,acos (1.0),0.0);
-        piplus.t(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)));
-        pizero.set(sqrt(piplus.V().lenSq() + pow(PI_MASS, 2.0)),
-                   zeroVec - piplus.V());
+        piplus.setPolar(piplus_p, acos(randm(-0.999999, 0.999999)), randm(-M_PI, M_PI));
+        //   piplus.setPolar( piplus_p,acos (1.0),0.0);
+        piplus.setT(sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)));
+        pizero = math::VFour(
+            sqrt(piplus.getVector().getLenSq() + pow(PI_MASS, 2.0)),
+            zeroVec - piplus.getVector()
+        );
 
 
         /*
@@ -6710,11 +6688,11 @@ void test100(int argc, char *argv[]) {
         else {
             if (LorentzFactor > randm(0.0, lfmax)) {
                 /* transform all 4-vectors back to lab frame */
-                fourVec tmp;
+                math::VFour tmp;
 
                 // boost from pi_pi(rho) rest frame to pi_pi_pi(a2/M) rest frame
 
-                tmp.set(isobar1.t(), zeroVec - isobar1.V());
+                tmp = math::VFour(isobar1.getT(), zeroVec - isobar1.getVector());
                 Boost.set(tmp);
                 piplus = Boost * piplus;
                 pizero = Boost * pizero;
@@ -6722,7 +6700,7 @@ void test100(int argc, char *argv[]) {
 
                 // boost from pipipi to resonance
 
-                tmp.set(resonance.t(), zeroVec - resonance.V());
+                tmp = math::VFour(resonance.getT(), zeroVec - resonance.getVector());
                 Boost.set(tmp);
                 piplus = Boost * piplus;
                 pizero = Boost * pizero;
@@ -6730,7 +6708,7 @@ void test100(int argc, char *argv[]) {
 
 
                 // boost to W
-                tmp.set(W.t(), zeroVec - W.V());
+                tmp = math::VFour(W.getT(), zeroVec - W.getVector());
                 Boost.set(tmp);
 
                 isobar1 = Boost * isobar1;
@@ -6752,54 +6730,44 @@ void test100(int argc, char *argv[]) {
 
 
                 /* generate vertices */
-                threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+                math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
                 if (debug) {
                     std::cerr << "\n\n*** New Event\n";
-                    std::cerr << "Beam:\n  ";
-                    beam.print();
-                    std::cerr << "W:\n  ";
-                    W.print();
-                    std::cerr << "Beam  in CM:\n  ";
-                    CMbeam.print();
+                    std::cerr << "Beam:\n  " << beam << endl;
+                    std::cerr << "W:\n  " << W << endl;
+                    std::cerr << "Beam  in CM:\n  " << CMbeam << endl;
                     std::cerr << "Resonance\n";
-                    std::cerr << "  Resonance mass: " << resonance_mass << "\n";
-                    std::cerr << "  Resonance CMmomentum: " << resonance_p
-                              << "\n";
-                    std::cerr << "  t: " << t << "\n";
-                    std::cerr << "  Resonance:\n ";
-                    resonance.print();
-                    std::cerr << "recoil: \n  ";
-                    recoil.print();
+                    std::cerr << "  Resonance mass: " << resonance_mass << endl;
+                    std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
+                    std::cerr << "  t: " << t << endl;
+                    std::cerr << "  Resonance:\n " << resonance << endl;
+                    std::cerr << "recoil: \n  " << recoil << endl;
                     std::cerr << "isobar1\n";
-                    std::cerr << "  isobar1 mass: " << isobar1_mass << "\n";
-                    std::cerr << "  isobar1 momentum: " << isobar1_p << "\n";
-                    std::cerr << "  isobar1:\n    ";
-                    isobar1.print();
-                    std::cerr << "pi+ :\n  ";
-                    piplus.print();
-                    std::cerr << "pi-2:\n  ";
-                    pizero.print();
-                    std::cerr << "pi-1:\n  ";
-                    piminus.print();
+                    std::cerr << "  isobar1 mass: " << isobar1_mass << endl;
+                    std::cerr << "  isobar1 momentum: " << isobar1_p << endl;
+                    std::cerr << "  isobar1:\n    " << isobar1 << endl;
+                    std::cerr << "pi+ :\n  " << piplus << endl;
+                    std::cerr << "pi-2:\n  " << pizero << endl;
+                    std::cerr << "pi-1:\n  " << piminus << endl;
                     //	   std::cerr << "vertices:\n";
                     //	   std::cerr << "  prod: " << production;
-                    std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                     std::cerr << "icount: " << icount << std::endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
-                    std::cerr << pow(~(pizero + piplus), 2.0) << " "
-                              << pow(~(pizero + piminus), 2.0) << " "
-                              << pow(~(piplus + piminus), 2.0) << std::endl;
+                    std::cerr << pow((pizero + piplus).getMass(), 2.0) << " "
+                              << pow((pizero + piminus).getMass(), 2.0) << " "
+                              << pow((piplus + piminus).getMass(), 2.0) << std::endl;
                 } else if (txt2part_style) {
                     if (printGamma) {
                         std::cout << "6" << std::endl;
                     } else {
                         std::cout << "5" << std::endl;
                     }
-                    std::cout << EbeamZ << " " << beam.t() << " "
-                              << -production.z() / SPEED_OF_LIGHT << std::endl;
+                    std::cout << EbeamZ << " " << beam.getT() << " "
+                              << -production.getZ() / SPEED_OF_LIGHT << std::endl;
                     pParticle_txt2part(Electron, production, electron);
                     pParticle_txt2part(Proton, production, recoil);
                     pParticle_txt2part(PiMinus, production, piminus);
@@ -7282,25 +7250,25 @@ void generateBeamMCinsideTarget(vector3_t *v, vector3_t *p) {
 }
 
 
-void pParticle_txt2part(Particle_t type, threeVec v, fourVec p) {
+void pParticle_txt2part(Particle_t type, math::VThree v, math::VFour p) {
     std::cout << (int) type << std::endl;;
-    std::cout << p.t() << " " << p.x() << " " << p.y() << " " << p.z()
+    std::cout << p.getT() << " " << p.getX() << " " << p.getY() << " " << p.getZ()
               << std::endl;
-    std::cout << v.x() << " " << v.y() << " " << v.z() << std::endl;;
+    std::cout << v.getX() << " " << v.getY() << " " << v.getZ() << std::endl;;
 }
 
-void pParticleGamp(Particle_t type, fourVec p) {
+void pParticleGamp(Particle_t type, math::VFour p) {
     std::cout << (int) type << " ";
     std::cout << (int) Q(type) << " ";
-    std::cout << p.x() << " " << p.y() << " " << p.z() << " " << p.t()
+    std::cout << p.getX() << " " << p.getY() << " " << p.getZ() << " " << p.getT()
               << std::endl;
 }
 
-void pParticle(Particle_t type, threeVec v, fourVec p) {
+void pParticle(Particle_t type, math::VThree v, math::VFour p) {
 
     std::cout << (int) type << " ";
-    std::cout << v.x() << " " << v.y() << " " << v.z() << " ";
-    std::cout << p.t() << " " << p.x() << " " << p.y() << " " << p.z()
+    std::cout << v.getX() << " " << v.getY() << " " << v.getZ() << " ";
+    std::cout << p.getT() << " " << p.getX() << " " << p.getY() << " " << p.getZ()
               << std::endl;
 
 }
@@ -7608,7 +7576,7 @@ c1c2(int argc, char **argv, Particle_t Beam, Particle_t Target, Particle_t C1,
             lfmax = 0,
             resonance_mass,
             isobar1_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             resonance,
@@ -7618,7 +7586,7 @@ c1c2(int argc, char **argv, Particle_t Beam, Particle_t Target, Particle_t C1,
             p1_1, p1_2, p2_1, p2_2;
     lorentzTransform Boost;
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass;
     float baryonmass;
@@ -7629,7 +7597,7 @@ c1c2(int argc, char **argv, Particle_t Beam, Particle_t Target, Particle_t C1,
 
 
     /* generate vertices */
-    threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+    math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
     float tMin;
 
@@ -7641,12 +7609,12 @@ c1c2(int argc, char **argv, Particle_t Beam, Particle_t Target, Particle_t C1,
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -7707,20 +7675,20 @@ c1c2(int argc, char **argv, Particle_t Beam, Particle_t Target, Particle_t C1,
      */
 
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
                      pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(targetMass, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(targetMass, math::VThree(0.0, 0.0, 0.0));
 
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
 
         /*
      *-- generate the resonance and isobar
@@ -7769,15 +7737,17 @@ c1c2(int argc, char **argv, Particle_t Beam, Particle_t Target, Particle_t C1,
         }
 
 
-        resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
+        resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
         /*
      *-- recoil particle
      */
-        recoil.set(sqrt(resonance.V().lenSq() + pow(Mass(Baryon), 2.0)),
-                   zeroVec - resonance.V());
+        recoil = math::VFour(
+            sqrt(resonance.getVector().getLenSq() + pow(Mass(Baryon), 2.0)),
+            zeroVec - resonance.getVector()
+        );
 
 
         /*
@@ -7785,7 +7755,7 @@ c1c2(int argc, char **argv, Particle_t Beam, Particle_t Target, Particle_t C1,
      */
 
 
-        lf = Decay2(resonance, ~resonance, c1, Mass(C1), c2, Mass(C2));
+        lf = Decay2(resonance, resonance.getMass(), c1, Mass(C1), c2, Mass(C2));
 
         // c1 and c2 now in overall CM  rest frame
 
@@ -7804,50 +7774,42 @@ c1c2(int argc, char **argv, Particle_t Beam, Particle_t Target, Particle_t C1,
         p2_2 *= Boost;
         if (Print) {
             std::cerr << "\n\n*** New Event\n";
-            std::cerr << "Beam:\n  ";
-            beam.print();
-            std::cerr << "Beam in CM:\n  ";
-            CMbeam.print();
-            std::cerr << "Target in CM:\n  ";
-            CMtarget.print();
+            std::cerr << "Beam:\n  " << beam << endl;
+            std::cerr << "Beam in CM:\n  " << CMbeam << endl;
+            std::cerr << "Target in CM:\n  " << CMtarget << endl;
             std::cerr << "Resonance\n";
-            std::cerr << "  Resonance mass: " << resonance_mass << "\n";
-            std::cerr << "  Resonance CMmomentum: " << resonance_p << "\n";
-            std::cerr << "  t: " << t << "\n";
-            std::cerr << "  Resonance:\n ";
-            resonance.print();
-            std::cerr << "recoil: \n  ";
-            recoil.print();
-            std::cerr << "c1 :\n  ";
-            c1.print();
-            std::cerr << "c2:\n  ";
-            c2.print();
+            std::cerr << "  Resonance mass: " << resonance_mass << endl;
+            std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
+            std::cerr << "  t: " << t << endl;
+            std::cerr << "  Resonance:\n " << resonance << endl;
+            std::cerr << "recoil: \n  " << recoil << endl;
+            std::cerr << "c1 :\n  " << c1 << endl;
+            std::cerr << "c2:\n  " << c2 << endl;
             //	   std::cerr << "vertices:\n";
             //	   std::cerr << "  prod: " << production;
-            std::cerr << "Lorentz factors: " << LorentzFactor << " " << lf
-                      << "\n";
+            std::cerr << "Lorentz factors: " << LorentzFactor << " " << lf << endl;
         }
         // calculate masses for dalitz plots
 
-        if (!std::isnan(recoil.t())) {
+        if (!std::isnan(recoil.getT())) {
 
             if (dalitz) {
                 std::cout << resonance_mass << " ";
-                std::cout << ~(recoil + c1 + c2) << " ";
-                std::cout << pow(~(recoil + c1), 2.0) << " "
-                          << pow(~(recoil + c2), 2.0) << " "
-                          << pow(~(c1 + c2), 2.0) << " ";
+                std::cout << (recoil + c1 + c2).getMass() << " ";
+                std::cout << pow((recoil + c1).getMass(), 2.0) << " "
+                          << pow((recoil + c2).getMass(), 2.0) << " "
+                          << pow((c1 + c2).getMass(), 2.0) << " ";
                 std::cout << masslow << " " << masshigh << " ";
                 std::cout << std::endl;
             } else if (debug) {
-                std::cout << "T " << (beam - c1 - c2).lenSq() << " "
-                          << (target - recoil).lenSq() << " " << t << " "
+                std::cout << "T " << (beam - c1 - c2).getLenSq() << " "
+                          << (target - recoil).getLenSq() << " " << t << " "
                           << tMin << std::endl;
             }
             if (txt2part_style) {
                 std::cout << "4" << std::endl;
-                std::cout << EbeamZ << " " << beam.t() << " "
-                          << -production.z() / SPEED_OF_LIGHT << std::endl;;
+                std::cout << EbeamZ << " " << beam.getT() << " "
+                          << -production.getZ() / SPEED_OF_LIGHT << std::endl;;
                 pParticle_txt2part(Recoil, production, recoil);
                 pParticle_txt2part(C1, production, c1);
                 pParticle_txt2part(C2, production, c2);
@@ -7951,25 +7913,25 @@ string pid2name(Particle_t type) {
 // --------------------  Decay2 -----------------------------------------------------
 
 double
-Decay2(fourVec &Rest, double massRest, fourVec &P1, double massP1, fourVec &P2,
+Decay2(math::VFour &Rest, double massRest, math::VFour &P1, double massP1, math::VFour &P2,
        double massP2) {
     // decays Rest -> P1 P2 and returns phase space factor
-    // fourVec P1 and P2 are in rest frame of Rest
+    // math::VFour P1 and P2 are in rest frame of Rest
 
-    threeVec zeroVec(0.0, 0.0, 0.0);
-    fourVec tmp;
+    math::VThree zeroVec(0.0, 0.0, 0.0);
+    math::VFour tmp;
     double p = CMmomentum(massRest, massP1, massP2);
     double costheta = randm(-1.0, 1.0);
     double sintheta = sqrt(1 - costheta * costheta);
     double phi = randm(-M_PI, M_PI);
     lorentzTransform L(Rest);
-    threeVec p1(p * cos(phi) * sintheta, p * sin(phi) * sintheta, p * costheta);
-    threeVec p2 = zeroVec - p1;
-    P1.set(sqrt(p * p + massP1 * massP1), p1);
-    P2.set(sqrt(p * p + massP2 * massP2), p2);
+    math::VThree p1(p * cos(phi) * sintheta, p * sin(phi) * sintheta, p * costheta);
+    math::VThree p2 = zeroVec - p1;
+    P1 = math::VFour(sqrt(p * p + massP1 * massP1), p1);
+    P2 = math::VFour(sqrt(p * p + massP2 * massP2), p2);
     // Transform back
 
-    tmp.set(Rest.t(), zeroVec - Rest.V());
+    tmp = math::VFour(Rest.getT(), zeroVec - Rest.getVector());
     L.set(tmp);
     P1 *= L;
     P2 *= L;
@@ -8002,7 +7964,7 @@ void body3(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
             lfmax = 0,
             resonance_mass,
             isobar1_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             resonance,
@@ -8015,7 +7977,7 @@ void body3(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
             isobar1;
     lorentzTransform Boost;
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass;
     float baryonmass;
@@ -8033,12 +7995,12 @@ void body3(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -8107,12 +8069,12 @@ void body3(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
      */
 
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
-                     pow((double) pbeam.z, 2.0) +
-                     pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                     pow((double) pbeam.z, 2.0) + pow((double) beamMass, 2.0)
+                 ),
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
 
 
@@ -8120,11 +8082,11 @@ void body3(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
 
-        resonance_mass = ~(beam + target);
+        resonance_mass = (beam + target).getMass();
         isobar1_mass = randm(cpcmThreshold, resonance_mass - Mass(N0));
 
         double beam_p = CMmomentum(CMenergy, Mass(Beam), PROTON_MASS);
@@ -8133,21 +8095,23 @@ void body3(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
                 pow(resonance_mass, 2.0) + pow(resonance_p, 2.0));
 
 
-        resonance = fourVec(resonance_mass, threeVec(0.0, 0.0, 0.0));
+        resonance = math::VFour(resonance_mass, math::VThree(0.0, 0.0, 0.0));
 
         /*
      *  now do Decay in resonance rest frame
      */
         double isobar1_p = CMmomentum(resonance_mass, isobar1_mass, Mass(N0));
 
-        isobar1.polar(isobar1_p, acos(randm(-0.999999, 0.999999)),
+        isobar1.setPolar(isobar1_p, acos(randm(-0.999999, 0.999999)),
                       randm(-M_PI, M_PI));
-        //   isobar1.polar( isobar1_p, acos (1.0), 0.0);
+        //   isobar1.setPolar( isobar1_p, acos (1.0), 0.0);
 
-        isobar1.t(sqrt(isobar1.V().lenSq() + pow(isobar1_mass, 2.0)));
+        isobar1.setT(sqrt(isobar1.getVector().getLenSq() + pow(isobar1_mass, 2.0)));
 
-        n0.set(sqrt(isobar1.V().lenSq() + pow(Mass(N0), 2.0)),
-               zeroVec - isobar1.V());
+        n0 = math::VFour(
+            sqrt(isobar1.getVector().getLenSq() + pow(Mass(N0), 2.0)),
+            zeroVec - isobar1.getVector()
+        );
 
 
 
@@ -8158,21 +8122,25 @@ void body3(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
         // c+ c-
         double cplus_p = CMmomentum(isobar1_mass, Mass(Cplus), Mass(Cminus));
 
-        cplus.polar(cplus_p, acos(randm(-0.999999, 0.999999)),
+        cplus.setPolar(cplus_p, acos(randm(-0.999999, 0.999999)),
                     randm(-M_PI, M_PI));
-        //   cplus.polar( cplus_p,acos (1.0),0.0);
-        cplus.t(sqrt(cplus.V().lenSq() + pow(Mass(Cplus), 2.0)));
-        cminus.set(sqrt(cplus.V().lenSq() + pow(Mass(Cminus), 2.0)),
-                   zeroVec - cplus.V());
+        //   cplus.setPolar( cplus_p,acos (1.0),0.0);
+        cplus.setT(sqrt(cplus.getVector().getLenSq() + pow(Mass(Cplus), 2.0)));
+        cminus = math::VFour(
+            sqrt(cplus.getVector().getLenSq() + pow(Mass(Cminus), 2.0)),
+            zeroVec - cplus.getVector()
+        );
 
         // neutral Decay to 2gamma, in pi0 rest frame
         if (decay) {
             double gam1_p = CMmomentum(Mass(N0), 0.0, 0.0);
-            gamma1.polar(gam1_p, acos(randm(-0.999999, 0.999999)),
+            gamma1.setPolar(gam1_p, acos(randm(-0.999999, 0.999999)),
                          randm(-M_PI, M_PI));
-            gamma1.t(gam1_p);
-            gamma2.set(gam1_p, threeVec(0.0, 0.0, 0.0) - gamma1.V());
-            gamma2.t(gam1_p);
+            gamma1.setT(gam1_p);
+            gamma2 = math::VFour(
+                gam1_p, math::VThree(0.0, 0.0, 0.0) - gamma1.getVector()
+            );
+            gamma2.setT(gam1_p);
         }
         /*
      *  compute lorentz factor
@@ -8182,27 +8150,27 @@ void body3(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
             lfmax = LorentzFactor > lfmax ? LorentzFactor : lfmax;
         else {
             /* generate vertices */
-            threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+            math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
             if (LorentzFactor > randm(0.0, lfmax)) {
                 /* transform all 4-vectors back to lab frame */
-                fourVec tmp;
+                math::VFour tmp;
 
                 // boost gammas to neutral rest frame
                 if (decay) {
-                    tmp.set(n0.t(), zeroVec - n0.V());
+                    tmp = math::VFour(n0.getT(), zeroVec - n0.getVector());
                     Boost.set(tmp);
                     gamma1 = Boost * gamma1;
                     gamma2 = Boost * gamma2;
                 }
                 // boost from c+ c- rest frame to c+ c- n0(X) rest frame
 
-                tmp.set(isobar1.t(), zeroVec - isobar1.V());
+                tmp = math::VFour(isobar1.getT(), zeroVec - isobar1.getVector());
                 Boost.set(tmp);
                 cplus = Boost * cplus;
                 cminus = Boost * cminus;
 
                 // boost from 3 particle meson  rest frame to CM
-                tmp.set(resonance.t(), zeroVec - resonance.V());
+                tmp = math::VFour(resonance.getT(), zeroVec - resonance.getVector());
                 Boost.set(tmp);
 
                 isobar1 = Boost * isobar1;
@@ -8231,61 +8199,51 @@ void body3(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
                 if (Print) {
 
                     std::cerr << "\n\n*** New Event\n";
-                    std::cerr << "Beam:\n  ";
-                    beam.print();
-                    std::cerr << "Beam in CM:\n  ";
-                    CMbeam.print();
-                    std::cerr << "Target in CM:\n  ";
-                    CMtarget.print();
+                    std::cerr << "Beam:\n  " << beam << endl;
+                    std::cerr << "Beam in CM:\n  " << CMbeam << endl;
+                    std::cerr << "Target in CM:\n  " << CMtarget << endl;
                     std::cerr << "Resonance\n";
-                    std::cerr << "  Resonance mass: " << resonance_mass << "\n";
-                    std::cerr << "  Resonance CMmomentum: " << resonance_p
-                              << "\n";
-                    std::cerr << "  Resonance:\n ";
-                    resonance.print();
-                    std::cerr << "recoil: \n  ";
-                    recoil.print();
+                    std::cerr << "  Resonance mass: " << resonance_mass << endl;
+                    std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
+                    std::cerr << "  Resonance:\n " << resonance << endl;
+                    std::cerr << "recoil: \n  " << recoil << endl;
                     std::cerr << "isobar1\n";
-                    std::cerr << "  isobar1 mass: " << isobar1_mass << "\n";
-                    std::cerr << "  isobar1 momentum: " << isobar1_p << "\n";
-                    std::cerr << "  isobar1:\n    ";
-                    isobar1.print();
-                    std::cerr << "c+ :\n  ";
-                    cplus.print();
-                    std::cerr << "n0:\n  ";
-                    n0.print();
-                    std::cerr << "c-:\n  ";
-                    cminus.print();
+                    std::cerr << "  isobar1 mass: " << isobar1_mass << endl;
+                    std::cerr << "  isobar1 momentum: " << isobar1_p << endl;
+                    std::cerr << "  isobar1:\n    " << isobar1 << endl;
+                    std::cerr << "c+ :\n  " << cplus << endl;
+                    std::cerr << "n0:\n  " << n0 << endl;
+                    std::cerr << "c-:\n  " << cminus << endl;
                     //	   std::cerr << "vertices:\n";
                     //	   std::cerr << "  prod: " << production;
-                    std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                     std::cerr << "icount: " << icount << std::endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
                     std::cout << resonance_mass << " "
                               << isobar1_mass * isobar1_mass << " ";
-                    std::cout << ~(n0 + cminus + cplus) << " ";
-                    std::cout << pow(~(n0 + cplus), 2.0) << " "
-                              << pow(~(n0 + cminus), 2.0) << " "
-                              << pow(~(cplus + cminus), 2.0) << " ";
+                    std::cout << (n0 + cminus + cplus).getMass() << " ";
+                    std::cout << pow((n0 + cplus).getMass(), 2.0) << " "
+                              << pow((n0 + cminus).getMass(), 2.0) << " "
+                              << pow((cplus + cminus).getMass(), 2.0) << " ";
                     std::cout << masslow << " " << masshigh << " ";
-                    std::cout << (n0 + cminus + cplus + recoil).lenSq() << " ";
+                    std::cout << (n0 + cminus + cplus + recoil).getLenSq() << " ";
                     std::cout
-                            << (beam - cminus - cplus - gamma1 - gamma2).lenSq()
+                            << (beam - cminus - cplus - gamma1 - gamma2).getLenSq()
                             << " ";
                     std::cout << std::endl;
                 } else if (debug) {
-                    std::cout << "Z " << production.x() << " " << production.y()
-                              << " " << production.z() << std::endl;
+                    std::cout << "Z " << production.getX() << " " << production.getY()
+                              << " " << production.getZ() << std::endl;
                 } else if (txt2part_style) {
                     if (decay && printGamma) {
                         std::cout << "5" << std::endl;
                     } else {
                         std::cout << "4" << std::endl;
                     }
-                    std::cout << EbeamZ << " " << beam.t() << " "
-                              << -production.z() / SPEED_OF_LIGHT << std::endl;;
+                    std::cout << EbeamZ << " " << beam.getT() << " "
+                              << -production.getZ() / SPEED_OF_LIGHT << std::endl;;
                     pParticle_txt2part(Baryon, production, recoil);
                     pParticle_txt2part(Cminus, production, cminus);
                     pParticle_txt2part(Cplus, production, cplus);
@@ -8388,7 +8346,7 @@ void bcpcm(int argc, char *argv[], Particle_t Beam, Particle_t Part1,
             lfmax = 0,
             resonance_mass,
             isobar1_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             resonance,
@@ -8397,7 +8355,7 @@ void bcpcm(int argc, char *argv[], Particle_t Beam, Particle_t Part1,
             part3;
     lorentzTransform Boost;
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass;
     int printBaryon = 0;
@@ -8406,7 +8364,7 @@ void bcpcm(int argc, char *argv[], Particle_t Beam, Particle_t Part1,
     Particle_t Target = Proton;
 
     /* generate vertices */
-    threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+    math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
     float tMin;
 
@@ -8418,12 +8376,12 @@ void bcpcm(int argc, char *argv[], Particle_t Beam, Particle_t Part1,
                 case 'm':
                     ptr++;
                     maxevents = atoi(ptr);
-                    std::cerr << "maxevents: " << maxevents << "\n";
+                    std::cerr << "maxevents: " << maxevents << endl;
                     break;
                 case 'l':
                     ptr++;
                     lfevents = atoi(ptr);
-                    std::cerr << "lfevents: " << lfevents << "\n";
+                    std::cerr << "lfevents: " << lfevents << endl;
                     break;
                 case 'L':
                     ptr++;
@@ -8478,20 +8436,20 @@ void bcpcm(int argc, char *argv[], Particle_t Beam, Particle_t Part1,
      */
 
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
                      pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
         /*
      *-- put them into the center of mass frame
      */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
         double cmphi;
 
         /*
@@ -8548,25 +8506,24 @@ void bcpcm(int argc, char *argv[], Particle_t Beam, Particle_t Part1,
         }
 
 
-        leading.polar(resonance_p, acos(costheta), cmphi = randm(-M_PI, M_PI));
-        leading.t(sqrt(resonance_p * resonance_p + Mass(Part1) * Mass(Part1)));
+        leading.setPolar(resonance_p, acos(costheta), cmphi = randm(-M_PI, M_PI));
+        leading.setT(sqrt(resonance_p * resonance_p + Mass(Part1) * Mass(Part1)));
 
 
 
         /*
      *-- recoil particle
      */
-        resonance.set(sqrt(leading.V().lenSq() + pow(resonance_mass, 2.0)),
-                      zeroVec - leading.V());
+        resonance = math::VFour(
+            sqrt(leading.getVector().getLenSq() + pow(resonance_mass, 2.0)),
+            zeroVec - leading.getVector()
+        );
 
 
         if (Print) {
-            std::cerr << "Resonance CM ";
-            resonance.print();
-            std::cerr << "Leading CM ";
-            leading.print();
+            std::cerr << "Resonance CM " << resonance << endl;
+            std::cerr << "Leading CM " << leading << endl;
         }
-
 
 
         /*
@@ -8575,12 +8532,14 @@ void bcpcm(int argc, char *argv[], Particle_t Beam, Particle_t Part1,
         // c+ c-
         double cplus_p = CMmomentum(resonance_mass, Mass(Part2), Mass(Part3));
 
-        part2.polar(cplus_p, acos(randm(-0.999999, 0.999999)),
+        part2.setPolar(cplus_p, acos(randm(-0.999999, 0.999999)),
                     randm(-M_PI, M_PI));
 
-        part2.t(sqrt(part2.V().lenSq() + pow(Mass(Part2), 2.0)));
-        part3.set(sqrt(part2.V().lenSq() + pow(Mass(Part3), 2.0)),
-                  zeroVec - part2.V());
+        part2.setT(sqrt(part2.getVector().getLenSq() + pow(Mass(Part2), 2.0)));
+        part3 = math::VFour(
+            sqrt(part2.getVector().getLenSq() + pow(Mass(Part3), 2.0)),
+            zeroVec - part2.getVector()
+        );
 
 
         /*
@@ -8592,12 +8551,12 @@ void bcpcm(int argc, char *argv[], Particle_t Beam, Particle_t Part1,
         else {
             if (LorentzFactor > randm(0.0, lfmax)) {
                 /* transform all 4-vectors back to lab frame */
-                fourVec tmp;
+                math::VFour tmp;
 
 
                 // boost from c+ c- rest frame to CM rest frame
 
-                tmp.set(resonance.t(), zeroVec - resonance.V());
+                tmp = math::VFour(resonance.getT(), zeroVec - resonance.getVector());
                 Boost.set(tmp);
                 part2 = Boost * part2;
                 part3 = Boost * part3;
@@ -8611,56 +8570,48 @@ void bcpcm(int argc, char *argv[], Particle_t Beam, Particle_t Part1,
                 part3 = Boost * part3;
 
                 /* generate vertices */
-                threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+                math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
 
                 if (Print) {
                     std::cerr << "\n\n*** New Event\n";
-                    std::cerr << "Beam:\n  ";
-                    beam.print();
-                    std::cerr << "Beam in CM:\n  ";
-                    CMbeam.print();
-                    std::cerr << "Target in CM:\n  ";
-                    CMtarget.print();
+                    std::cerr << "Beam:\n  " << beam << endl;
+                    std::cerr << "Beam in CM:\n  " << CMbeam << endl;
+                    std::cerr << "Target in CM:\n  " << CMtarget << endl;
                     std::cerr << "Resonance\n";
-                    std::cerr << "  Resonance mass: " << resonance_mass << "\n";
-                    std::cerr << "  Resonance CMmomentum: " << resonance_p
-                              << "\n";
-                    std::cerr << "  t: " << t << "\n";
-                    std::cerr << "  Resonance:\n ";
-                    resonance.print();
-                    std::cerr << "leading: \n  ";
-                    leading.print();
-                    std::cerr << "c+ :\n  ";
-                    part2.print();
-                    std::cerr << "c-:\n  ";
-                    part3.print();
+                    std::cerr << "  Resonance mass: " << resonance_mass << endl;
+                    std::cerr << "  Resonance CMmomentum: " << resonance_p << endl;
+                    std::cerr << "  t: " << t << endl;
+                    std::cerr << "  Resonance:\n " << resonance << endl;
+                    std::cerr << "leading: \n  " << leading << endl;
+                    std::cerr << "c+ :\n  " << part2 << endl;
+                    std::cerr << "c-:\n  " << part3 << endl;
                     //	   std::cerr << "vertices:\n";
                     //	   std::cerr << "  prod: " << production;
-                    std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
+                    std::cerr << "Lorentz factor: " << LorentzFactor << endl;
                     std::cerr << "icount: " << icount << std::endl;
                 }
                 // calculate masses for dalitz plots
                 if (dalitz) {
                     std::cout << "DALITZ ";
                     std::cout << resonance_mass << " ";
-                    std::cout << ~(leading + part3 + part2) << " ";
-                    std::cout << pow(~(leading + part2), 2.0) << " "
-                              << pow(~(leading + part3), 2.0) << " "
-                              << pow(~(part2 + part3), 2.0) << " ";
+                    std::cout << (leading + part3 + part2).getMass() << " ";
+                    std::cout << pow((leading + part2).getMass(), 2.0) << " "
+                              << pow((leading + part3).getMass(), 2.0) << " "
+                              << pow((part2 + part3).getMass(), 2.0) << " ";
                     std::cout << masslow << " " << masshigh << " ";
                     std::cout << std::endl;
                 } else if (debug) {
-                    std::cout << "T " << (beam - part2 - part3).lenSq() << " "
-                              << (target - leading).lenSq() << " " << t
+                    std::cout << "T " << (beam - part2 - part3).getLenSq() << " "
+                              << (target - leading).getLenSq() << " " << t
                               << " " << tMin << " " << costheta << " "
                               << costhetax << " " << " " << cmphi << " "
                               << (t - tMin) << " " << tx << " " << std::endl;
                 }
                 if (txt2part_style) {
                     std::cout << "3" << std::endl;
-                    std::cout << EbeamZ << " " << beam.t() << " "
-                              << -production.z() / SPEED_OF_LIGHT << std::endl;;
+                    std::cout << EbeamZ << " " << beam.getT() << " "
+                              << -production.getZ() / SPEED_OF_LIGHT << std::endl;;
                     pParticle_txt2part(Part1, production, leading);
                     pParticle_txt2part(Part3, production, part3);
                     pParticle_txt2part(Part2, production, part2);

@@ -1,4 +1,7 @@
 #include <event.h>
+#include <math/VFour.h>
+#include <math/VThree.h>
+#include <math/io.h>
 
 using std::list;
 using std::string;
@@ -86,19 +89,19 @@ particle event::target() const {
     return (*(this->_target));
 }
 
-fourVec
-event::getPartPFinal(string name, int charge, int index, int debug) const {
+math::VFour
+event::getPartPFinal(const string &name, int charge, int index, int debug) const {
     int i = 0;
     if (debug) {
         cout << "Looking for " << name << charge << "[" << index << "] in event"
              << endl;
     }
-    list<particle>::const_iterator p = this->_final.begin();
-    while (p != this->_final.end()) {
+
+    for (const auto &p: _final) {
         if (debug) {
-            cout << "checking against " << p->Name() << p->Charge() << endl;
+            cout << "checking against " << p.Name() << p.Charge() << endl;
         }
-        if (p->Name() == name && p->Charge() == charge) {
+        if (p.Name() == name && p.Charge() == charge) {
             i++;
             if (debug) {
                 cout << "found one" << endl;
@@ -108,28 +111,23 @@ event::getPartPFinal(string name, int charge, int index, int debug) const {
                 if (debug) {
                     cout << "found the right one, getting 4p" << endl;
                     cout << "4p:" << endl;
-                    p->get4P().print();
+                    cout << p.get4P() << endl;
                 }
-                return p->get4P();
+                return p.get4P();
             }
         }
-        p++;
     }
     throw ("PartNotFound");
 }
 
 
 void event::print() const {
-    cout << "beam: ";
-    this->_beam->get4P().print();
-    cout << "target: ";
-    this->_target->get4P().print();
-    cout << "final particles: ";
-    cout << endl;
-    list<particle>::const_iterator p = this->_final.begin();
-    while (p != this->_final.end()) {
-        p->print();
-        p++;
+    cout << "beam: " << _beam->get4P() << endl;
+    cout << "target: " << _target->get4P() << endl;
+    cout << "final particles: "<< endl;
+
+    for (const auto &p: _final) {
+        p.print();
     }
 }
 
@@ -156,27 +154,26 @@ istream &operator>>(istream &is, event &e) {
 }
 
 ostream &event::write2(ostream &os) {
-    fourVec v = this->beam().get4P();
+    math::VFour v = this->beam().get4P();
     os << "B " << name2id(this->_beam->Name(), this->_beam->Charge()) << " "
        << this->_beam->Charge() << " "
-       << v.t() << " "
-       << v.x() << " " << v.y() << " " << v.z() << " "
+       << v.getT() << " "
+       << v.getX() << " " << v.getY() << " " << v.getZ() << " "
        << endl;
     v = this->target().get4P();
     os << "T " << name2id(this->_target->Name(), this->_target->Charge()) << " "
        << this->_target->Charge() << " "
-       << v.t() << " "
-       << v.x() << " " << v.y() << " " << v.z() << " "
+       << v.getT() << " "
+       << v.getX() << " " << v.getY() << " " << v.getZ() << " "
        << endl;
-    list<particle>::iterator part = this->_final.begin();
-    while (part != this->_final.end()) {
-        v = part->get4P();
-        os << "F " << name2id(part->Name(), part->Charge()) << " "
-           << part->Charge() << " "
-           << v.t() << " "
-           << v.x() << " " << v.y() << " " << v.z() << " "
+
+    for (const auto &p: _final) {
+        v = p.get4P();
+        os << "F " << name2id(p.Name(), p.Charge()) << " "
+           << p.Charge() << " "
+           << v.getT() << " "
+           << v.getX() << " " << v.getY() << " " << v.getZ() << " "
            << endl;
-        part++;
     }
     os << "E" << endl;
     return os;
@@ -195,7 +192,7 @@ istream &event::read2(istream &is) {
                 is >> ptype >> q >> t >> px >> py >> pz;
                 name = id2name((Geant_ID) ptype);
                 particle part(PDGtable.get(name), q);
-                part.set4P(fourVec(t, threeVec(px, py, pz)));
+                part.set4P(math::VFour(t, math::VThree(px, py, pz)));
                 this->addinitial(part);
             }
                 break;
@@ -203,7 +200,7 @@ istream &event::read2(istream &is) {
                 is >> ptype >> q >> t >> px >> py >> pz;
                 name = id2name((Geant_ID) ptype);
                 particle part(PDGtable.get(name), q);
-                part.set4P(fourVec(t, threeVec(px, py, pz)));
+                part.set4P(math::VFour(t, math::VThree(px, py, pz)));
                 this->addfinal(part);
             }
                 break;
@@ -211,7 +208,7 @@ istream &event::read2(istream &is) {
                 is >> ptype >> q >> t >> px >> py >> pz;
                 name = id2name((Geant_ID) ptype);
                 particle part(PDGtable.get(name), q);
-                part.set4P(fourVec(t, threeVec(px, py, pz)));
+                part.set4P(math::VFour(t, math::VThree(px, py, pz)));
                 this->beam(part);
             }
                 break;
@@ -219,7 +216,7 @@ istream &event::read2(istream &is) {
                 is >> ptype >> q >> t >> px >> py >> pz;
                 name = id2name((Geant_ID) ptype);
                 particle part(PDGtable.get(name), q);
-                part.set4P(fourVec(t, threeVec(px, py, pz)));
+                part.set4P(math::VFour(t, math::VThree(px, py, pz)));
                 this->target(part);
             }
                 break;
@@ -232,19 +229,18 @@ istream &event::read2(istream &is) {
 
 ostream &event::write1(ostream &os) {
     os << this->_final.size() + 1 << endl;
-    fourVec v = this->beam().get4P();
+    math::VFour v = this->beam().get4P();
     os << name2id(this->_beam->Name(), this->_beam->Charge()) << " "
        << this->_beam->Charge() << " "
-       << v.x() << " " << v.y() << " " << v.z() << " "
-       << v.t() << endl;
-    list<particle>::iterator part = this->_final.begin();
-    while (part != this->_final.end()) {
-        v = part->get4P();
-        os << name2id(part->Name(), part->Charge()) << " "
-           << part->Charge() << " "
-           << v.x() << " " << v.y() << " " << v.z() << " "
-           << v.t() << endl;
-        part++;
+       << v.getX() << " " << v.getY() << " " << v.getZ() << " "
+       << v.getT() << endl;
+
+    for (const auto &part: _final) {
+        v = part.get4P();
+        os << name2id(part.Name(), part.Charge()) << " "
+           << part.Charge() << " "
+           << v.getX() << " " << v.getY() << " " << v.getZ() << " "
+           << v.getT() << endl;
     }
     return os;
 }
@@ -258,7 +254,7 @@ istream &event::read1(istream &is) {
     this->erase();
 
     particle Target(PDGtable.get("p"), 1);
-    Target.set4P(fourVec(Target.Mass(), threeVec(0, 0, 0)));
+    Target.set4P(math::VFour(Target.Mass(), math::VThree(0, 0, 0)));
     this->target(Target);
 
     is >> nparticles;
@@ -267,11 +263,11 @@ istream &event::read1(istream &is) {
         name = id2name((Geant_ID) ptype);
         if (i == 0) {
             particle Beam(PDGtable.get(name), q);
-            Beam.set4P(fourVec(t, threeVec(px, py, pz)));
+            Beam.set4P(math::VFour(t, math::VThree(px, py, pz)));
             this->beam(Beam);
         } else {
             particle part(PDGtable.get(name), q);
-            part.set4P(fourVec(t, threeVec(px, py, pz)));
+            part.set4P(math::VFour(t, math::VThree(px, py, pz)));
             this->addfinal(part);
         }
     }
@@ -282,22 +278,15 @@ istream &event::read1(istream &is) {
 event operator*(const lorentzTransform &L, const event &e) {
     event r;
 
-    list<particle>::const_iterator p;
-
     r.beam(L * e.beam());
     r.target(L * e.target());
 
-    p = e._initial.begin();
-    while (p != e._initial.end()) {
-        r.addinitial(L * (*p));
-        p++;
-    }
+    for (auto &p: e._initial)
+        r.addinitial(L * p);
 
-    p = e._final.begin();
-    while (p != e._final.end()) {
-        r.addfinal(L * (*p));
-        p++;
-    }
+    for (auto &p: e._final)
+        r.addfinal(L * p);
+
 
     return r;
 }

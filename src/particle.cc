@@ -1,4 +1,5 @@
 #include <particle.h>
+#include <math/io.h>
 
 using std::cout;
 using std::cerr;
@@ -16,7 +17,7 @@ particle::particle() : particleData() {
     this->_index = 0;
     this->_lambda = 0;
     this->_inRestFrame = 0;
-    this->_p = fourVec(0, threeVec(0, 0, 0));
+    this->_p = math::VFour(0, math::VThree(0, 0, 0));
     this->_decay = NULL;
     this->_massDep = NULL;
 }
@@ -56,7 +57,7 @@ particle::particle(const particleData &data, int c) : particleData(data) {
     this->_index = 0;
     this->_lambda = 0;
     this->_inRestFrame = 0;
-    this->_p = fourVec(0, threeVec(0, 0, 0));
+    this->_p = math::VFour(0, math::VThree(0, 0, 0));
     this->_decay = NULL;
     this->_massDep = NULL;
 }
@@ -114,7 +115,7 @@ int particle::operator<(const particle &p) {
     return (this->Mass() < p.Mass());
 }
 
-particle &particle::set4P(const fourVec &p4) {
+particle &particle::set4P(const math::VFour &p4) {
     this->_p = p4;
     return (*this);
 }
@@ -274,15 +275,15 @@ void Decay::printFrames() const {
     }
 }
 
-fourVec Decay::fill(const event &e, int debug) {
-    fourVec p;
+math::VFour Decay::fill(const event &e, int debug) {
+    math::VFour p;
     if (this) {
         Decay *d;
         list<particle>::iterator first = const_cast<Decay *>(this)->_children.begin();
         list<particle>::iterator last = const_cast<Decay *>(this)->_children.end();
         list<particle>::iterator c;
         for (c = first; c != last; c++) {
-            fourVec v;
+            math::VFour v;
             if ((*c).Stable()) {
                 if (debug) {
                     cout << "Found stable particle " << (*c).Name() << endl;
@@ -291,7 +292,7 @@ fourVec Decay::fill(const event &e, int debug) {
                                     debug);
                 if (debug) {
                     cout << "Setting p of " << (*c).Name() << " to:" << endl;
-                    v.print();
+                    cout << v << endl;
                 }
                 (*c).set4P(v);
                 p += v;
@@ -306,7 +307,7 @@ fourVec Decay::fill(const event &e, int debug) {
                 v = d->fill(e, debug);
                 if (debug) {
                     cout << "Setting p of " << (*c).Name() << " to:" << endl;
-                    v.print();
+                    cout << v << endl;
                 }
                 (*c).set4P(v);
                 p += v;
@@ -316,9 +317,9 @@ fourVec Decay::fill(const event &e, int debug) {
     return p;
 }
 
-fourVec *Decay::get4P(particle *part, int debug) {
+math::VFour *Decay::get4P(particle *part, int debug) {
 
-    fourVec *p = NULL;
+    math::VFour *p = NULL;
 
     list<particle>::iterator child;
 
@@ -346,44 +347,37 @@ fourVec *Decay::get4P(particle *part, int debug) {
 Decay &Decay::setupFrames(lorentzTransform T, int debug) {
 
     // assert(this->_children.size() == 2);
-    fourVec p(0, threeVec(0, 0, 0));
-
-    list<particle>::iterator child;
+    math::VFour p(0, math::VThree(0, 0, 0));
 
 
     // boost children into correct frame
-    child = this->_children.begin();
-    while (child != this->_children.end()) {
+    for (auto &child: _children) {
         if (debug) {
-            cout << "boosting child (" << child->Name()
+            cout << "boosting child (" << child.Name()
                  << ") into correct frame" << endl;
             cout << "p before: " << endl;
-            child->get4P().print();
+            cout << child.get4P() << endl;
         }
-        *child *= T;
+        child *= T;
         if (debug) {
             cout << "p after: " << endl;
-            child->get4P().print();
+            cout << child.get4P() << endl;
         }
-        child++;
     }
-
 
     // setupDecay for children
-    child = this->_children.begin();
-    while (child != this->_children.end()) {
-        p += child->setupFrames(debug);
-        child++;
+    for (auto &child: _children) {
+        p += child.setupFrames(debug);
     }
-    this->_mass = ~p;
+    this->_mass = p.getMass();
 
     if (debug) {
-        child = this->_children.begin();
         cout << "Decay mass: " << this->_mass << endl;
-        cout << "Decay analyzer: " << child->Name() << child->Charge() << "["
-             << child->Index() << "]" << endl;
-        cout << "Decay angles: theta: " << child->get3P().theta() << " ";
-        cout << "phi: " << child->get3P().phi() << endl;
+        cout << "Decay analyzer: " << _children.front().Name()
+             << _children.front().Charge() << "["
+             << _children.front().Index() << "]" << endl;
+        cout << "Decay angles: theta: " << _children.front().get3P().getTheta()
+             << " " << "phi: " << _children.front().get3P().getPhi() << endl;
     }
 
     return *this;
@@ -579,13 +573,13 @@ complex<double> Decay::amp(int j, int m, int debug) const {
                 double phi;
                 double theta;
                 if (this->_children.size() == 2) {
-                    phi = analyzer.get3P().phi();
-                    theta = analyzer.get3P().theta();
+                    phi = analyzer.get3P().getPhi();
+                    theta = analyzer.get3P().getTheta();
                 } else if (this->_children.size() == 3) {
                     // omega case, use normal to Decay plane
-                    threeVec normal = child1.get3P() / child2.get3P();
-                    phi = normal.phi();
-                    theta = normal.theta();
+                    math::VThree normal = child1.get3P().crossMultiply(child2.get3P());
+                    phi = normal.getPhi();
+                    theta = normal.getTheta();
                 }
 
                 tildeFactor = tilde(this->_l);
@@ -594,7 +588,7 @@ complex<double> Decay::amp(int j, int m, int debug) const {
                 CGcoefficient2 = clebsch(s1, s2, _s, *lambda1, -*lambda2,
                                          lambda);
                 if (this->_children.size() == 2) {
-                    barrierFactor = F(this->_l, ~(analyzer.get3P()));
+                    barrierFactor = F(this->_l, analyzer.get3P().getLen());
                     lambdaFactor = 1;
                 } else if (this->_children.size() == 3) {
                     // omega case
@@ -631,21 +625,21 @@ complex<double> Decay::amp(int j, int m, int debug) const {
                         cout << "P_pi-: " << piMinus.get3P() << endl;
                         ptab();
                         cout << "| P_pi+ X P_pi- |: " \
- << (piPlus.get3P() / piMinus.get3P()).len() << endl;
+ << piPlus.get3P().crossMultiply(piMinus.get3P()).getLen() << endl;
                         ptab();
                         cout << "M(pi^+ pi^- pi^0): " << this->_mass << endl;
                         ptab();
-                        cout << "M(pi^-): " << piMinus.get4P().lenSq() << endl;
+                        cout << "M(pi^-): " << piMinus.get4P().getLenSq() << endl;
                         ptab();
                         cout << "numerator: " \
- << (piPlus.get3P() / piMinus.get3P()).len() << endl;
+ << piPlus.get3P().crossMultiply(piMinus.get3P()).getLen() << endl;
                         ptab();
                         cout << "denominator: " \
- << (sqrt(3.0 / 4.0) * (pow(this->_mass / 3.0, 2.0) - piMinus.get4P().lenSq()))
+ << (sqrt(3.0 / 4.0) * (pow(this->_mass / 3.0, 2.0) - piMinus.get4P().getLenSq()))
                              << endl;
                     }
-                    lambdaFactor = (piPlus.get3P() / piMinus.get3P()).len() \
- / (sqrt(3.0 / 4.0) * (pow(this->_mass / 3.0, 2.0) - piMinus.get4P().lenSq()));
+                    lambdaFactor = piPlus.get3P().crossMultiply(piMinus.get3P()).getLen() \
+ / (sqrt(3.0 / 4.0) * (pow(this->_mass / 3.0, 2.0) - piMinus.get4P().getLenSq()));
                     barrierFactor = 1;
                 }
 
@@ -662,7 +656,7 @@ complex<double> Decay::amp(int j, int m, int debug) const {
                          << -*lambda2 << \
                         " | " << _s << " " << lambda << " ){=" << CGcoefficient2
                          << "}";
-                    cout << "F_" << this->_l << "(" << ~(analyzer.get3P())
+                    cout << "F_" << this->_l << "(" << analyzer.get3P().getLen()
                          << "){=" << barrierFactor << "}";
                     cout << "sqrt(lambda)" << "{=" << lambdaFactor << "}";
                     cout << "Delta(" << this->_mass << ")";
@@ -732,20 +726,20 @@ int particle::Stable() const {
     return ((this->_decay) ? 0 : 1);
 }
 
-fourVec particle::get4P() const {
+math::VFour particle::get4P() const {
     return (this->_p);
 }
 
-fourVec *particle::get4P(particle *part, int debug) const {
-    fourVec *ret = NULL;
+math::VFour *particle::get4P(particle *part, int debug) const {
+    math::VFour *ret = NULL;
     if (this->Name() == part->Name()
         && this->Charge() == part->Charge()
         && this->Index() == part->Index()) {
-        ret = new fourVec(this->_p);
+        ret = new math::VFour(this->_p);
         if (debug) {
             cout << "found particle " << part->Name() << part->Charge() << "["
                  << part->Index() << "]" << endl;
-            cout << "returning fourVec:" << ret << endl;
+            cout << "returning math::VFour:" << ret << endl;
         }
     } else if (this->get_decay()) {
         if (debug) {
@@ -761,8 +755,8 @@ fourVec *particle::get4P(particle *part, int debug) const {
     return ret;
 }
 
-threeVec particle::get3P() const {
-    return (this->_p.V());
+math::VThree particle::get3P() const {
+    return (this->_p.getVector());
 }
 
 int particle::Index() const {
@@ -795,8 +789,8 @@ int particle::is(string nm) const {
     }
 }
 
-fourVec particle::setupFrames(int debug) {
-    fourVec ret;
+math::VFour particle::setupFrames(int debug) {
+    math::VFour ret;
     if (_decay) {
         if (debug) {
             cout << "put ";
@@ -804,8 +798,7 @@ fourVec particle::setupFrames(int debug) {
             cout << this->Charge();
             cout << "[" << this->Index() << "]";
             cout << " into helicity frame:" << endl;
-            cout << "momentum: ";
-            this->_p.print();
+            cout << "momentum: " << _p << endl;
         }
 
         // i should be in my parents rest frame when this is called
@@ -816,19 +809,19 @@ fourVec particle::setupFrames(int debug) {
         lorentzTransform L, T;
         matrix<double> X(4, 4);
         rotation R;
-        threeVec normal;
-        fourVec tempP;
+        math::VThree normal;
+        math::VFour tempP;
 
         tempP = this->_p;
 
         // make y perpendicular to z_old and p
-        normal = threeVec(0, 0, 1) / tempP.V();
-        T.set(R.set(normal.phi(), normal.theta() - M_PI / 2, -M_PI / 2));
+        normal = math::VThree(0, 0, 1).crossMultiply(tempP.getVector());
+        T.set(R.set(normal.getPhi(), normal.getTheta() - M_PI / 2, -M_PI / 2));
         L = T;
         tempP *= T;
 
         // make z_new parallel to p
-        T.set(R.set(0, signof (tempP.x()) * tempP.theta(), 0));
+        T.set(R.set(0, signof (tempP.getX()) * tempP.getTheta(), 0));
         X = T * L;
         L = *((lorentzTransform *) &X);
         tempP *= T;
@@ -857,7 +850,7 @@ double particle::q() const {
     list<particle>::const_iterator child = this->get_decay()->_children.begin();
 
     if (_inRestFrame) {
-        return (~(child->get3P()));
+        return child->get3P().getLen();
     } else {
         assert(this->get_decay()->_children.size() == 2);
         particle child1 = *child;
@@ -865,9 +858,9 @@ double particle::q() const {
         particle child2 = *child;
 
         double lam;
-        double Msq = this->get4P().lenSq();
-        double m1sq = child1.get4P().lenSq();
-        double m2sq = child2.get4P().lenSq();
+        double Msq = this->get4P().getLenSq();
+        double m1sq = child1.get4P().getLenSq();
+        double m2sq = child2.get4P().getLenSq();
 
         lam = lambda(Msq, m1sq, m2sq);
         return (sqrt(fabs(lam / (4 * Msq))));
@@ -884,8 +877,8 @@ double particle::q0() const {
 
     double lam;
     double Msq = pow(this->Mass(), 2);
-    double m1sq = child1.get4P().lenSq();
-    double m2sq = child2.get4P().lenSq();
+    double m1sq = child1.get4P().getLenSq();
+    double m2sq = child2.get4P().getLenSq();
 
     lam = lambda(Msq, m1sq, m2sq);
     return (sqrt(fabs(lam / (4 * Msq))));
@@ -948,8 +941,7 @@ void particle::print() const {
     ptab();
     cout << "charge: " << _charge << "\tid: " << _index << endl;
     ptab();
-    cout << "momentum: ";
-    _p.print();
+    cout << "momentum: " << _p << endl;
     if (_decay) {
         addtab();
         cout << "mass dependance: ";
@@ -965,8 +957,7 @@ void particle::printFrames() const {
     ptab();
     cout << "charge: " << _charge << "\tid: " << _index << endl;
     ptab();
-    cout << "momentum: ";
-    _p.print();
+    cout << "momentum: " << _p << endl;
     if (_decay) {
         addtab();
         _decay->printFrames();

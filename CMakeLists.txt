@@ -7,6 +7,7 @@ project(PWA_UTILS VERSION 1.1
 set(CMAKE_CXX_STANDARD 20)
 
 include_directories(include)
+include_directories(src)
 
 set(SHARED_LIBPP
 		src/event.cc
@@ -14,7 +15,9 @@ set(SHARED_LIBPP
 		src/particle.cc
 		src/particleData.cc
 		src/pputil.cc
-		src/Vec.cc
+		src/math/VFour.cpp
+		src/math/VThree.cpp
+		src/math/io.cpp
 )
 
 set (
@@ -29,10 +32,10 @@ set (
 set (
     PPGEN_SOURCES
 	src/expDist.cc
-	src/matrix.cc
 	src/ppgen.cc
 	src/txtEvent.cc
 )
+
 
 add_library (pp STATIC ${SHARED_LIBPP})
 

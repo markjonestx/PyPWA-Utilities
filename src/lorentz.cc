@@ -25,17 +25,19 @@ rotation rotation::set(double alpha, double beta, double gamma) {
     return (*this);
 }
 
-rotation::rotation(double alpha, double beta, double gamma) : matrix<double>(3,
-                                                                             3) {
+rotation::rotation(
+        double alpha, double beta, double gamma
+    ) : matrix<double>(3,3)
+{
     this->set(alpha, beta, gamma);
 }
 
-rotation rotation::set(const threeVec &V) {
-    this->set(V.phi(), V.theta(), 0.0);
+rotation rotation::set(const math::VThree &V) {
+    this->set(V.getPhi(), V.getTheta(), 0.0);
     return (*this);
 }
 
-threeVec operator*=(threeVec &V, const rotation &R) {
+math::VThree operator*=(math::VThree &V, const rotation &R) {
     V = R * V;
     return V;
 }
@@ -44,9 +46,9 @@ lorentzTransform lorentzTransform::set(const rotation &r) {
     this->zero();
     for (int row = 1; row < 4; row++) {
         for (int col = 1; col < 4; col++) {
-//				this->el(row,col) = r.el(row-1,col-1);
-            this->el(row, col) = (const_cast<rotation *>(&r))->el(row - 1,
-                                                                  col - 1);
+            this->el(row, col) = (const_cast<rotation *>(&r))->el(
+                    row - 1, col - 1
+            );
         }
     }
     this->el(0, 0) = 1;
@@ -71,27 +73,27 @@ lorentzTransform::lorentzTransform(const rotation &r) : matrix<double>(4, 4) {
 }
 
 
-lorentzTransform lorentzTransform::set(const threeVec &beta) {
+lorentzTransform lorentzTransform::set(const math::VThree &beta) {
     double gamma;
     double gFactor;
 
-    this->_gamma = 1.0 / sqrt(1 - beta.lenSq());
+    this->_gamma = 1.0 / sqrt(1 - beta.getLenSq());
     gamma = this->_gamma;
     gFactor = pow(gamma, 2) / (gamma + 1);
 
     this->el(0, 0) = gamma;
-    this->el(0, 1) = gamma * beta.x();
-    this->el(0, 2) = gamma * beta.y();
-    this->el(0, 3) = gamma * beta.z();
+    this->el(0, 1) = gamma * beta.getX();
+    this->el(0, 2) = gamma * beta.getY();
+    this->el(0, 3) = gamma * beta.getZ();
 
-    this->el(1, 1) = (pow(beta.x(), 2) * gFactor) + 1;
-    this->el(1, 2) = beta.x() * beta.y() * gFactor;
-    this->el(1, 3) = beta.x() * beta.z() * gFactor;
+    this->el(1, 1) = (pow(beta.getX(), 2) * gFactor) + 1;
+    this->el(1, 2) = beta.getX() * beta.getY() * gFactor;
+    this->el(1, 3) = beta.getX() * beta.getZ() * gFactor;
 
-    this->el(2, 2) = (pow(beta.y(), 2) * gFactor) + 1;
-    this->el(2, 3) = beta.y() * beta.z() * gFactor;
+    this->el(2, 2) = (pow(beta.getY(), 2) * gFactor) + 1;
+    this->el(2, 3) = beta.getY() * beta.getZ() * gFactor;
 
-    this->el(3, 3) = (pow(beta.z(), 2) * gFactor) + 1;
+    this->el(3, 3) = (pow(beta.getZ(), 2) * gFactor) + 1;
 
     this->el(1, 0) = this->el(0, 1);
     this->el(2, 0) = this->el(0, 2);
@@ -103,29 +105,29 @@ lorentzTransform lorentzTransform::set(const threeVec &beta) {
     return (*this);
 }
 
-lorentzTransform::lorentzTransform(const threeVec &beta) : matrix<double>(4,
+lorentzTransform::lorentzTransform(const math::VThree &beta) : matrix<double>(4,
                                                                           4) {
     this->set(beta);
 }
 
 
-lorentzTransform lorentzTransform::set(const fourVec &p) {
-    threeVec beta;
+lorentzTransform lorentzTransform::set(const math::VFour &p) {
+    math::VThree beta;
 
-    beta.el(0) = -p.x() / p.t();
-    beta.el(1) = -p.y() / p.t();
-    beta.el(2) = -p.z() / p.t();
+    beta.setX(-p.getX() / p.getT());
+    beta.setY(-p.getY() / p.getT());
+    beta.setZ(-p.getZ() / p.getT());
 
     this->set(beta);
 
     return (*this);
 }
 
-lorentzTransform::lorentzTransform(const fourVec &p) : matrix<double>(4, 4) {
+lorentzTransform::lorentzTransform(const math::VFour &p) : matrix<double>(4, 4) {
     this->set(p);
 }
 
-fourVec operator*=(fourVec &v, const lorentzTransform &L) {  //new
+math::VFour operator*=(math::VFour &v, const lorentzTransform &L) {  //new
     v = L * v;
     return v;
 }

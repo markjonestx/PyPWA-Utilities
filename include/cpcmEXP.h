@@ -21,7 +21,7 @@ void cpcmEXP(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
             LorentzFactor,
             lfmax = 0,
             resonance_mass;
-    fourVec
+    math::VFour
             beam,
             target,
             resonance,
@@ -30,7 +30,7 @@ void cpcmEXP(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
             cplus;
     lorentzTransform Boost;
 
-    threeVec zeroVec = threeVec(0.0, 0.0, 0.0);
+    math::VThree zeroVec = math::VThree(0.0, 0.0, 0.0);
     vector3_t vbeam, pbeam;
     float beamMass;
     int debug = 0;
@@ -39,7 +39,7 @@ void cpcmEXP(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
     Particle_t Target = Proton;
 
     /* generate vertices */
-    threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+    math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
     float tMin;
 
@@ -112,20 +112,20 @@ void cpcmEXP(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
          */
 
 
-        beam = fourVec(
+        beam = math::VFour(
                 sqrt(pow((double) pbeam.x, 2.0) + pow((double) pbeam.y, 2.0) +
                      pow((double) pbeam.z, 2.0) +
                      pow((double) beamMass, 2.0)),
-                threeVec(pbeam.x, pbeam.y, pbeam.z));
-        target = fourVec(TARGET_MASS, threeVec(0.0, 0.0, 0.0));
+                math::VThree(pbeam.x, pbeam.y, pbeam.z));
+        target = math::VFour(TARGET_MASS, math::VThree(0.0, 0.0, 0.0));
 
         /*
          *-- put them into the center of mass frame
          */
         Boost.set(beam + target);
-        fourVec CMbeam = Boost * beam;
-        fourVec CMtarget = Boost * target;
-        double CMenergy = (CMbeam + CMtarget).t();
+        math::VFour CMbeam = Boost * beam;
+        math::VFour CMtarget = Boost * target;
+        double CMenergy = (CMbeam + CMtarget).getT();
 
         /*
          *-- generate the resonance and isobar
@@ -180,18 +180,20 @@ void cpcmEXP(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
 
 
         if (uChannel)
-            resonance.polar(resonance_p, M_PI + acos(costheta),
+            resonance.setPolar(resonance_p, M_PI + acos(costheta),
                             randm(-M_PI, M_PI));
         else
-            resonance.polar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
-        resonance.t(resonance_E);
+            resonance.setPolar(resonance_p, acos(costheta), randm(-M_PI, M_PI));
+        resonance.setT(resonance_E);
 
 
         /*
          *-- recoil particle
          */
-        recoil.set(sqrt(resonance.V().lenSq() + pow(Mass(Baryon), 2.0)),
-                   zeroVec - resonance.V());
+        recoil = math::VFour(
+            sqrt(resonance.getVector().getLenSq() + pow(Mass(Baryon), 2.0)),
+            zeroVec - resonance.getVector()
+        );
 
 
         /*
@@ -200,12 +202,14 @@ void cpcmEXP(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
         // c+ c-
         double cplus_p = CMmomentum(resonance_mass, Mass(Cplus), Mass(Cminus));
 
-        cplus.polar(cplus_p, acos(randm(-0.999999, 0.999999)),
+        cplus.setPolar(cplus_p, acos(randm(-0.999999, 0.999999)),
                     randm(-M_PI, M_PI));
-        //     cplus.polar( cplus_p,acos (1.0),0.0);
-        cplus.t(sqrt(cplus.V().lenSq() + pow(Mass(Cplus), 2.0)));
-        cminus.set(sqrt(cplus.V().lenSq() + pow(Mass(Cminus), 2.0)),
-                   zeroVec - cplus.V());
+        //     cplus.setPolar( cplus_p,acos (1.0),0.0);
+        cplus.setT(sqrt(cplus.getVector().getLenSq() + pow(Mass(Cplus), 2.0)));
+        cminus = math::VFour(
+            sqrt(cplus.getVector().getLenSq() + pow(Mass(Cminus), 2.0)),
+            zeroVec - cplus.getVector()
+        );
 
 
         /*
@@ -217,12 +221,12 @@ void cpcmEXP(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
         else {
             if (LorentzFactor > randm(0.0, lfmax)) {
                 /* transform all 4-vectors back to lab frame */
-                fourVec tmp;
+                math::VFour tmp;
 
 
                 // boost from c+ c- rest frame to CM rest frame
 
-                tmp.set(resonance.t(), zeroVec - resonance.V());
+                tmp = math::VFour(resonance.getT(), zeroVec - resonance.getVector());
                 Boost.set(tmp);
                 cplus = Boost * cplus;
                 cminus = Boost * cminus;
@@ -236,30 +240,23 @@ void cpcmEXP(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
                 cminus = Boost * cminus;
 
                 /* generate vertices */
-                threeVec production = threeVec(vbeam.x, vbeam.y, vbeam.z);
+                math::VThree production = math::VThree(vbeam.x, vbeam.y, vbeam.z);
 
 
                 if (Print) {
                     std::cerr << "\n\n*** New Event\n";
-                    std::cerr << "Beam:\n  ";
-                    beam.print();
-                    std::cerr << "Beam in CM:\n  ";
-                    CMbeam.print();
-                    std::cerr << "Target in CM:\n  ";
-                    CMtarget.print();
+                    std::cerr << "Beam:\n  " << beam << endl;
+                    std::cerr << "Beam in CM:\n  " << CMbeam << endl;
+                    std::cerr << "Target in CM:\n  " << CMtarget << endl;
                     std::cerr << "Resonance\n";
                     std::cerr << "  Resonance mass: " << resonance_mass << "\n";
                     std::cerr << "  Resonance CMmomentum: " << resonance_p
                               << "\n";
                     std::cerr << "  t: " << t << "\n";
-                    std::cerr << "  Resonance:\n ";
-                    resonance.print();
-                    std::cerr << "recoil: \n  ";
-                    recoil.print();
-                    std::cerr << "c+ :\n  ";
-                    cplus.print();
-                    std::cerr << "c-:\n  ";
-                    cminus.print();
+                    std::cerr << "  Resonance:\n " << resonance << endl;
+                    std::cerr << "recoil: \n  " << recoil << endl;
+                    std::cerr << "c+ :\n  " << cplus << endl;
+                    std::cerr << "c-:\n  " << cminus << endl;
                     //	   std::cerr << "vertices:\n";
                     //	   std::cerr << "  prod: " << production;
                     std::cerr << "Lorentz factor: " << LorentzFactor << "\n";
@@ -269,23 +266,23 @@ void cpcmEXP(int argc, char *argv[], Particle_t Beam, Particle_t Cplus,
                 if (dalitz) {
                     std::cout << "DALITZ ";
                     std::cout << resonance_mass << " ";
-                    std::cout << ~(recoil + cminus + cplus) << " ";
-                    std::cout << pow(~(recoil + cplus), 2.0) << " "
-                              << pow(~(recoil + cminus), 2.0) << " "
-                              << pow(~(cplus + cminus), 2.0) << " ";
+                    std::cout << (recoil + cminus + cplus).getMass() << " ";
+                    std::cout << pow((recoil + cplus).getMass(), 2.0) << " "
+                              << pow((recoil + cminus).getMass(), 2.0) << " "
+                              << pow((cplus + cminus).getMass(), 2.0) << " ";
                     std::cout << masslow << " " << masshigh << " ";
                     std::cout << std::endl;
                 } else if (debug) {
-                    std::cout << "T " << (beam - cplus - cminus).lenSq() << " "
-                              << (target - recoil).lenSq() << " " << t
+                    std::cout << "T " << (beam - cplus - cminus).getLenSq() << " "
+                              << (target - recoil).getLenSq() << " " << t
                               << " " << tMin << " " << costheta << " "
                               << costhetax << " " << (t - tMin) << " " << tx
                               << " " << std::endl;
                 }
                 if (txt2part_style) {
                     std::cout << "3" << std::endl;
-                    std::cout << EbeamZ << " " << beam.t() << " "
-                              << -production.z() / SPEED_OF_LIGHT << std::endl;;
+                    std::cout << EbeamZ << " " << beam.getT() << " "
+                              << -production.getZ() / SPEED_OF_LIGHT << std::endl;;
                     pParticle_txt2part(Recoil, production, recoil);
                     pParticle_txt2part(Cminus, production, cminus);
                     pParticle_txt2part(Cplus, production, cplus);

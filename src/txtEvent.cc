@@ -1,4 +1,5 @@
 #include <txtEvent.h>
+#include <math/io.h>
 
 using std::list;
 using std::string;
@@ -81,35 +82,31 @@ particle txtEvent::target() const {
 }
 
 void txtEvent::print() const {
-    cout << "beam: ";
-    this->_beam->get4P().print();
-    cout << "target: ";
-    this->_target->get4P().print();
+    cout << "beam: " << _beam->get4P() << endl;
+    cout << "target: " << _target->get4P() << endl;
     cout << "final particles: ";
     cout << endl;
-    list<particle>::const_iterator p = this->_final.begin();
-    while (p != this->_final.end()) {
-        p->print();
-        p++;
+
+    for (const auto &p : _final) {
+        p.print();
     }
 }
 
 ostream &operator<<(ostream &os, txtEvent &e) {
     os << e._final.size() + 1 << " " << e.code() << " " << e.weight() << " "
        << e.run() << " " << e.event() << endl;
-    fourVec v = e.beam().get4P();
+    math::VFour v = e.beam().get4P();
     os << name2id(e._beam->Name(), e._beam->Charge()) << " "
        << e._beam->Charge() << " "
-       << v.x() << " " << v.y() << " " << v.z() << " "
-       << v.t() << endl;
-    list<particle>::iterator part = e._final.begin();
-    while (part != e._final.end()) {
-        v = part->get4P();
-        os << name2id(part->Name(), part->Charge()) << " "
-           << part->Charge() << " "
-           << v.x() << " " << v.y() << " " << v.z() << " "
-           << v.t() << endl;
-        part++;
+       << v.getX() << " " << v.getY() << " " << v.getZ() << " "
+       << v.getT() << endl;
+
+    for (const auto &part : e._final) {
+        v = part.get4P();
+        os << name2id(part.Name(), part.Charge()) << " "
+           << part.Charge() << " "
+           << v.getX() << " " << v.getY() << " " << v.getZ() << " "
+           << v.getT() << endl;
     }
     return os;
 }
@@ -124,7 +121,7 @@ istream &operator>>(istream &is, txtEvent &e) {
     string name;
     e.erase();
     particle Target(PDGtable.get("p"), 1);
-    Target.set4P(fourVec(Target.Mass(), threeVec(0, 0, 0)));
+    Target.set4P(math::VFour(Target.Mass(), {0, 0, 0}));
     e.target(Target);
     is >> nparticles;
     is >> code >> w >> run >> event;
@@ -137,12 +134,12 @@ istream &operator>>(istream &is, txtEvent &e) {
         name = id2name((Geant_ID) ptype);
         if (i == 0) {
             particle Beam(PDGtable.get(name), q);
-            Beam.set4P(fourVec(t, threeVec(px, py, pz)));
+            Beam.set4P(math::VFour(t, {px, py, pz}));
             e.beam(Beam);
 
         } else {
             particle part(PDGtable.get(name), q);
-            part.set4P(fourVec(t, threeVec(px, py, pz)));
+            part.set4P(math::VFour(t, {px, py, pz}));
             e.addfinal(part);
         }
     }
