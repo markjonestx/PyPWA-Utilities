@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.20)
 project(PWA_UTILS VERSION 1.1
 		DESCRIPTION "A Modern revision of PWA2000"
 		LANGUAGES CXX
@@ -16,15 +16,10 @@ else()
 	add_compile_options(-Wall -Wextra -pedantic -Werror)
 endif()
 
-# These features should only be enabled when this is the project
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-
-	# Support IDE Folders
-	set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-	# Here you can enable documentation and testing
-endif()
+# Support IDE Folders
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 
+add_subdirectory(dependencies)
 add_subdirectory(src)
 
